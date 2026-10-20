@@ -227,6 +227,7 @@ table.team .wait { color: var(--warn-text); }
 const DEFAULTS = {
   owner: '',
   repos: [],
+  hidden: [],
   refreshMin: 5, staleHours: 2, claimHours: 3, failHours: 3, includedMinutes: 2000,
 };
 const LS = { token: 'mc.token', config: 'mc.config' };
@@ -247,6 +248,7 @@ let inflight = null;
 let busy = false;
 let tokenBad = false;
 let feedScope = 'all';
+let discoveredThisLoad = false;
 
 function loadConfig() {
   try {
@@ -254,6 +256,7 @@ function loadConfig() {
     if (s && typeof s === 'object') {
       const c = Object.assign({}, DEFAULTS, s);
       c.repos = Array.isArray(c.repos) ? c.repos.filter(r => r && /^[\w.-]+$/.test(r.name || '')) : [];
+      c.hidden = Array.isArray(c.hidden) ? c.hidden.filter(n => typeof n === 'string') : [];
       return c;
     }
   } catch (e) { /* storage unavailable */ }
@@ -349,8 +352,9 @@ async function discoverRepos(signal) {
   return cands.filter((r, i) => checks[i].status === 'fulfilled').map(r => r.name);
 }
 const shortName = (n) => n.length > 22 && n.includes('-') ? n.split('-').slice(0, 2).join('-') : n;
+/* Adds newly found repos, except ones you removed in Settings (kept in cfg.hidden). */
 function mergeRepos(names) {
-  const have = new Set(cfg.repos.map(r => r.name.toLowerCase()));
+  const have = new Set(cfg.repos.map(r => r.name.toLowerCase()).concat(cfg.hidden || []));
   let added = 0;
   for (const n of names) if (!have.has(n.toLowerCase())) { cfg.repos.push({ name: n, nick: shortName(n), note: '' }); have.add(n.toLowerCase()); added++; }
   cfg.discoveredAt = new Date().toISOString();
@@ -571,7 +575,12 @@ async function refresh() {
   try {
     tokenBad = false;
     await ensureOwner(ctrl.signal);
-    if (!cfg.repos.length && !cfg.discoveredAt) mergeRepos(await discoverRepos(ctrl.signal));
+    /* New agent repos appear on their own: look again on every page load and every 6 hours. */
+    if (!discoveredThisLoad || !cfg.repos.length || hoursSince(cfg.discoveredAt) >= 6) {
+      discoveredThisLoad = true;
+      const found = await discoverRepos(ctrl.signal).catch(e => { if (e && e.name === 'AbortError') throw e; return null; });
+      if (found) { const added = mergeRepos(found); if (added) toast('Added ' + added + ' new agent repo' + (added > 1 ? 's' : '')); }
+    }
     const repos = await Promise.all(cfg.repos.map(r => loadRepo(r, ctrl.signal).catch(e => {
       if (e && e.name === 'AbortError') throw e;
       return { cfg: r, name: r.name, nick: r.nick || r.name, note: r.note || '', url: 'https://github.com/' + cfg.owner + '/' + r.name, errors: [], fatal: e };
@@ -930,7 +939,7 @@ function renderAgents(m) {
   return h('section', null,
     h('h2', null, 'Agents', h('span', { class: 'count' }, String(m.agents.length))),
     h('div', { class: 'card', style: 'overflow:auto' }, body),
-    h('div', { class: 'meta', style: 'margin-top:6px' }, 'Routines run hourly per Claude account: ', link('https://claude.ai/code/routines', 'claude.ai/code/routines'), ' · ', link('https://chatgpt.com/codex', 'Codex'), ' · ', link('https://jules.google.com', 'Jules')));
+    h('div', { class: 'meta', style: 'margin-top:6px' }, 'The dispatcher wakes a Claude routine only when it has a task for it: ', link('https://claude.ai/code/routines', 'routines'), ' · ', link('https://chatgpt.com/codex', 'Codex tasks')));
 }
 
 function renderFeed(m) {
@@ -974,7 +983,7 @@ function render() {
   app.append(renderAgents(model), renderFeed(model));
   app.append(h('footer', null,
     h('span', null, rate ? ('GitHub API: ' + fmtNum(rate.remaining) + ' of ' + fmtNum(rate.limit) + ' calls left this hour') : ''),
-    h('span', null, 'Labels: plan → split · ready → build · jules → Google Jules · claimed → agent on it · in-review → PR open · blocked → needs you · pause → everything stops'),
+    h('span', null, 'Labels: plan → the administrator splits it · ready → the dispatcher assigns it · size:S/M → Sonnet · size:L → Opus · ui → Antigravity · to:codex → Codex · claimed → agent on it · in-review → PR open · blocked → needs you · pause → everything stops'),
     h('span', null, 'Auto-refresh every ' + cfg.refreshMin + ' min while this tab is visible.')));
 }
 
@@ -995,6 +1004,10 @@ function applySettings() {
   const repos = $('#fRepos').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const [name, nick, note] = l.split('|').map(x => x.trim()); return { name, nick: nick || name, note: note || '' }; }).filter(r => /^[\w.-]+$/.test(r.name));
   if (!repos.length) { toast('Add at least one repository', true); return false; }
   cfg.owner = $('#fOwner').value.trim() || cfg.owner;
+  const kept = new Set(repos.map(r => r.name.toLowerCase()));
+  const hidden = new Set((cfg.hidden || []).filter(n => !kept.has(n)));
+  for (const r of cfg.repos) if (!kept.has(r.name.toLowerCase())) hidden.add(r.name.toLowerCase());
+  cfg.hidden = [...hidden];
   cfg.repos = repos;
   cfg.refreshMin = Math.max(1, +$('#fRefresh').value || DEFAULTS.refreshMin);
   cfg.staleHours = Math.max(0.5, +$('#fStale').value || DEFAULTS.staleHours);

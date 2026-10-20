@@ -1,7 +1,7 @@
 # Mission Control — one page for all AI-team projects
 
 A single static web page (`index.html`, no build step, no server) that watches every repo
-your Claude / Codex / Jules agents work on and tells you what needs **you**.
+your Claude / Codex / Antigravity agents work on and tells you what needs **you**.
 
 It talks to GitHub directly from your browser with a fine-grained token. The token is kept only in
 that browser (`localStorage`) and is sent only to `api.github.com`. This repo contains no token and
@@ -34,7 +34,8 @@ Buttons that change GitHub ask for a second tap and need **Issues: Read and writ
 
 ## Settings (gear icon)
 
-Repositories (one per line, `repo | short name | note`; **Find my agent repos** adds new ones), auto-refresh
+Repositories (one per line, `repo | short name | note`; new agent repos are added on their own each time the page opens,
+a repo you delete from the list stays hidden, and **Find my agent repos** looks right away), auto-refresh
 interval, and thresholds: *stalled after* (hours without Claude activity while `ready` issues wait), *stuck
 claim after*, *agent retry window* (hours a failing agent PR is left to its agent), included Actions minutes.
 
