@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="referrer" content="no-referrer">
+<title>Mission Control</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --line: #e1e0d9; --border: rgba(11,11,11,.10); --chip: rgba(11,11,11,.05); --hover: rgba(11,11,11,.04);
+  --accent: #2a78d6; --violet: #6250d6; --aqua: #1baf7a;
+  --good: #0ca30c; --good-text: #006300; --warn: #fab219; --warn-text: #7a5200; --serious: #ec835a; --bad: #d03b3b; --bad-text: #b02a2a;
+  --you-bg: rgba(208,59,59,.08); --wait-bg: rgba(250,178,25,.12);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --line: #2c2c2a; --border: rgba(255,255,255,.10); --chip: rgba(255,255,255,.07); --hover: rgba(255,255,255,.05);
+    --accent: #3987e5; --violet: #9085e9; --aqua: #199e70;
+    --good-text: #0ca30c; --warn-text: #fab219; --bad-text: #e66767;
+    --you-bg: rgba(208,59,59,.16); --wait-bg: rgba(250,178,25,.14);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+  --line: #2c2c2a; --border: rgba(255,255,255,.10); --chip: rgba(255,255,255,.07); --hover: rgba(255,255,255,.05);
+  --accent: #3987e5; --violet: #9085e9; --aqua: #199e70;
+  --good-text: #0ca30c; --warn-text: #fab219; --bad-text: #e66767;
+  --you-bg: rgba(208,59,59,.16); --wait-bg: rgba(250,178,25,.14);
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, "PingFang TC", "Noto Sans TC", sans-serif; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button { font: inherit; color: inherit; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px 56px; }
+header.top { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 10px; padding-bottom: 10px; }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: -.01em; white-space: nowrap; }
+.brand .sub { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
+.dot.ok { background: var(--good); } .dot.busy { background: var(--warn); animation: pulse 1s infinite alternate; } .dot.bad { background: var(--bad); }
+@keyframes pulse { from { opacity: .4 } to { opacity: 1 } }
+.actions { display: flex; align-items: center; gap: 8px; flex: none; }
+.meta { color: var(--muted); font-size: 12px; }
+.btn { border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 7px 12px; cursor: pointer; line-height: 1.2; font-size: 14px; }
+.btn:hover { background: var(--hover); }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn.primary { background: var(--accent); color: #fff; border-color: transparent; }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.danger { color: var(--bad-text); }
+.btn.sm { padding: 4px 9px; font-size: 13px; border-radius: 7px; }
+.btn.ghost { background: transparent; }
+.btn.armed { background: var(--bad); color: #fff; border-color: transparent; }
+main.wrap { padding-top: 16px; }
+section { margin-bottom: 22px; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+h2 .count { background: var(--chip); color: var(--ink-2); border-radius: 999px; padding: 1px 8px; font-size: 12px; letter-spacing: 0; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+.tile .label { color: var(--ink-2); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile .value { font-size: 26px; font-weight: 600; line-height: 1.15; margin-top: 2px; }
+.tile .hint { color: var(--muted); font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile.you .value { color: var(--bad-text); }
+.tile.good .value { color: var(--good-text); }
+.needs { display: flex; flex-direction: column; gap: 8px; }
+.need { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--you-bg); border: 1px solid var(--border); }
+.need.info { background: var(--wait-bg); }
+.need .ic { flex: none; width: 22px; text-align: center; font-size: 16px; line-height: 1.3; }
+.need .body { flex: 1; min-width: 0; }
+.need .t { font-weight: 550; }
+.need .s { color: var(--ink-2); font-size: 13px; margin-top: 1px; overflow-wrap: anywhere; }
+.need .act { flex: none; display: flex; gap: 6px; }
+.empty { color: var(--muted); font-size: 14px; padding: 8px 2px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: 12px; align-items: start; }
+.repo { display: flex; flex-direction: column; gap: 10px; }
+.repo.paused { outline: 2px solid var(--bad); outline-offset: -1px; }
+.repo .head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.repo .head .name { font-size: 16px; font-weight: 650; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.repo .head .name a { color: inherit; }
+.repo .links { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.repo .links a { color: var(--ink-2); }
+.repo .note { color: var(--muted); font-size: 12px; margin-top: -6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; background: var(--chip); font-size: 12.5px; color: var(--ink-2); border: 1px solid transparent; }
+.chip b { font-weight: 650; color: var(--ink); }
+.chip.zero { opacity: .55; }
+.chip .sw { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.sw.plan { background: var(--violet); } .sw.ready { background: var(--good); } .sw.claimed { background: var(--warn); } .sw.in-review { background: var(--accent); } .sw.blocked { background: var(--bad); } .sw.jules { background: var(--aqua); } .sw.pause { background: var(--ink); }
+.kv { font-size: 13.5px; color: var(--ink-2); }
+.kv b { color: var(--ink); font-weight: 600; }
+.list { display: flex; flex-direction: column; gap: 6px; }
+.pr { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 8px; background: var(--chip); font-size: 13.5px; }
+.pr.you { background: var(--you-bg); }
+.pr.agent { background: var(--wait-bg); }
+.pr .row { display: flex; gap: 8px; align-items: baseline; }
+.pr .title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 550; }
+.pr .title a { color: inherit; }
+.pr .who { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.pr .st { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12.5px; color: var(--ink-2); }
+.st .ok { color: var(--good-text); } .st .bad { color: var(--bad-text); } .st .wait { color: var(--warn-text); }
+.verdict { font-weight: 600; }
+.verdict.you { color: var(--bad-text); } .verdict.agent { color: var(--warn-text); } .verdict.wait { color: var(--ink-2); }
+.foot { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 2px; }
+.err { color: var(--bad-text); font-size: 13px; overflow-wrap: anywhere; }
+.warnline { color: var(--warn-text); font-size: 13px; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th { text-align: left; color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+td { padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+.feed { display: flex; flex-direction: column; }
+.ev { display: grid; grid-template-columns: 62px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+.ev:last-child { border-bottom: 0; }
+.ev .when { color: var(--muted); font-size: 12px; padding-top: 2px; white-space: nowrap; }
+.ev .what { min-width: 0; overflow-wrap: anywhere; }
+.ev .what .tag { color: var(--muted); font-size: 12px; margin-right: 6px; }
+.ev .what .who { font-weight: 600; }
+.taskform { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px dashed var(--border); border-radius: 8px; }
+input[type=text], input[type=password], input[type=number], textarea, select { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; width: 100%; }
+textarea { min-height: 64px; resize: vertical; }
+label.f { display: block; font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+label.f > span { display: block; margin-bottom: 4px; }
+.setup ol { padding-left: 20px; margin: 8px 0; }
+.setup li { margin: 4px 0; }
+.setup code { background: var(--chip); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+dialog { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--ink); padding: 18px 18px 14px; width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; }
+dialog::backdrop { background: rgba(0,0,0,.45); }
+dialog h3 { margin: 0 0 8px; font-size: 17px; }
+.dlg-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 9px 14px; border-radius: 10px; font-size: 14px; max-width: calc(100vw - 32px); box-shadow: 0 6px 24px rgba(0,0,0,.25); z-index: 20; }
+.toast.bad { background: var(--bad); color: #fff; }
+footer { color: var(--muted); font-size: 12px; margin-top: 24px; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+details summary { cursor: pointer; color: var(--ink-2); font-size: 13.5px; }
+.hid { display: none !important; }
+.onlynarrow { display: none; }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+@media (max-width: 640px) {
+  header .sub, header #lastRefresh { display: none; }
+  .onlynarrow { display: block; }
+  .need { flex-wrap: wrap; }
+  .need .act { width: 100%; justify-content: flex-end; }
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand"><span class="dot" id="statusDot"></span><h1>Mission Control</h1><span class="sub" id="ownerLabel"></span></div>
+  <div class="actions">
+    <span class="meta" id="lastRefresh"></span>
+    <button class="btn" id="btnRefresh" type="button">Refresh</button>
+    <button class="btn ghost" id="btnSettings" type="button" aria-label="Settings" title="Settings">&#9881;</button>
+  </div>
+</div></header>
+<main class="wrap" id="app"><noscript>This page needs JavaScript.</noscript></main>
+<div id="toast" class="toast hid" role="status"></div>
+
+<dialog id="settings">
+  <h3>Settings</h3>
+  <form method="dialog" id="settingsForm">
+    <label class="f"><span>GitHub token (fine-grained, stays in this browser)</span><input type="password" id="fToken" autocomplete="off" placeholder="github_pat_…"></label>
+    <label class="f"><span>Owner (GitHub user or org)</span><input type="text" id="fOwner"></label>
+    <label class="f"><span>Repositories — one per line: <code>repo | short name | note</code></span><textarea id="fRepos" rows="6"></textarea></label>
+    <div class="toolbar" style="margin:6px 0 0"><button class="btn sm" type="button" id="btnDiscover">Find my agent repos</button><span class="meta" id="discoverMsg"></span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px">
+      <label class="f"><span>Auto-refresh (min)</span><input type="number" id="fRefresh" min="1" max="120"></label>
+      <label class="f"><span>Stalled after (h)</span><input type="number" id="fStale" min="1" max="72" step="0.5"></label>
+      <label class="f"><span>Stuck claim after (h)</span><input type="number" id="fClaim" min="1" max="72" step="0.5"></label>
+      <label class="f"><span>Agent retry window (h)</span><input type="number" id="fFail" min="1" max="72" step="0.5"></label>
+      <label class="f"><span>Included Actions min</span><input type="number" id="fMinutes" min="0" step="100"></label>
+    </div>
+    <details style="margin-top:10px"><summary>How to create the token</summary>
+      <div class="setup" id="tokenHelp2"></div>
+    </details>
+    <div class="dlg-actions">
+      <button class="btn danger" type="button" id="btnForget">Forget token</button>
+      <button class="btn" type="button" id="btnCancel">Cancel</button>
+      <button class="btn primary" type="submit" id="btnSave">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- configuration ---------- */
+/* No repo names live in this file: the owner comes from the token, and the repo list is every repo of
+   the owner that carries the agents' `ready` label (the routines create it on their first run). */
+const DEFAULTS = {
+  owner: '',
+  repos: [],
+  refreshMin: 5, staleHours: 2, claimHours: 3, failHours: 3, includedMinutes: 2000,
+};
+const LS = { token: 'mc.token', config: 'mc.config' };
+const LABELS = ['plan', 'ready', 'claimed', 'in-review', 'blocked', 'jules', 'pause'];
+const API = 'https://api.github.com';
+
+let cfg = loadConfig();
+let token = loadToken();
+let model = null;
+let lastRefresh = 0;
+let rate = null;
+let inflight = null;
+let busy = false;
+let tokenBad = false;
+let feedScope = 'all';
+
+function loadConfig() {
+  try {
+    const s = JSON.parse(localStorage.getItem(LS.config) || 'null');
+    if (s && typeof s === 'object') {
+      const c = Object.assign({}, DEFAULTS, s);
+      c.repos = Array.isArray(c.repos) ? c.repos.filter(r => r && /^[\w.-]+$/.test(r.name || '')) : [];
+      return c;
+    }
+  } catch (e) { /* storage unavailable */ }
+  return Object.assign({}, DEFAULTS, { repos: [] });
+}
+function saveConfig() { try { localStorage.setItem(LS.config, JSON.stringify(cfg)); } catch (e) { toast('Could not save settings in this browser', true); } }
+function loadToken() { try { return localStorage.getItem(LS.token) || ''; } catch (e) { return ''; } }
+function saveToken(t) { try { if (t) localStorage.setItem(LS.token, t); else localStorage.removeItem(LS.token); } catch (e) { toast('Could not store the token in this browser', true); } }
+
+/* ---------- small helpers ---------- */
+const $ = (sel) => document.querySelector(sel);
+function h(tag, attrs, ...children) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'text') el.textContent = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? '' : String(v));
+  }
+  for (const c of children.flat(Infinity)) {
+    if (c == null || c === false) continue;
+    el.append(c.nodeType ? c : document.createTextNode(String(c)));
+  }
+  return el;
+}
+const link = (href, text, cls) => h('a', { href, target: '_blank', rel: 'noopener noreferrer', class: cls }, text);
+const now = () => Date.now();
+const hoursSince = (iso) => iso ? (now() - Date.parse(iso)) / 36e5 : Infinity;
+function ago(iso) {
+  if (!iso) return '—';
+  const s = Math.max(0, (now() - Date.parse(iso)) / 1000);
+  if (s < 50) return 'just now';
+  const m = s / 60; if (m < 60) return Math.round(m) + 'm ago';
+  const hh = m / 60; if (hh < 48) return Math.round(hh) + 'h ago';
+  return Math.round(hh / 24) + 'd ago';
+}
+const fmtClock = (ms) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const fmtNum = (n) => (n == null || isNaN(n)) ? '—' : Number(n).toLocaleString();
+const firstLine = (s, max = 110) => { const l = String(s || '').split('\n').find(x => x.trim()) || ''; return l.length > max ? l.slice(0, max - 1) + '…' : l; };
+const agentOf = (body) => { const m = /^\s*Agent:\s*([\w.-]+)/im.exec(body || ''); return m ? m[1].toLowerCase() : null; };
+const isCodex = (login) => /codex/i.test(login || '');
+const isJules = (login) => /jules/i.test(login || '');
+const isBot = (login) => /\[bot\]$/i.test(login || '');
+const issueNum = (url) => { const m = /\/(\d+)$/.exec(url || ''); return m ? +m[1] : null; };
+const labelsOf = (i) => (i.labels || []).map(l => typeof l === 'string' ? l : l.name);
+const has = (i, l) => labelsOf(i).includes(l);
+const mentions = (body, n) => new RegExp('(^|[^\\w])#' + n + '(?!\\d)').test(body || '');
+
+let toastTimer = 0;
+function toast(msg, bad) {
+  const t = $('#toast'); t.textContent = msg; t.classList.toggle('bad', !!bad); t.classList.remove('hid');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hid'), bad ? 6000 : 3500);
+}
+
+/* ---------- GitHub API ---------- */
+class ApiError extends Error {
+  constructor(status, path, data) { super((data && data.message) || ('HTTP ' + status)); this.status = status; this.path = path; this.data = data; }
+}
+async function gh(path, opts = {}) {
+  const headers = { 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'Authorization': 'Bearer ' + token };
+  if (opts.body) headers['Content-Type'] = 'application/json';
+  const res = await fetch(API + path, { method: opts.method || 'GET', headers, body: opts.body ? JSON.stringify(opts.body) : undefined, signal: opts.signal, cache: 'no-cache' });
+  const rem = res.headers.get('x-ratelimit-remaining');
+  if (rem != null) rate = { remaining: +rem, limit: +(res.headers.get('x-ratelimit-limit') || 0), reset: (+res.headers.get('x-ratelimit-reset') || 0) * 1000 };
+  if (res.status === 204) return null;
+  let data = null; try { data = await res.json(); } catch (e) { /* no body */ }
+  if (!res.ok) throw new ApiError(res.status, path, data);
+  return data;
+}
+function explain(err) {
+  if (!(err instanceof ApiError)) return err && err.message ? err.message : String(err);
+  if (err.status === 401) return 'token rejected (401)';
+  if (err.status === 403) return /rate limit/i.test(err.message) ? 'rate limited' : 'no permission (403)';
+  if (err.status === 404) return 'not found or no access (404)';
+  return err.message + ' (' + err.status + ')';
+}
+
+/* ---------- who am I, which repos ---------- */
+async function ensureOwner(signal) {
+  if (cfg.owner) return;
+  const me = await gh('/user', { signal });
+  if (me && me.login) { cfg.owner = me.login; saveConfig(); }
+}
+/* Repos of the owner that the token can read and that have the agents' `ready` label. */
+async function discoverRepos(signal) {
+  await ensureOwner(signal);
+  const list = await gh('/user/repos?affiliation=owner&sort=pushed&per_page=100', { signal });
+  const owner = (cfg.owner || '').toLowerCase();
+  const cands = (list || []).filter(r => r && !r.archived && r.owner && r.owner.login.toLowerCase() === owner);
+  const checks = await Promise.allSettled(cands.map(r => gh('/repos/' + cfg.owner + '/' + r.name + '/labels/ready', { signal })));
+  checks.forEach(s => { if (s.status === 'rejected' && s.reason && s.reason.name === 'AbortError') throw s.reason; });
+  return cands.filter((r, i) => checks[i].status === 'fulfilled').map(r => r.name);
+}
+const shortName = (n) => n.length > 22 && n.includes('-') ? n.split('-').slice(0, 2).join('-') : n;
+function mergeRepos(names) {
+  const have = new Set(cfg.repos.map(r => r.name.toLowerCase()));
+  let added = 0;
+  for (const n of names) if (!have.has(n.toLowerCase())) { cfg.repos.push({ name: n, nick: shortName(n), note: '' }); have.add(n.toLowerCase()); added++; }
+  cfg.discoveredAt = new Date().toISOString();
+  saveConfig();
+  return added;
+}
+
+/* ---------- loading one repo ---------- */
+async function loadRepo(r, signal) {
+  const base = '/repos/' + cfg.owner + '/' + r.name;
+  const out = { cfg: r, name: r.name, nick: r.nick || r.name, note: r.note || '', url: 'https://github.com/' + cfg.owner + '/' + r.name, errors: [], fatal: null };
+  const want = {
+    meta: gh(base, { signal }),
+    issues: gh(base + '/issues?state=open&per_page=100', { signal }),
+    pulls: gh(base + '/pulls?state=open&per_page=50', { signal }),
+    comments: gh(base + '/issues/comments?sort=updated&direction=desc&per_page=60', { signal }),
+    reviewComments: gh(base + '/pulls/comments?sort=updated&direction=desc&per_page=40', { signal }),
+    runs: gh(base + '/actions/runs?per_page=20', { signal }),
+    commits: gh(base + '/commits?per_page=15', { signal }),
+    merged: gh(base + '/pulls?state=closed&sort=updated&direction=desc&per_page=30', { signal }),
+  };
+  const keys = Object.keys(want);
+  const settled = await Promise.allSettled(Object.values(want));
+  const got = {};
+  settled.forEach((s, i) => {
+    if (s.status === 'fulfilled') got[keys[i]] = s.value;
+    else { got[keys[i]] = null; out.errors.push({ what: keys[i], err: s.reason }); if (s.reason && s.reason.name === 'AbortError') throw s.reason; }
+  });
+  const metaErr = out.errors.find(e => e.what === 'meta');
+  if (metaErr && !got.issues) { out.fatal = metaErr.err; return out; }
+
+  out.defaultBranch = (got.meta && got.meta.default_branch) || 'main';
+  out.pushedAt = got.meta && got.meta.pushed_at;
+  const issues = (got.issues || []).filter(i => !i.pull_request);
+  out.issues = issues;
+  out.counts = {}; for (const L of LABELS) out.counts[L] = issues.filter(i => has(i, L)).length;
+  out.pauseIssues = issues.filter(i => has(i, 'pause'));
+  out.paused = out.pauseIssues.length > 0;
+  out.queue = issues.filter(i => has(i, 'ready') && !has(i, 'claimed') && !has(i, 'blocked') && !has(i, 'jules')).sort((a, b) => a.created_at.localeCompare(b.created_at));
+  out.blocked = issues.filter(i => has(i, 'blocked'));
+  out.claimed = issues.filter(i => has(i, 'claimed'));
+  out.working = issues.filter(i => has(i, 'claimed') && !has(i, 'in-review'));
+  out.plans = issues.filter(i => has(i, 'plan'));
+
+  const comments = got.comments || [];
+  const reviewComments = got.reviewComments || [];
+  const lastCommentByIssue = new Map();
+  for (const c of comments) { const n = issueNum(c.issue_url); if (n != null && !lastCommentByIssue.has(n)) lastCommentByIssue.set(n, c); }
+  out.lastCommentByIssue = lastCommentByIssue;
+
+  const pulls = got.pulls || [];
+  out.prs = await Promise.all(pulls.map(async (pr) => {
+    const [d, c, rv] = await Promise.allSettled([
+      gh(base + '/pulls/' + pr.number, { signal }),
+      gh(base + '/commits/' + pr.head.sha + '/check-runs?per_page=50', { signal }),
+      gh(base + '/pulls/' + pr.number + '/reviews?per_page=50', { signal }),
+    ]);
+    for (const s of [d, c, rv]) if (s.status === 'rejected' && s.reason && s.reason.name === 'AbortError') throw s.reason;
+    if (c.status === 'rejected' && !out.errors.some(e => e.what === 'checks')) out.errors.push({ what: 'checks', err: c.reason });
+    return analyzePR(pr, d.value, c.value, rv.value, reviewComments, comments);
+  }));
+  out.stuck = out.claimed.filter(i => hoursSince(i.updated_at) > cfg.claimHours && !out.prs.some(p => mentions(p.pr.body, i.number)));
+
+  /* agent heartbeats */
+  const beats = [];
+  for (const c of comments) {
+    const m = /^\s*(Claimed|Planning) by ([\w.-]+)/i.exec(c.body || '');
+    const n = issueNum(c.issue_url);
+    if (m) beats.push({ agent: m[2].toLowerCase(), at: c.created_at, what: (m[1].toLowerCase() === 'claimed' ? 'claimed #' : 'planning #') + n, url: c.html_url, n });
+    else if (isCodex(c.user && c.user.login)) beats.push({ agent: 'codex', at: c.created_at, what: 'commented on #' + n, url: c.html_url, n });
+    else if (isJules(c.user && c.user.login)) beats.push({ agent: 'jules', at: c.created_at, what: 'commented on #' + n, url: c.html_url, n });
+  }
+  for (const c of reviewComments) {
+    if (isCodex(c.user && c.user.login)) beats.push({ agent: 'codex', at: c.created_at, what: 'reviewed PR #' + issueNum(c.pull_request_url), url: c.html_url });
+  }
+  for (const p of out.prs) {
+    if (p.agent) beats.push({ agent: p.agent, at: p.pr.updated_at, what: 'PR #' + p.number + ' updated', url: p.pr.html_url });
+    else if (isJules(p.pr.user && p.pr.user.login)) beats.push({ agent: 'jules', at: p.pr.updated_at, what: 'PR #' + p.number + ' updated', url: p.pr.html_url });
+    for (const r of p.codexReviews) beats.push({ agent: 'codex', at: r.submitted_at, what: 'reviewed PR #' + p.number, url: r.html_url || p.pr.html_url });
+  }
+  out.beats = beats;
+  const claudeBeats = beats.filter(b => /^claude/.test(b.agent));
+  out.lastClaudeAt = claudeBeats.length ? claudeBeats.map(b => b.at).sort().pop() : null;
+  out.lastBeat = beats.length ? beats.slice().sort((a, b) => b.at.localeCompare(a.at))[0] : null;
+  out.stalled = out.queue.length > 0 && !out.paused && hoursSince(out.lastClaudeAt) > cfg.staleHours;
+
+  /* CI on the default branch */
+  const runs = (got.runs && got.runs.workflow_runs) || [];
+  out.runs = runs;
+  out.mainRun = runs.find(x => x.head_branch === out.defaultBranch) || null;
+  out.ciError = out.errors.find(e => e.what === 'runs');
+
+  const commits = got.commits || [];
+  out.lastCommit = commits[0] || null;
+  const merged = (got.merged || []).filter(p => p.merged_at && hoursSince(p.merged_at) <= 24 * 7);
+  out.merged7d = merged;
+
+  /* activity feed */
+  const feed = [];
+  for (const c of comments) feed.push({ at: c.created_at, repo: out, kind: 'comment', who: c.user && c.user.login, text: '#' + issueNum(c.issue_url) + ' ' + firstLine(c.body), url: c.html_url });
+  for (const c of reviewComments) feed.push({ at: c.created_at, repo: out, kind: 'review', who: c.user && c.user.login, text: 'PR #' + issueNum(c.pull_request_url) + ' ' + firstLine(c.body), url: c.html_url });
+  for (const p of out.prs) feed.push({ at: p.pr.created_at, repo: out, kind: 'pr', who: p.agent || (p.pr.user && p.pr.user.login), text: 'opened PR #' + p.number + ' ' + p.title, url: p.pr.html_url });
+  for (const p of merged) feed.push({ at: p.merged_at, repo: out, kind: 'merged', who: p.merged_by ? p.merged_by.login : 'merged', text: 'merged PR #' + p.number + ' ' + p.title, url: p.html_url });
+  for (const c of commits.slice(0, 8)) feed.push({ at: (c.commit && c.commit.committer && c.commit.committer.date) || '', repo: out, kind: 'commit', who: (c.author && c.author.login) || (c.commit && c.commit.author && c.commit.author.name), text: firstLine(c.commit && c.commit.message), url: c.html_url });
+  for (const r of runs.slice(0, 8)) feed.push({ at: r.updated_at, repo: out, kind: 'ci', who: r.name, text: (r.status === 'completed' ? (r.conclusion || 'done') : r.status) + ' · ' + r.head_branch + ' · ' + r.event, url: r.html_url, conclusion: r.conclusion, status: r.status });
+  out.feed = feed.filter(f => f.at);
+  return out;
+}
+
+function analyzePR(pr, detail, checks, reviews, reviewComments, comments) {
+  const p = { pr, number: pr.number, title: pr.title, agent: agentOf(pr.body), draft: !!pr.draft };
+  const runs = (checks && checks.check_runs) || [];
+  const ck = { total: runs.length, success: 0, failure: 0, pending: 0, failed: [], failedAt: null };
+  for (const c of runs) {
+    if (c.status !== 'completed') ck.pending++;
+    else if (['success', 'neutral', 'skipped'].includes(c.conclusion)) ck.success++;
+    else { ck.failure++; ck.failed.push(c); if (!ck.failedAt || (c.completed_at || '') > ck.failedAt) ck.failedAt = c.completed_at || null; }
+  }
+  ck.state = checks ? (ck.failure ? 'failure' : ck.pending ? 'pending' : ck.total ? 'success' : 'none') : 'unknown';
+  p.checks = ck;
+  const latest = new Map();
+  for (const r of (reviews || [])) { if (!r.user || r.state === 'PENDING') continue; latest.set(r.user.login, r); }
+  p.approved = [...latest.values()].filter(r => r.state === 'APPROVED').map(r => r.user.login);
+  p.changes = [...latest.values()].filter(r => r.state === 'CHANGES_REQUESTED').map(r => r.user.login);
+  p.codexReviews = (reviews || []).filter(r => isCodex(r.user && r.user.login));
+  p.codexNotes = reviewComments.filter(c => c.pull_request_url && issueNum(c.pull_request_url) === pr.number && isCodex(c.user && c.user.login));
+  p.codexSummary = comments.filter(c => issueNum(c.issue_url) === pr.number && isCodex(c.user && c.user.login));
+  p.lastCodexAt = [...p.codexReviews.map(r => r.submitted_at), ...p.codexNotes.map(c => c.created_at), ...p.codexSummary.map(c => c.created_at)].filter(Boolean).sort().pop() || null;
+  p.mergeable = detail ? detail.mergeable : null;
+  p.mergeableState = detail ? detail.mergeable_state : 'unknown';
+  p.size = detail ? { add: detail.additions, del: detail.deletions, files: detail.changed_files } : null;
+
+  const ageH = hoursSince(pr.created_at);
+  let verdict, level;
+  if (p.draft) { verdict = 'Draft'; level = 'wait'; }
+  else if (p.mergeable === false || p.mergeableState === 'dirty') { verdict = 'Merge conflict'; level = 'you'; }
+  else if (ck.state === 'failure') {
+    const failH = ck.failedAt ? hoursSince(ck.failedAt) : ageH;
+    if (p.agent && failH < cfg.failHours) { verdict = 'Checks failing · agent retries hourly'; level = 'agent'; }
+    else { verdict = 'Checks failing'; level = 'you'; }
+  }
+  else if (p.changes.length) {
+    if (p.agent) { verdict = 'Changes requested · agent will fix'; level = 'agent'; }
+    else { verdict = 'Changes requested'; level = 'you'; }
+  }
+  else if (ck.state === 'pending') { verdict = 'Checks running'; level = 'wait'; }
+  else if (p.mergeableState === 'blocked') { verdict = 'Blocked by branch rules'; level = 'you'; }
+  else if (p.mergeableState === 'behind') { verdict = 'Behind base · update branch'; level = 'you'; }
+  else { verdict = 'Ready to merge'; level = 'you'; }
+  if (level === 'you' && verdict === 'Ready to merge' && p.codexNotes.length) verdict += ' · read Codex notes';
+  p.verdict = verdict; p.level = level;
+  return p;
+}
+
+/* ---------- billing (optional) ---------- */
+async function loadBilling(signal) {
+  const user = cfg.owner;
+  try {
+    const b = await gh('/users/' + user + '/settings/billing/actions', { signal });
+    if (b && typeof b.total_minutes_used === 'number') return { used: b.total_minutes_used, included: b.included_minutes || cfg.includedMinutes, paid: b.total_paid_minutes_used || 0, source: 'actions' };
+  } catch (e) { if (e.name === 'AbortError') throw e; }
+  try {
+    const d = new Date();
+    const u = await gh('/users/' + user + '/settings/billing/usage?year=' + d.getUTCFullYear() + '&month=' + (d.getUTCMonth() + 1), { signal });
+    const items = (u && u.usageItems) || [];
+    let used = 0, net = 0, seen = false;
+    for (const it of items) if (/actions/i.test(it.product || '') && /minute/i.test(it.unitType || '')) { used += +it.quantity || 0; net += +it.netAmount || 0; seen = true; }
+    if (seen) return { used: Math.round(used), included: cfg.includedMinutes, net, source: 'usage' };
+  } catch (e) { if (e.name === 'AbortError') throw e; }
+  return null;
+}
+
+/* ---------- refresh ---------- */
+async function refresh() {
+  if (!token) { render(); return; }
+  if (inflight) inflight.abort();
+  const ctrl = new AbortController(); inflight = ctrl;
+  setBusy(true);
+  try {
+    tokenBad = false;
+    await ensureOwner(ctrl.signal);
+    if (!cfg.repos.length && !cfg.discoveredAt) mergeRepos(await discoverRepos(ctrl.signal));
+    const repos = await Promise.all(cfg.repos.map(r => loadRepo(r, ctrl.signal).catch(e => {
+      if (e && e.name === 'AbortError') throw e;
+      return { cfg: r, name: r.name, nick: r.nick || r.name, note: r.note || '', url: 'https://github.com/' + cfg.owner + '/' + r.name, errors: [], fatal: e };
+    })));
+    const billing = await loadBilling(ctrl.signal);
+    if (ctrl.signal.aborted) return;
+    model = buildModel(repos, billing);
+    tokenBad = repos.length > 0 && repos.every(r => r.fatal && r.fatal.status === 401);
+    lastRefresh = now();
+  } catch (e) {
+    if (e && e.name === 'AbortError') return;
+    if (e instanceof ApiError && e.status === 401) tokenBad = true;
+    else toast('Refresh failed: ' + explain(e), true);
+  } finally {
+    if (inflight === ctrl) { inflight = null; setBusy(false); }
+  }
+  render();
+}
+
+function buildModel(repos, billing) {
+  const needs = [], agents = new Map(), feed = [];
+  const totals = { queue: 0, working: 0, prs: 0, blocked: 0, merged: 0, paused: 0, plans: 0 };
+  for (const r of repos) {
+    if (r.fatal) continue;
+    totals.queue += r.queue.length; totals.working += r.working.length; totals.prs += r.prs.length;
+    totals.blocked += r.blocked.length; totals.merged += r.merged7d.length; totals.plans += r.plans.length;
+    if (r.paused) { totals.paused++; needs.push({ kind: 'paused', repo: r, text: 'Paused', sub: 'Open issue ' + r.pauseIssues.map(i => '#' + i.number).join(', ') + ' carries the pause label; every agent skips this repo until it is closed.', url: r.pauseIssues[0].html_url, action: { label: 'Resume', run: () => resumeRepo(r), danger: false } }); }
+    for (const p of r.prs) if (p.level === 'you') needs.push({ kind: 'pr', repo: r, text: 'PR #' + p.number + ' · ' + p.verdict, sub: p.title + ' — by ' + (p.agent || (p.pr.user && p.pr.user.login) || '?') + ', ' + ago(p.pr.created_at), url: p.pr.html_url });
+    for (const i of r.stuck) needs.push({ kind: 'stuck', repo: r, text: '#' + i.number + ' claimed ' + Math.round(hoursSince(i.updated_at)) + 'h ago, no PR', sub: i.title + ' — the agent run probably died; unclaim it so the next run can take it.', url: i.html_url, action: { label: 'Unclaim', run: () => unclaim(r, i.number) } });
+    for (const i of r.blocked) { const lc = r.lastCommentByIssue.get(i.number); needs.push({ kind: 'blocked', repo: r, text: '#' + i.number + ' is blocked', sub: i.title + (lc ? ' — ' + firstLine(lc.body, 140) : ''), url: i.html_url }); }
+    if (r.stalled) needs.push({ kind: 'stalled', repo: r, info: true, text: r.queue.length + ' ready issue' + (r.queue.length > 1 ? 's' : '') + ' waiting, no Claude activity for ' + (r.lastClaudeAt ? Math.round(hoursSince(r.lastClaudeAt)) + 'h' : 'a while'), sub: 'The hourly routine may be off, out of usage, or failing. Check its run list.', url: 'https://claude.ai/code/routines' });
+    for (const b of r.beats) {
+      const a = agents.get(b.agent) || { agent: b.agent, last: null, repos: new Set() };
+      if (!a.last || b.at > a.last.at) a.last = Object.assign({ repo: r }, b);
+      a.repos.add(r.nick); agents.set(b.agent, a);
+    }
+    feed.push(...r.feed);
+  }
+  if (billing && billing.included && billing.used / billing.included >= 0.9) needs.push({ kind: 'billing', info: true, text: 'GitHub Actions minutes: ' + fmtNum(billing.used) + ' of ' + fmtNum(billing.included) + ' used this month', sub: 'Private-repo workflows stop (or bill) past the included minutes. Public repos are free.', url: 'https://github.com/settings/billing/summary' });
+  const order = { paused: 0, pr: 1, stuck: 2, blocked: 3, stalled: 4, billing: 5 };
+  needs.sort((a, b) => order[a.kind] - order[b.kind]);
+  feed.sort((a, b) => b.at.localeCompare(a.at));
+  return { repos, needs, agents: [...agents.values()].sort((a, b) => (b.last ? b.last.at : '').localeCompare(a.last ? a.last.at : '')), feed, billing, totals };
+}
+
+/* ---------- write actions ---------- */
+async function createIssue(repo, title, body, labels) {
+  return gh('/repos/' + cfg.owner + '/' + repo.name + '/issues', { method: 'POST', body: { title, body, labels } });
+}
+async function pauseRepo(repo) {
+  const issue = await createIssue(repo, 'STOP — paused from Mission Control', 'Every agent stops while this issue is open. Close it to resume.', ['pause']);
+  toast(repo.nick + ' paused (#' + issue.number + ')');
+}
+async function resumeRepo(repo) {
+  for (const i of repo.pauseIssues) await gh('/repos/' + cfg.owner + '/' + repo.name + '/issues/' + i.number, { method: 'PATCH', body: { state: 'closed' } });
+  toast(repo.nick + ' resumed');
+}
+async function unclaim(repo, n) {
+  await gh('/repos/' + cfg.owner + '/' + repo.name + '/issues/' + n + '/labels/claimed', { method: 'DELETE' });
+  toast('#' + n + ' unclaimed');
+}
+async function runAction(fn, btn) {
+  if (btn) btn.disabled = true;
+  try { await fn(); await refresh(); }
+  catch (e) {
+    const msg = (e instanceof ApiError && (e.status === 403 || e.status === 404)) ? 'Not allowed — the token needs "Issues: Read and write" on this repo' : explain(e);
+    toast(msg, true); if (btn) btn.disabled = false;
+  }
+}
+function armedButton(label, fn, cls) {
+  let timer = 0;
+  const b = h('button', { class: 'btn sm ' + (cls || ''), type: 'button' }, label);
+  b.addEventListener('click', () => {
+    if (b.classList.contains('armed')) { clearTimeout(timer); b.classList.remove('armed'); b.textContent = label; runAction(fn, b); return; }
+    b.classList.add('armed'); b.textContent = 'Tap again to ' + label.toLowerCase();
+    timer = setTimeout(() => { b.classList.remove('armed'); b.textContent = label; }, 6000);
+  });
+  return b;
+}
+
+/* ---------- rendering ---------- */
+function setBusy(b) { busy = b; const d = $('#statusDot'); d.classList.toggle('busy', b); $('#btnRefresh').disabled = b; }
+function renderHeader() {
+  $('#ownerLabel').textContent = (cfg.owner ? cfg.owner + ' · ' : '') + cfg.repos.length + (cfg.repos.length === 1 ? ' repo' : ' repos');
+  const d = $('#statusDot');
+  d.classList.toggle('bad', !!tokenBad);
+  d.classList.toggle('ok', !!model && !tokenBad && !busy);
+  $('#lastRefresh').textContent = lastRefresh ? ('updated ' + fmtClock(lastRefresh) + ' · auto ' + cfg.refreshMin + 'm') : '';
+}
+
+function tokenHelp() {
+  const repoList = cfg.repos.length ? cfg.repos.map(r => r.name).join(', ') : 'every repo your AI agents work on';
+  return h('div', { class: 'setup' },
+    h('ol', null,
+      h('li', null, 'Open ', link('https://github.com/settings/personal-access-tokens/new', 'github.com → Settings → Developer settings → Fine-grained tokens → Generate new token'), '.'),
+      h('li', null, 'Token name ', h('code', null, 'mission-control'), ', expiration: the longest offered. Resource owner: ', cfg.owner ? h('code', null, cfg.owner) : 'your account', '.'),
+      h('li', null, 'Repository access: ', h('b', null, 'Only select repositories'), ' → ', repoList, '.'),
+      h('li', null, 'Repository permissions: ', h('b', null, 'Issues: Read and write'), ' (Read-only also works, but then the Pause / Resume / + Task buttons are disabled), ', h('b', null, 'Pull requests: Read'), ', ', h('b', null, 'Checks: Read'), ', ', h('b', null, 'Actions: Read'), ', ', h('b', null, 'Contents: Read'), '. Metadata is added automatically.'),
+      h('li', null, 'Optional — Account permissions: ', h('b', null, 'Plan: Read'), ' shows your GitHub Actions minutes.'),
+      h('li', null, 'Generate, copy the ', h('code', null, 'github_pat_…'), ' value and paste it here.')),
+    h('p', { class: 'kv' }, 'The token is kept only in this browser (localStorage) and is sent only to api.github.com. Use "Forget token" in Settings to remove it.'));
+}
+
+function renderSetup() {
+  const input = h('input', { type: 'password', id: 'setupToken', autocomplete: 'off', placeholder: 'github_pat_…' });
+  const btn = h('button', { class: 'btn primary', type: 'button', onclick: () => { const v = input.value.trim(); if (!v) { toast('Paste the token first', true); return; } token = v; saveToken(v); tokenBad = false; refresh(); } }, 'Connect');
+  return h('section', null, h('div', { class: 'card setup' },
+    h('h2', null, 'Connect GitHub'),
+    h('p', { style: 'margin:0 0 8px' }, 'This page watches your repos, the AI agents\' issues and pull requests, and tells you what needs you. It needs one fine-grained GitHub token, limited to the repos your agents work on. It finds those repos by itself: every repo of yours with the agents\' ', h('code', null, 'ready'), ' label.'),
+    tokenHelp(),
+    h('div', { style: 'display:flex;gap:8px;margin-top:10px;flex-wrap:wrap' }, h('div', { style: 'flex:1;min-width:220px' }, input), btn)));
+}
+
+function tile(label, value, hint, cls) {
+  return h('div', { class: 'tile ' + (cls || '') }, h('div', { class: 'label' }, label), h('div', { class: 'value' }, value), hint ? h('div', { class: 'hint' }, hint) : null);
+}
+
+function renderTiles(m) {
+  const t = m.totals, b = m.billing;
+  const youCount = m.needs.length;
+  const tiles = [
+    tile('Needs you', String(youCount), youCount ? 'items in the list above' : 'nothing waiting', youCount ? 'you' : 'good'),
+    tile('Ready queue', String(t.queue), t.plans ? t.plans + ' plan issue' + (t.plans > 1 ? 's' : '') + ' to split' : 'issues agents can take'),
+    tile('Agents working', String(t.working), 'claimed, no PR yet'),
+    tile('In review', String(t.prs), 'open pull requests'),
+    tile('Blocked', String(t.blocked), 'need a human', t.blocked ? 'you' : ''),
+    tile('Merged · 7d', String(t.merged), 'shipped this week', t.merged ? 'good' : ''),
+    tile('Actions minutes', b ? fmtNum(b.used) : '—', b ? ('of ' + fmtNum(b.included) + ' included' + (b.net ? ' · $' + b.net.toFixed(2) : '')) : 'needs Plan: Read', b && b.used / b.included >= 0.9 ? 'you' : ''),
+  ];
+  return h('section', null, h('div', { class: 'tiles' }, tiles));
+}
+
+function renderNeeds(m) {
+  const items = m.needs.map(n => {
+    const icon = n.kind === 'paused' ? '⏸' : n.kind === 'pr' ? '⇄' : n.kind === 'blocked' ? '⛔' : n.kind === 'stuck' ? '⏳' : n.kind === 'stalled' ? '💤' : '⏱';
+    const act = [];
+    if (n.action) act.push(armedButton(n.action.label, n.action.run));
+    act.push(n.url ? link(n.url, 'Open ↗', 'btn sm') : null);
+    return h('div', { class: 'need' + (n.info ? ' info' : '') },
+      h('div', { class: 'ic', 'aria-hidden': 'true' }, icon),
+      h('div', { class: 'body' }, h('div', { class: 't' }, n.repo ? h('span', { class: 'meta' }, n.repo.nick + ' · ') : null, n.text), n.sub ? h('div', { class: 's' }, n.sub) : null),
+      h('div', { class: 'act' }, act));
+  });
+  return h('section', null,
+    h('h2', null, 'Needs you', h('span', { class: 'count' }, String(m.needs.length))),
+    items.length ? h('div', { class: 'needs' }, items) : h('div', { class: 'card empty' }, 'Nothing needs you right now. Agents are either working or idle with an empty queue.'));
+}
+
+function checksText(p) {
+  const c = p.checks;
+  if (c.state === 'unknown') return h('span', { class: 'wait' }, 'checks: no access');
+  if (c.state === 'none') return h('span', null, 'no checks');
+  if (c.state === 'failure') return h('span', { class: 'bad' }, '✗ ' + c.failure + ' failing' + (c.pending ? ', ' + c.pending + ' running' : ''));
+  if (c.state === 'pending') return h('span', { class: 'wait' }, '◐ ' + c.pending + ' running');
+  return h('span', { class: 'ok' }, '✓ ' + c.success + ' passed');
+}
+
+function renderPR(p, r) {
+  const who = p.agent ? p.agent : ((p.pr.user && p.pr.user.login) || '?') + (p.agent ? '' : ' (human)');
+  const st = [checksText(p)];
+  if (p.approved.length) st.push(h('span', { class: 'ok' }, '✓ approved by ' + p.approved.join(', ')));
+  if (p.changes.length) st.push(h('span', { class: 'bad' }, '✎ changes requested by ' + p.changes.join(', ')));
+  if (p.codexNotes.length || p.codexReviews.length) st.push(h('span', null, 'Codex: ' + (p.codexNotes.length ? p.codexNotes.length + ' note' + (p.codexNotes.length > 1 ? 's' : '') : 'reviewed') + (p.lastCodexAt ? ' ' + ago(p.lastCodexAt) : '')));
+  if (p.mergeable === false || p.mergeableState === 'dirty') st.push(h('span', { class: 'bad' }, '⚠ conflicts'));
+  if (p.size) st.push(h('span', null, '+' + fmtNum(p.size.add) + ' −' + fmtNum(p.size.del) + ' · ' + p.size.files + ' files'));
+  st.push(h('span', { class: 'verdict ' + p.level }, p.verdict));
+  return h('div', { class: 'pr ' + p.level },
+    h('div', { class: 'row' }, h('span', { class: 'title' }, link(p.pr.html_url, '#' + p.number + ' ' + p.title)), h('span', { class: 'who' }, who + ' · ' + ago(p.pr.created_at))),
+    h('div', { class: 'st' }, st));
+}
+
+function taskForm(r, host) {
+  const title = h('input', { type: 'text', placeholder: 'Task title (one sentence of what to build)' });
+  const body = h('textarea', { placeholder: 'Details / acceptance criteria (optional)', rows: 3 });
+  const sel = h('select', null, h('option', { value: 'ready' }, 'ready — a Claude agent builds it (small task)'), h('option', { value: 'plan' }, 'plan — Claude splits it into small ready issues'), h('option', { value: 'jules' }, 'jules — reserved for Google Jules'));
+  const form = h('div', { class: 'taskform' }, title, body, sel,
+    h('div', { style: 'display:flex;gap:8px;justify-content:flex-end' },
+      h('button', { class: 'btn sm', type: 'button', onclick: () => form.remove() }, 'Cancel'),
+      h('button', { class: 'btn sm primary', type: 'button', onclick: (ev) => {
+        const t = title.value.trim(); if (!t) { toast('Give the task a title', true); return; }
+        runAction(async () => { const i = await createIssue(r, t, body.value.trim(), [sel.value]); toast('Created #' + i.number + ' in ' + r.nick + ' (' + sel.value + ')'); }, ev.currentTarget);
+      } }, 'Create issue')));
+  host.append(form); title.focus();
+}
+
+function renderRepo(r) {
+  const card = h('div', { class: 'card repo' + (r.paused ? ' paused' : '') });
+  card.append(h('div', { class: 'head' },
+    h('div', { class: 'name' }, link(r.url, r.nick), r.paused ? h('span', { class: 'chip', style: 'margin-left:8px;vertical-align:middle' }, h('span', { class: 'sw pause' }), 'PAUSED') : null),
+    h('div', { class: 'links' }, link(r.url + '/issues?q=is%3Aopen+is%3Aissue', 'issues'), ' · ', link(r.url + '/pulls', 'PRs'), ' · ', link(r.url + '/actions', 'actions'))));
+  if (r.note) card.append(h('div', { class: 'note' }, r.note));
+  if (r.fatal) {
+    card.append(h('div', { class: 'err' }, 'Cannot read this repo: ' + explain(r.fatal) + '. ' + (r.fatal.status === 404 || r.fatal.status === 403 ? 'Add it to the token\'s repository list.' : '')));
+    return card;
+  }
+  card.append(h('div', { class: 'chips' }, LABELS.map(L => {
+    const n = r.counts[L];
+    const c = h('a', { class: 'chip' + (n ? '' : ' zero'), href: r.url + '/issues?q=' + encodeURIComponent('is:open is:issue label:' + L), target: '_blank', rel: 'noopener noreferrer' }, h('span', { class: 'sw ' + L }), L + ' ', h('b', null, String(n)));
+    return c;
+  })));
+  const next = r.queue[0];
+  card.append(h('div', { class: 'kv' }, 'Next for agents: ', next ? [link(next.html_url, '#' + next.number + ' ' + next.title), r.queue.length > 1 ? ' (+' + (r.queue.length - 1) + ' more)' : ''] : h('span', { class: 'meta' }, r.paused ? 'paused' : 'queue empty — add a task')));
+  if (r.working.length) card.append(h('div', { class: 'kv' }, 'Working now: ', r.working.map((i, k) => [k ? ', ' : '', link(i.html_url, '#' + i.number), ' ', h('span', { class: 'meta' }, ago(i.updated_at))])));
+
+  const list = h('div', { class: 'list' });
+  if (r.prs.length) for (const p of r.prs) list.append(renderPR(p, r));
+  else list.append(h('div', { class: 'meta' }, 'No open pull requests'));
+  card.append(list);
+
+  const ciBits = [];
+  if (r.ciError) ciBits.push(h('span', { class: 'wait' }, 'CI: ' + (r.ciError.err && r.ciError.err.status === 403 ? 'no access (token needs Actions: Read)' : explain(r.ciError.err))));
+  else if (r.mainRun) {
+    const ok = r.mainRun.conclusion === 'success', done = r.mainRun.status === 'completed';
+    ciBits.push(h('span', { class: !done ? 'wait' : ok ? 'ok' : 'bad' }, (!done ? '◐ ' : ok ? '✓ ' : '✗ ') + r.defaultBranch + ' CI ' + (done ? (r.mainRun.conclusion || 'done') : r.mainRun.status) + ' '), link(r.mainRun.html_url, ago(r.mainRun.updated_at)));
+  } else ciBits.push(h('span', null, 'CI: no runs'));
+  if (r.lastCommit) ciBits.push(h('span', null, ' · last commit '), link(r.lastCommit.html_url, firstLine(r.lastCommit.commit && r.lastCommit.commit.message, 60)), h('span', { class: 'meta' }, ' ' + ago(r.lastCommit.commit && r.lastCommit.commit.committer && r.lastCommit.commit.committer.date)));
+  card.append(h('div', { class: 'kv st' }, ciBits));
+
+  const beat = r.lastBeat;
+  card.append(h('div', { class: 'kv' }, 'Agents: ', beat ? [h('b', null, beat.agent), ' ' + beat.what + ' ', link(beat.url, ago(beat.at))] : h('span', { class: 'meta' }, 'no agent activity in recent history'), r.merged7d.length ? h('span', { class: 'meta' }, ' · ' + r.merged7d.length + ' merged this week') : null));
+  if (r.stalled) card.append(h('div', { class: 'warnline' }, '💤 Ready issues are waiting but no Claude run has touched this repo for ' + (r.lastClaudeAt ? Math.round(hoursSince(r.lastClaudeAt)) + 'h' : 'a while') + ' — check the routine.'));
+  for (const e of r.errors) if (e.what !== 'runs' && e.what !== 'checks') card.append(h('div', { class: 'err' }, 'Partial data: ' + e.what + ' — ' + explain(e.err)));
+
+  const formHost = h('div');
+  const foot = h('div', { class: 'foot' },
+    h('button', { class: 'btn sm', type: 'button', onclick: () => { if (!formHost.querySelector('.taskform')) taskForm(r, formHost); } }, '+ Task'),
+    r.paused ? armedButton('Resume', () => resumeRepo(r)) : armedButton('Pause agents', () => pauseRepo(r), 'danger'));
+  card.append(foot, formHost);
+  return card;
+}
+
+function renderAgents(m) {
+  const rows = m.agents.map(a => h('tr', null,
+    h('td', null, h('b', null, a.agent)),
+    h('td', null, a.last ? [link(a.last.url, ago(a.last.at))] : '—'),
+    h('td', null, a.last ? a.last.repo.nick + ' · ' + a.last.what : ''),
+    h('td', null, [...a.repos].join(', '))));
+  const body = rows.length ? h('table', null, h('thead', null, h('tr', null, h('th', null, 'Agent'), h('th', null, 'Last seen'), h('th', null, 'Doing'), h('th', null, 'Repos'))), h('tbody', null, rows))
+    : h('div', { class: 'empty' }, 'No agent activity found yet. Agents leave "Claimed by …" comments and "Agent: …" pull requests when they run.');
+  return h('section', null,
+    h('h2', null, 'Agents', h('span', { class: 'count' }, String(m.agents.length))),
+    h('div', { class: 'card', style: 'overflow:auto' }, body),
+    h('div', { class: 'meta', style: 'margin-top:6px' }, 'Routines run hourly per Claude account: ', link('https://claude.ai/code/routines', 'claude.ai/code/routines'), ' · ', link('https://chatgpt.com/codex', 'Codex'), ' · ', link('https://jules.google.com', 'Jules')));
+}
+
+function renderFeed(m) {
+  const scopes = [['all', 'All']].concat(m.repos.filter(r => !r.fatal).map(r => [r.name, r.nick]));
+  const bar = h('div', { class: 'chips', style: 'margin-bottom:8px' }, scopes.map(([k, label]) => h('button', { class: 'chip' + (feedScope === k ? '' : ' zero'), type: 'button', style: 'cursor:pointer', onclick: () => { feedScope = k; render(); } }, label)));
+  const items = m.feed.filter(f => feedScope === 'all' || f.repo.name === feedScope).slice(0, 40);
+  const list = items.map(f => {
+    const tag = f.kind === 'ci' ? 'CI' : f.kind === 'review' ? 'review' : f.kind === 'pr' ? 'PR' : f.kind === 'merged' ? 'merged' : f.kind === 'commit' ? 'commit' : 'comment';
+    const cls = f.kind === 'ci' ? (f.status !== 'completed' ? 'wait' : f.conclusion === 'success' ? 'ok' : 'bad') : '';
+    return h('div', { class: 'ev' }, h('div', { class: 'when' }, ago(f.at)),
+      h('div', { class: 'what' }, h('span', { class: 'tag' }, (feedScope === 'all' ? f.repo.nick + ' · ' : '') + tag), h('span', { class: 'who ' + cls }, f.who || ''), ' ', link(f.url, f.text || '(no text)')));
+  });
+  return h('section', null, h('h2', null, 'Activity'), bar, h('div', { class: 'card feed' }, list.length ? list : h('div', { class: 'empty' }, 'Nothing yet.')));
+}
+
+function render() {
+  renderHeader();
+  const app = $('#app');
+  app.replaceChildren();
+  if (!token) { app.append(renderSetup()); return; }
+  if (tokenBad) { app.append(h('section', null, h('div', { class: 'card err' }, 'GitHub rejected the token (401). Open Settings and paste a new one.')), renderSetup()); return; }
+  if (!model) { app.append(h('div', { class: 'empty' }, busy ? 'Loading your repos…' : 'Press Refresh to load.')); return; }
+  if (!model.repos.length) {
+    app.append(h('section', null, h('div', { class: 'card setup' },
+      h('h2', null, 'No agent repos found yet'),
+      h('p', { style: 'margin:0 0 8px' }, 'Mission Control lists every repo of yours that has the agents\' ', h('code', null, 'ready'), ' label; each Claude routine creates it on its first run. Either the routines have not run yet, or the token cannot see those repos.'),
+      h('div', { class: 'toolbar' },
+        h('button', { class: 'btn primary', type: 'button', onclick: (ev) => runAction(async () => { const n = mergeRepos(await discoverRepos()); toast(n ? 'Added ' + n + ' repo' + (n > 1 ? 's' : '') : 'Still none found'); }, ev.currentTarget) }, 'Look again'),
+        h('button', { class: 'btn', type: 'button', onclick: openSettings }, 'Add repos by name')))));
+    return;
+  }
+  app.append(h('div', { class: 'meta onlynarrow', style: 'margin:0 0 10px' }, 'Updated ' + fmtClock(lastRefresh) + ' · auto-refresh ' + cfg.refreshMin + 'm'));
+  app.append(renderNeeds(model), renderTiles(model));
+  const live = model.repos.filter(r => !r.fatal);
+  const pausedAll = live.length > 0 && live.every(r => r.paused);
+  const toolbar = h('div', { class: 'toolbar' },
+    h('span', { class: 'meta' }, pausedAll ? 'All repos are paused.' : (model.totals.paused ? model.totals.paused + ' of ' + live.length + ' repos paused.' : 'All agents allowed to run.')),
+    live.some(r => !r.paused) ? armedButton('Pause all repos', async () => { for (const r of live) if (!r.paused) await pauseRepo(r); }, 'danger') : null,
+    live.some(r => r.paused) ? armedButton('Resume all', async () => { for (const r of live) if (r.paused) await resumeRepo(r); }) : null);
+  app.append(h('section', null, h('h2', null, 'Projects', h('span', { class: 'count' }, String(model.repos.length))), toolbar, h('div', { class: 'grid' }, model.repos.map(renderRepo))));
+  app.append(renderAgents(model), renderFeed(model));
+  app.append(h('footer', null,
+    h('span', null, rate ? ('GitHub API: ' + fmtNum(rate.remaining) + ' of ' + fmtNum(rate.limit) + ' calls left this hour') : ''),
+    h('span', null, 'Labels: plan → split · ready → build · jules → Google Jules · claimed → agent on it · in-review → PR open · blocked → needs you · pause → everything stops'),
+    h('span', null, 'Auto-refresh every ' + cfg.refreshMin + ' min while this tab is visible.')));
+}
+
+/* ---------- settings dialog ---------- */
+function openSettings() {
+  $('#fToken').value = token; $('#fOwner').value = cfg.owner;
+  $('#fRepos').value = cfg.repos.map(r => {
+    const parts = [r.name];
+    if ((r.nick && r.nick !== r.name) || r.note) parts.push(r.nick || r.name);
+    if (r.note) parts.push(r.note);
+    return parts.join(' | ');
+  }).join('\n');
+  $('#fRefresh').value = cfg.refreshMin; $('#fStale').value = cfg.staleHours; $('#fClaim').value = cfg.claimHours; $('#fFail').value = cfg.failHours; $('#fMinutes').value = cfg.includedMinutes;
+  $('#tokenHelp2').replaceChildren(tokenHelp());
+  $('#settings').showModal();
+}
+function applySettings() {
+  const repos = $('#fRepos').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const [name, nick, note] = l.split('|').map(x => x.trim()); return { name, nick: nick || name, note: note || '' }; }).filter(r => /^[\w.-]+$/.test(r.name));
+  if (!repos.length) { toast('Add at least one repository', true); return false; }
+  cfg.owner = $('#fOwner').value.trim() || cfg.owner;
+  cfg.repos = repos;
+  cfg.refreshMin = Math.max(1, +$('#fRefresh').value || DEFAULTS.refreshMin);
+  cfg.staleHours = Math.max(0.5, +$('#fStale').value || DEFAULTS.staleHours);
+  cfg.claimHours = Math.max(0.5, +$('#fClaim').value || DEFAULTS.claimHours);
+  cfg.failHours = Math.max(0.5, +$('#fFail').value || DEFAULTS.failHours);
+  cfg.includedMinutes = Math.max(0, +$('#fMinutes').value || 0);
+  saveConfig();
+  const t = $('#fToken').value.trim();
+  if (t !== token) { token = t; saveToken(t); tokenBad = false; }
+  return true;
+}
+
+/* ---------- wiring ---------- */
+$('#btnRefresh').addEventListener('click', () => refresh());
+$('#btnSettings').addEventListener('click', openSettings);
+$('#btnCancel').addEventListener('click', () => $('#settings').close());
+$('#btnForget').addEventListener('click', () => { token = ''; saveToken(''); model = null; tokenBad = false; $('#settings').close(); render(); toast('Token removed from this browser'); });
+$('#settingsForm').addEventListener('submit', (ev) => { ev.preventDefault(); if (applySettings()) { $('#settings').close(); model = null; refresh(); } });
+$('#btnDiscover').addEventListener('click', async (ev) => {
+  if (!token) { toast('Connect a token first', true); return; }
+  const b = ev.currentTarget; b.disabled = true; $('#discoverMsg').textContent = 'Looking…';
+  try {
+    const names = await discoverRepos();
+    if (!$('#fOwner').value.trim()) $('#fOwner').value = cfg.owner;
+    const ta = $('#fRepos');
+    const lines = ta.value.split('\n').map(l => l.trim()).filter(Boolean);
+    const have = new Set(lines.map(l => l.split('|')[0].trim().toLowerCase()));
+    const add = names.filter(n => !have.has(n.toLowerCase()));
+    ta.value = lines.concat(add.map(n => shortName(n) === n ? n : n + ' | ' + shortName(n))).join('\n');
+    $('#discoverMsg').textContent = names.length ? 'Found ' + names.length + ', added ' + add.length + ' — press Save.' : 'None found yet.';
+  } catch (e) { $('#discoverMsg').textContent = 'Failed: ' + explain(e); }
+  finally { b.disabled = false; }
+});
+/* Never refresh under someone typing: a refresh redraws the page and would drop an open task form. */
+const editing = () => !!document.querySelector('.taskform') || $('#settings').open;
+setInterval(() => { if (token && document.visibilityState === 'visible' && now() - lastRefresh > cfg.refreshMin * 60e3 && !busy && !editing()) refresh(); }, 20e3);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && token && now() - lastRefresh > 60e3 && !busy && !editing()) refresh(); });
+setInterval(() => { if (model && !busy) renderHeader(); }, 30e3);
+
+render();
+if (token) refresh();
+})();
+</script>
+</body>
+</html>
