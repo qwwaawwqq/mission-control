@@ -58,6 +58,9 @@ header.top .wrap { display: flex; align-items: center; justify-content: space-be
 .btn.danger { color: var(--bad-text); }
 .btn.sm { padding: 4px 9px; font-size: 13px; border-radius: 7px; }
 .btn.ghost { background: transparent; }
+a.btn { color: var(--ink); display: inline-flex; align-items: center; }
+a.btn:hover { text-decoration: none; }
+.lnk-narrow { display: none; }
 .btn.armed { background: var(--bad); color: #fff; border-color: transparent; }
 main.wrap { padding-top: 16px; }
 section { margin-bottom: 22px; }
@@ -174,6 +177,7 @@ table.team .wait { color: var(--warn-text); }
 .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
 @media (max-width: 640px) {
   header .sub, header #lastRefresh { display: none; }
+  .lnk-wide { display: none; } .lnk-narrow { display: inline; }
   .onlynarrow { display: block; }
   .need { flex-wrap: wrap; }
   .need .act { width: 100%; justify-content: flex-end; }
@@ -185,6 +189,7 @@ table.team .wait { color: var(--warn-text); }
   <div class="brand"><span class="dot" id="statusDot"></span><h1>Mission Control</h1><span class="sub" id="ownerLabel"></span></div>
   <div class="actions">
     <span class="meta" id="lastRefresh"></span>
+    <a class="btn" id="lnkProjectForm" href="https://claude.ai/artifact/Jchh6A2dWfUQZKNxHEJsPT" target="_blank" rel="noopener" title="Project management form: every project, including ones that aren't GitHub repos (private claude.ai page)"><span class="lnk-wide">Project form</span><span class="lnk-narrow">Form</span>&nbsp;&#8599;</a>
     <button class="btn" id="btnRefresh" type="button">Refresh</button>
     <button class="btn ghost" id="btnSettings" type="button" aria-label="Settings" title="Settings">&#9881;</button>
   </div>
