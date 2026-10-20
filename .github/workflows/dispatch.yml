@@ -1,0 +1,32 @@
+name: dispatch
+
+# Wakes the AI agents only when they have work. Runs on a schedule in this public repo, so the
+# minutes are free; it uses no AI itself. It never runs on pull requests, so forks cannot reach
+# the secrets.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dispatch
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dispatch
+        run: node dispatch/dispatcher.mjs
+        env:
+          DISPATCH_GH_TOKEN: ${{ secrets.DISPATCH_GH_TOKEN }}
+          ROUTINE_ADMIN: ${{ secrets.ROUTINE_ADMIN }}
+          ROUTINE_CLAUDE_1: ${{ secrets.ROUTINE_CLAUDE_1 }}
+          ROUTINE_CLAUDE_2: ${{ secrets.ROUTINE_CLAUDE_2 }}
+          ROUTINE_CLAUDE_3: ${{ secrets.ROUTINE_CLAUDE_3 }}
+          ROUTINE_CLAUDE_4: ${{ secrets.ROUTINE_CLAUDE_4 }}

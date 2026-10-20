@@ -1,0 +1,22 @@
+{
+  "_about": "Dispatcher settings. Edit on GitHub; the next run (every 15 min) picks them up. Each agent is one routine on one Claude account. pool 'admin' = planning and triage only (no code); 'home' agents only serve repos that carry the label home:<agent>; 'general' agents serve every other agent repo. Caps count tasks started (one build, plan, PR fix or triage pass each). Account caps add up every routine on that account.",
+  "owner": "",
+  "everyMinutes": 15,
+  "maxFiresPerRun": 4,
+  "claimTimeoutMinutes": 45,
+  "coolingHours": 5,
+  "staleClaimHours": 3,
+  "fixEscalateMinutes": 90,
+  "triageEveryHours": 3,
+  "triageWaitMinutes": 60,
+  "agents": [
+    { "name": "admin",    "account": 2, "model": "Fable",  "pool": "admin",   "cap5h": 4, "cap7d": 30, "perHour": 2, "secret": "ROUTINE_ADMIN",    "role": "Administrator: plans plan issues, sizes new issues; never writes code" },
+    { "name": "claude-1", "account": 1, "model": "Opus",   "pool": "home",    "cap5h": 5, "cap7d": 50, "perHour": 1, "secret": "ROUTINE_CLAUDE_1", "role": "Fenced repos (trading app): every build and fix there" },
+    { "name": "claude-2", "account": 2, "model": "Opus",   "pool": "general", "cap5h": 5, "cap7d": 50, "perHour": 1, "secret": "ROUTINE_CLAUDE_2", "role": "Hard tasks (size:L) and overflow" },
+    { "name": "claude-3", "account": 3, "model": "Sonnet", "pool": "general", "cap5h": 8, "cap7d": 80, "perHour": 1, "secret": "ROUTINE_CLAUDE_3", "role": "Normal tasks (size:S/M)" },
+    { "name": "claude-4", "account": 4, "model": "Sonnet", "pool": "general", "cap5h": 8, "cap7d": 80, "perHour": 1, "secret": "ROUTINE_CLAUDE_4", "role": "Normal tasks (size:S/M)" }
+  ],
+  "accounts": { "1": { "cap5h": 6 }, "2": { "cap5h": 8 }, "3": { "cap5h": 10 }, "4": { "cap5h": 10 } },
+  "codex": { "enabled": true, "model": "GPT", "cooldownHours": 24, "role": "Reviews every PR; takes over PRs an agent could not fix" },
+  "antigravity": { "enabled": true, "model": "Gemini", "role": "ui / visual tasks, worked on your Mac" }
+}

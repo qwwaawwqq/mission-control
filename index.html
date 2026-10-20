@@ -140,6 +140,36 @@ dialog h3 { margin: 0 0 8px; font-size: 17px; }
 footer { color: var(--muted); font-size: 12px; margin-top: 24px; display: flex; flex-wrap: wrap; gap: 6px 16px; }
 details summary { cursor: pointer; color: var(--ink-2); font-size: 13.5px; }
 .hid { display: none !important; }
+table.team td { white-space: normal; }
+table.team td:first-child { white-space: nowrap; }
+.model { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--chip); color: var(--ink); white-space: nowrap; }
+.model.m-fable { background: color-mix(in srgb, var(--violet) 22%, transparent); }
+.model.m-opus { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+.model.m-sonnet { background: color-mix(in srgb, var(--aqua) 22%, transparent); }
+.model.m-gpt { background: color-mix(in srgb, var(--good) 18%, transparent); }
+.model.m-gemini { background: color-mix(in srgb, var(--warn) 22%, transparent); }
+.meter { position: relative; display: inline-flex; align-items: center; width: 84px; height: 18px; border-radius: 9px; background: color-mix(in srgb, var(--accent) 14%, transparent); overflow: hidden; vertical-align: middle; }
+.meter .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 9px; }
+.meter.high .fill { background: var(--warn); }
+.meter.full .fill { background: var(--bad); }
+.meter .num { position: relative; width: 100%; text-align: center; font-size: 11.5px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.chip .meter { width: 64px; height: 16px; }
+.chip.warnchip { background: var(--wait-bg); color: var(--warn-text); }
+table.team .ok { color: var(--good-text); }
+table.team .wait { color: var(--warn-text); }
+@media (max-width: 640px) {
+  table.team thead { display: none; }
+  table.team, table.team tbody { display: block; }
+  table.team tr { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "name model m5" "now now now" "job job job" "m7 m7 m7"; gap: 4px 10px; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: center; }
+  table.team tr:last-child { border-bottom: 0; }
+  table.team td { display: block; padding: 0; border: 0; }
+  table.team td.c-name { grid-area: name; } table.team td.c-model { grid-area: model; } table.team td.c-5h { grid-area: m5; }
+  table.team td.c-now { grid-area: now; } table.team td.c-job { grid-area: job; } table.team td.c-7d { grid-area: m7; }
+  table.team td.c-name .meta { display: inline; margin-left: 6px; }
+  table.team td.c-5h::before { content: '5h '; color: var(--muted); font-size: 12px; }
+  table.team td.c-7d:has(.meter)::before { content: '7 days '; color: var(--muted); font-size: 12px; }
+  table.team td.c-7d > .meter { width: 120px; }
+}
 .onlynarrow { display: none; }
 .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
 @media (max-width: 640px) {
@@ -200,7 +230,12 @@ const DEFAULTS = {
   refreshMin: 5, staleHours: 2, claimHours: 3, failHours: 3, includedMinutes: 2000,
 };
 const LS = { token: 'mc.token', config: 'mc.config' };
-const LABELS = ['plan', 'ready', 'claimed', 'in-review', 'blocked', 'jules', 'pause'];
+const LABELS = ['plan', 'ready', 'claimed', 'in-review', 'blocked', 'pause'];
+const DISPATCH_RE = /^Dispatch:\s*([\w.-]+)\s*·\s*([^·\n]*?)\s*·\s*([\w-]+)(?:\s*·\s*sha=([0-9a-f]{7,40}))?/m;
+/* The team roster mirrors dispatch/config.json (fetched at start-up when served from GitHub Pages). */
+const DEFAULT_TEAM = {"claimTimeoutMinutes": 45, "coolingHours": 5, "agents": [{"name": "admin", "account": 2, "model": "Fable", "pool": "admin", "cap5h": 4, "cap7d": 30, "perHour": 2, "role": "Administrator: plans plan issues, sizes new issues; never writes code"}, {"name": "claude-1", "account": 1, "model": "Opus", "pool": "home", "cap5h": 5, "cap7d": 50, "perHour": 1, "role": "Fenced repos (trading app): every build and fix there"}, {"name": "claude-2", "account": 2, "model": "Opus", "pool": "general", "cap5h": 5, "cap7d": 50, "perHour": 1, "role": "Hard tasks (size:L) and overflow"}, {"name": "claude-3", "account": 3, "model": "Sonnet", "pool": "general", "cap5h": 8, "cap7d": 80, "perHour": 1, "role": "Normal tasks (size:S/M)"}, {"name": "claude-4", "account": 4, "model": "Sonnet", "pool": "general", "cap5h": 8, "cap7d": 80, "perHour": 1, "role": "Normal tasks (size:S/M)"}], "accounts": {"1": {"cap5h": 6}, "2": {"cap5h": 8}, "3": {"cap5h": 10}, "4": {"cap5h": 10}}, "codex": {"enabled": true, "model": "GPT", "cooldownHours": 24, "role": "Reviews every PR; takes over PRs an agent could not fix"}, "antigravity": {"enabled": true, "model": "Gemini", "role": "ui / visual tasks, worked on your Mac"}};
+let team = DEFAULT_TEAM;
+let dispatcher = null;
 const API = 'https://api.github.com';
 
 let cfg = loadConfig();
@@ -331,7 +366,8 @@ async function loadRepo(r, signal) {
     meta: gh(base, { signal }),
     issues: gh(base + '/issues?state=open&per_page=100', { signal }),
     pulls: gh(base + '/pulls?state=open&per_page=50', { signal }),
-    comments: gh(base + '/issues/comments?sort=updated&direction=desc&per_page=60', { signal }),
+    comments: gh(base + '/issues/comments?sort=updated&direction=desc&per_page=100&since=' + encodeURIComponent(new Date(now() - 7 * 864e5).toISOString()), { signal }),
+    labels: gh(base + '/labels?per_page=100', { signal }),
     reviewComments: gh(base + '/pulls/comments?sort=updated&direction=desc&per_page=40', { signal }),
     runs: gh(base + '/actions/runs?per_page=20', { signal }),
     commits: gh(base + '/commits?per_page=15', { signal }),
@@ -354,7 +390,7 @@ async function loadRepo(r, signal) {
   out.counts = {}; for (const L of LABELS) out.counts[L] = issues.filter(i => has(i, L)).length;
   out.pauseIssues = issues.filter(i => has(i, 'pause'));
   out.paused = out.pauseIssues.length > 0;
-  out.queue = issues.filter(i => has(i, 'ready') && !has(i, 'claimed') && !has(i, 'blocked') && !has(i, 'jules')).sort((a, b) => a.created_at.localeCompare(b.created_at));
+  out.queue = issues.filter(i => has(i, 'ready') && !['claimed', 'blocked', 'in-review', 'jules', 'to:codex', 'to:antigravity'].some(l => has(i, l))).sort((a, b) => a.created_at.localeCompare(b.created_at));
   out.blocked = issues.filter(i => has(i, 'blocked'));
   out.claimed = issues.filter(i => has(i, 'claimed'));
   out.working = issues.filter(i => has(i, 'claimed') && !has(i, 'in-review'));
@@ -365,6 +401,16 @@ async function loadRepo(r, signal) {
   const lastCommentByIssue = new Map();
   for (const c of comments) { const n = issueNum(c.issue_url); if (n != null && !lastCommentByIssue.has(n)) lastCommentByIssue.set(n, c); }
   out.lastCommentByIssue = lastCommentByIssue;
+  out.home = (got.labels || []).map(l => l.name).filter(n => n.startsWith('home:')).map(n => n.slice(5).toLowerCase());
+  out.commentsByIssue = new Map();
+  out.dispatches = [];
+  for (const c of comments) {
+    const n = issueNum(c.issue_url); if (n == null) continue;
+    if (!out.commentsByIssue.has(n)) out.commentsByIssue.set(n, []);
+    out.commentsByIssue.get(n).push(c);
+    const m = DISPATCH_RE.exec(c.body || '');
+    if (m) out.dispatches.push({ who: m[1].toLowerCase(), model: m[2], mode: m[3].toLowerCase(), sha: m[4] || '', at: c.created_at, num: n, url: c.html_url, repo: out });
+  }
 
   const pulls = got.pulls || [];
   out.prs = await Promise.all(pulls.map(async (pr) => {
@@ -431,7 +477,7 @@ async function loadRepo(r, signal) {
 
   /* activity feed */
   const feed = [];
-  for (const c of comments) feed.push({ at: c.created_at, repo: out, kind: 'comment', who: c.user && c.user.login, text: '#' + issueNum(c.issue_url) + ' ' + firstLine(c.body), url: c.html_url });
+  for (const c of comments) { const dm = DISPATCH_RE.exec(c.body || ''); feed.push({ at: c.created_at, repo: out, kind: dm ? 'dispatch' : 'comment', who: dm ? dm[1] : (c.user && c.user.login), text: '#' + issueNum(c.issue_url) + ' ' + (dm ? dm[3] + ' · ' + dm[2] : firstLine(c.body)), url: c.html_url }); }
   for (const c of reviewComments) feed.push({ at: c.created_at, repo: out, kind: 'review', who: c.user && c.user.login, text: 'PR #' + issueNum(c.pull_request_url) + ' ' + firstLine(c.body), url: c.html_url });
   for (const p of out.prs) feed.push({ at: p.pr.created_at, repo: out, kind: 'pr', who: p.agent || (p.pr.user && p.pr.user.login), text: 'opened PR #' + p.number + ' ' + p.title, url: p.pr.html_url });
   for (const p of merged) feed.push({ at: p.merged_at, repo: out, kind: 'merged', who: p.merged_by ? p.merged_by.login : 'merged', text: 'merged PR #' + p.number + ' ' + p.title, url: p.html_url });
@@ -504,6 +550,18 @@ async function loadBilling(signal) {
   return null;
 }
 
+/* ---------- team roster + dispatcher status ---------- */
+async function loadTeam() {
+  try { const r = await fetch('dispatch/config.json', { cache: 'no-cache' }); if (r.ok) { const j = await r.json(); if (j && Array.isArray(j.agents)) team = j; } } catch (e) { /* opened from disk: keep the built-in roster */ }
+}
+async function loadDispatcher(signal) {
+  try {
+    const r = await gh('/repos/' + cfg.owner + '/mission-control/actions/workflows/dispatch.yml/runs?per_page=1', { signal });
+    const run = r && r.workflow_runs && r.workflow_runs[0];
+    return run ? { at: run.updated_at, status: run.status, conclusion: run.conclusion, url: run.html_url } : { none: true };
+  } catch (e) { if (e && e.name === 'AbortError') throw e; return { error: (e && e.status) || true }; }
+}
+
 /* ---------- refresh ---------- */
 async function refresh() {
   if (!token) { render(); return; }
@@ -519,6 +577,7 @@ async function refresh() {
       return { cfg: r, name: r.name, nick: r.nick || r.name, note: r.note || '', url: 'https://github.com/' + cfg.owner + '/' + r.name, errors: [], fatal: e };
     })));
     const billing = await loadBilling(ctrl.signal);
+    dispatcher = await loadDispatcher(ctrl.signal);
     if (ctrl.signal.aborted) return;
     model = buildModel(repos, billing);
     tokenBad = repos.length > 0 && repos.every(r => r.fatal && r.fatal.status === 401);
@@ -556,7 +615,62 @@ function buildModel(repos, billing) {
   const order = { paused: 0, pr: 1, stuck: 2, blocked: 3, stalled: 4, billing: 5 };
   needs.sort((a, b) => order[a.kind] - order[b.kind]);
   feed.sort((a, b) => b.at.localeCompare(a.at));
-  return { repos, needs, agents: [...agents.values()].sort((a, b) => (b.last ? b.last.at : '').localeCompare(a.last ? a.last.at : '')), feed, billing, totals };
+  const agentList = [...agents.values()].sort((a, b) => (b.last ? b.last.at : '').localeCompare(a.last ? a.last.at : ''));
+  return { repos, needs, agents: agentList, feed, billing, totals, team: buildTeam(repos, agentList) };
+}
+
+/* ---------- team: who works on what, load against caps ---------- */
+function buildTeam(repos, beatAgents) {
+  const T = team, HOUR = 36e5, nowMs = now();
+  const claimMs = (T.claimTimeoutMinutes || 45) * 6e4, coolMs = (T.coolingHours || 5) * HOUR;
+  const live = repos.filter(r => !r.fatal);
+  const disp = live.flatMap(r => r.dispatches || []);
+  const claimerOf = (r, n) => {
+    const cs = (r.commentsByIssue && r.commentsByIssue.get(n)) || [];
+    for (const c of cs) { const m = /\b(?:Claimed|Planning) by ([\w.-]+)/i.exec(c.body || ''); if (m) return m[1].toLowerCase(); }
+    return null;
+  };
+  const answered = (x) => {
+    const r = x.repo, after = ((r.commentsByIssue && r.commentsByIssue.get(x.num)) || []).filter(c => c.created_at > x.at);
+    if (after.some(c => new RegExp('\\b(Claimed|Planning) by ' + x.who + '\\b', 'i').test(c.body || ''))) return true;
+    if (after.some(c => { const m = DISPATCH_RE.exec(c.body || ''); return m && m[3] === 'reclaimed'; })) return true;
+    if (x.mode === 'fix-pr') return after.some(c => !DISPATCH_RE.test(c.body || ''));
+    const i = r.issues.find(k => k.number === x.num);
+    return !i || has(i, 'claimed') || has(i, 'in-review') || has(i, 'blocked');
+  };
+  const acct = {};
+  const rows = (T.agents || []).map(a => {
+    const seen = new Set(), mine = [];
+    for (const x of disp) {
+      if (x.who !== a.name || !['build', 'plan', 'fix-pr', 'triage'].includes(x.mode)) continue;
+      if (x.mode === 'triage') { const k = Math.floor(Date.parse(x.at) / 6e4); if (seen.has(k)) continue; seen.add(k); }
+      mine.push(x);
+    }
+    mine.sort((p, q) => q.at.localeCompare(p.at));
+    const load5h = mine.filter(x => nowMs - Date.parse(x.at) <= 5 * HOUR).length;
+    acct[a.account] = (acct[a.account] || 0) + load5h;
+    let status = mine.length ? 'idle' : 'no tasks yet', doing = null;
+    if (mine.some(x => x.mode !== 'triage' && nowMs - Date.parse(x.at) >= claimMs && nowMs - Date.parse(x.at) <= coolMs && !answered(x))) status = 'cooling';
+    if (status !== 'cooling') {
+      for (const r of live) for (const i of r.working) if (claimerOf(r, i.number) === a.name) { status = 'working'; doing = { r, n: i.number, url: i.html_url }; break; }
+      const last = mine[0];
+      if (!doing && last && nowMs - Date.parse(last.at) < claimMs) { if (last.mode === 'triage') status = 'sizing'; else { status = 'starting'; doing = { r: last.repo, n: last.num, url: last.url }; } }
+    }
+    const serves = a.pool === 'admin' ? 'all repos: planning + sizing'
+      : a.pool === 'home' ? (live.filter(r => r.home.includes(a.name)).map(r => r.nick).join(', ') || 'its home repo (label home:' + a.name + ')')
+      : 'all other agent repos';
+    return { name: a.name, model: a.model, account: a.account, role: a.role || '', serves, status, doing, load5h, cap5h: a.cap5h, load7d: mine.length, cap7d: a.cap7d, last: mine[0] || null };
+  });
+  const issuesAll = live.flatMap(r => r.paused ? [] : r.issues.map(i => ({ r, i })));
+  const anyTo = (i) => labelsOf(i).some(l => l.startsWith('to:'));
+  const unassigned = issuesAll.filter(({ i }) => (has(i, 'ready') || has(i, 'plan')) && !['claimed', 'blocked', 'in-review', 'jules'].some(l => has(i, l)) && !anyTo(i)).length;
+  const agQueue = issuesAll.filter(({ i }) => has(i, 'to:antigravity') && !has(i, 'claimed') && !has(i, 'in-review')).length;
+  const agWorking = live.reduce((s, r) => s + r.working.filter(i => claimerOf(r, i.number) === 'antigravity').length, 0);
+  const codexQueue = issuesAll.filter(({ i }) => has(i, 'to:codex') && !has(i, 'in-review')).length;
+  const codexTakeovers = disp.filter(x => x.who === 'codex' && x.mode === 'fix-pr').length;
+  const beat = (n) => (beatAgents.find(b => b.agent === n) || {}).last || null;
+  return { rows, acct, unassigned, agQueue, agWorking, codexQueue, codexTakeovers, codexLast: beat('codex'), agLast: beat('antigravity'),
+           human: live.reduce((s, r) => s + r.blocked.length, 0), dispatches7d: disp.length };
 }
 
 /* ---------- write actions ---------- */
@@ -688,13 +802,22 @@ function renderPR(p, r) {
 function taskForm(r, host) {
   const title = h('input', { type: 'text', placeholder: 'Task title (one sentence of what to build)' });
   const body = h('textarea', { placeholder: 'Details / acceptance criteria (optional)', rows: 3 });
-  const sel = h('select', null, h('option', { value: 'ready' }, 'ready — a Claude agent builds it (small task)'), h('option', { value: 'plan' }, 'plan — Claude splits it into small ready issues'), h('option', { value: 'jules' }, 'jules — reserved for Google Jules'));
-  const form = h('div', { class: 'taskform' }, title, body, sel,
+  const sel = h('select', null, h('option', { value: 'ready' }, 'Build it: the dispatcher picks the agent'), h('option', { value: 'plan' }, 'Big goal: the administrator splits it into tasks'));
+  const size = h('select', null,
+    h('option', { value: '' }, 'Size: let the administrator decide'),
+    h('option', { value: 'size:S' }, 'Small: Sonnet'),
+    h('option', { value: 'size:M' }, 'Normal: Sonnet'),
+    h('option', { value: 'size:L' }, 'Hard: Opus'),
+    h('option', { value: 'ui' }, 'Visual / UI: Antigravity'),
+    h('option', { value: 'to:codex' }, 'Give it to Codex'));
+  sel.addEventListener('change', () => { size.disabled = sel.value === 'plan'; });
+  const form = h('div', { class: 'taskform' }, title, body, sel, size,
     h('div', { style: 'display:flex;gap:8px;justify-content:flex-end' },
       h('button', { class: 'btn sm', type: 'button', onclick: () => form.remove() }, 'Cancel'),
       h('button', { class: 'btn sm primary', type: 'button', onclick: (ev) => {
         const t = title.value.trim(); if (!t) { toast('Give the task a title', true); return; }
-        runAction(async () => { const i = await createIssue(r, t, body.value.trim(), [sel.value]); toast('Created #' + i.number + ' in ' + r.nick + ' (' + sel.value + ')'); }, ev.currentTarget);
+        const labels = [sel.value]; if (sel.value === 'ready' && size.value) labels.push(size.value);
+        runAction(async () => { const i = await createIssue(r, t, body.value.trim(), labels); toast('Created #' + i.number + ' in ' + r.nick + ' (' + labels.join(', ') + ')'); }, ev.currentTarget);
       } }, 'Create issue')));
   host.append(form); title.focus();
 }
@@ -745,6 +868,57 @@ function renderRepo(r) {
   return card;
 }
 
+function meter(n, cap) {
+  const f = cap ? Math.min(1, n / cap) : 0;
+  const cls = f >= 1 ? 'full' : f >= 0.7 ? 'high' : '';
+  return h('span', { class: 'meter ' + cls, title: n + ' of ' + cap }, h('span', { class: 'fill', style: 'width:' + Math.round(f * 100) + '%' }), h('span', { class: 'num' }, n + '/' + cap));
+}
+function renderTeam(m) {
+  const t = m.team;
+  const d = dispatcher;
+  const dChip = !d ? h('span', { class: 'chip zero' }, 'Dispatcher: checking…')
+    : d.none || d.error ? h('a', { class: 'chip warnchip', href: 'https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/SETUP.md', target: '_blank', rel: 'noopener noreferrer' }, 'Dispatcher: not running yet — setup ↗')
+    : h('a', { class: 'chip', href: d.url, target: '_blank', rel: 'noopener noreferrer' }, h('span', { class: 'sw ' + (d.status !== 'completed' ? 'claimed' : d.conclusion === 'success' ? 'ready' : 'blocked') }), 'Dispatcher ' + (d.status !== 'completed' ? 'running' : d.conclusion === 'success' ? 'ok' : d.conclusion) + ' · ' + ago(d.at));
+  const chips = h('div', { class: 'chips', style: 'margin-bottom:10px' }, dChip,
+    h('span', { class: 'chip' + (t.unassigned ? '' : ' zero') }, 'Waiting for dispatch ', h('b', null, String(t.unassigned))),
+    h('span', { class: 'chip' + (t.agQueue ? '' : ' zero') }, h('span', { class: 'sw jules' }), 'Antigravity queue ', h('b', null, String(t.agQueue))),
+    h('span', { class: 'chip' + (t.codexTakeovers ? '' : ' zero') }, 'Codex takeovers · 7d ', h('b', null, String(t.codexTakeovers))),
+    h('span', { class: 'chip' + (t.human ? '' : ' zero') }, h('span', { class: 'sw blocked' }), 'Needs you ', h('b', null, String(t.human))));
+  const statusCell = (row) => {
+    if (row.status === 'working' || row.status === 'starting') return h('span', { class: 'st' }, h('span', { class: 'ok' }, row.status === 'working' ? 'working on ' : 'starting '), row.doing ? link(row.doing.url || row.doing.r.url, row.doing.r.nick + ' #' + row.doing.n) : '');
+    if (row.status === 'sizing') return h('span', { class: 'ok' }, 'sizing new issues');
+    if (row.status === 'cooling') return h('span', { class: 'wait', title: 'Did not start a task within ' + (team.claimTimeoutMinutes || 45) + ' min: probably out of usage. Skipped until the 5-hour window passes.' }, 'cooling (out of usage?)');
+    return h('span', { class: 'meta' }, row.status);
+  };
+  const rows = t.rows.map(r => h('tr', null,
+    h('td', { class: 'c-name' }, h('b', null, r.name), h('div', { class: 'meta' }, 'account ' + r.account)),
+    h('td', { class: 'c-model' }, h('span', { class: 'model m-' + String(r.model).toLowerCase() }, r.model)),
+    h('td', { class: 'c-job' }, h('div', null, r.role), h('div', { class: 'meta' }, r.serves)),
+    h('td', { class: 'c-now' }, statusCell(r), r.last ? h('div', { class: 'meta' }, 'last task ' + ago(r.last.at)) : null),
+    h('td', { class: 'c-5h' }, meter(r.load5h, r.cap5h)),
+    h('td', { class: 'c-7d' }, meter(r.load7d, r.cap7d))));
+  rows.push(h('tr', null,
+    h('td', { class: 'c-name' }, h('b', null, 'codex'), h('div', { class: 'meta' }, 'ChatGPT')),
+    h('td', { class: 'c-model' }, h('span', { class: 'model m-gpt' }, (team.codex && team.codex.model) || 'GPT')),
+    h('td', { class: 'c-job' }, h('div', null, (team.codex && team.codex.role) || 'Reviews every PR'), h('div', { class: 'meta' }, 'every repo')),
+    h('td', { class: 'c-now' }, t.codexLast ? h('span', { class: 'meta' }, t.codexLast.what + ' · ' + ago(t.codexLast.at)) : h('span', { class: 'meta' }, 'no activity seen'), t.codexQueue ? h('div', { class: 'meta' }, t.codexQueue + ' queued (start at chatgpt.com/codex)') : null),
+    h('td', { colspan: 2, class: 'c-7d' }, h('span', { class: 'meta' }, t.codexTakeovers + ' takeover' + (t.codexTakeovers === 1 ? '' : 's') + ' in 7 days'))));
+  rows.push(h('tr', null,
+    h('td', { class: 'c-name' }, h('b', null, 'antigravity'), h('div', { class: 'meta' }, 'your Mac')),
+    h('td', { class: 'c-model' }, h('span', { class: 'model m-gemini' }, (team.antigravity && team.antigravity.model) || 'Gemini')),
+    h('td', { class: 'c-job' }, h('div', null, (team.antigravity && team.antigravity.role) || 'ui tasks'), h('div', { class: 'meta' }, 'non-fenced repos')),
+    h('td', { class: 'c-now' }, t.agWorking ? h('span', { class: 'ok' }, 'working on ' + t.agWorking) : h('span', { class: 'meta' }, t.agQueue ? t.agQueue + ' waiting for the Mac' : 'idle')),
+    h('td', { colspan: 2, class: 'c-7d' }, h('span', { class: 'meta' }, t.agLast ? 'last seen ' + ago(t.agLast.at) : 'runs only while Antigravity is open'))));
+  const accounts = Object.keys(team.accounts || {}).map(k => h('span', { class: 'chip' }, 'account ' + k + ' ', meter(t.acct[k] || 0, (team.accounts[k] || {}).cap5h || 0)));
+  return h('section', null,
+    h('h2', null, 'Team', h('span', { class: 'count' }, String(t.rows.length + 2))),
+    chips,
+    h('div', { class: 'card', style: 'overflow:auto' }, h('table', { class: 'team' },
+      h('thead', null, h('tr', null, h('th', null, 'Agent'), h('th', null, 'Model'), h('th', null, 'Job'), h('th', null, 'Now'), h('th', null, 'Tasks · 5h'), h('th', null, 'Tasks · 7d'))),
+      h('tbody', null, rows))),
+    accounts.length ? h('div', { class: 'chips', style: 'margin-top:8px' }, h('span', { class: 'meta', style: 'align-self:center' }, 'Accounts, all routines · 5h:'), accounts) : null);
+}
+
 function renderAgents(m) {
   const rows = m.agents.map(a => h('tr', null,
     h('td', null, h('b', null, a.agent)),
@@ -789,7 +963,7 @@ function render() {
     return;
   }
   app.append(h('div', { class: 'meta onlynarrow', style: 'margin:0 0 10px' }, 'Updated ' + fmtClock(lastRefresh) + ' · auto-refresh ' + cfg.refreshMin + 'm'));
-  app.append(renderNeeds(model), renderTiles(model));
+  app.append(renderNeeds(model), renderTiles(model), renderTeam(model));
   const live = model.repos.filter(r => !r.fatal);
   const pausedAll = live.length > 0 && live.every(r => r.paused);
   const toolbar = h('div', { class: 'toolbar' },
@@ -861,6 +1035,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 setInterval(() => { if (model && !busy) renderHeader(); }, 30e3);
 
 render();
+loadTeam().then(() => { if (model) { model.team = buildTeam(model.repos, model.agents); render(); } });
 if (token) refresh();
 })();
 </script>

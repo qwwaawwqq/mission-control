@@ -14,8 +14,9 @@ no repo names: the page finds your agent repos by itself (every repo of yours th
 |---|---|
 | **Needs you** | Pull requests ready to merge (with a nudge to read Codex notes), with merge conflicts, or failing longer than the agents' retry window; `blocked` issues with their last comment; issues `claimed` for hours with no PR (a dead agent run, one tap to unclaim); repos where `ready` issues wait but no Claude run has shown up; paused repos; Actions minutes near the limit. |
 | **Tiles** | Ready queue, agents working, open PRs, blocked, merged this week, GitHub Actions minutes. |
-| **Projects** | One card per repo: label counts (tap to open that filter on GitHub), the next issue an agent will take, every open PR with checks, Codex notes, conflicts and a verdict, CI on the default branch, last commit, last agent activity. **+ Task** opens a `ready` / `plan` / `jules` issue; **Pause agents** opens a `pause` issue (every agent stops), **Resume** closes it. |
-| **Agents** | Every agent seen recently (`Claimed by claude-1`, `Agent: claude-2`, Codex, Jules) with last-seen time. |
+| **Projects** | One card per repo: label counts (tap to open that filter on GitHub), the next issue an agent will take, every open PR with checks, Codex notes, conflicts and a verdict, CI on the default branch, last commit, last agent activity. **+ Task** opens a `ready` issue (with a size, `ui` or `to:codex` if you like) or a `plan` issue; **Pause agents** opens a `pause` issue (every agent stops), **Resume** closes it. |
+| **Team** | Every lane: the Fable administrator, the Claude agents (account, model, job), Codex and Antigravity, with what each is doing now, tasks started in the last 5 hours and 7 days against its caps, per-account load, and the dispatcher's last run. |
+| **Agents** | Every agent seen recently (`Claimed by claude-1`, `Agent: claude-2`, Codex, Antigravity) with last-seen time. |
 | **Activity** | Comments, PRs, merges, commits and CI runs across all repos, newest first. |
 
 Buttons that change GitHub ask for a second tap and need **Issues: Read and write** on the token.
@@ -39,5 +40,11 @@ claim after*, *agent retry window* (hours a failing agent PR is left to its agen
 
 ## Labels the agents follow
 
-`plan` → split into `ready` issues · `ready` → the next free Claude agent builds it · `jules` → Google Jules ·
-`claimed` → an agent is on it · `in-review` → PR open · `blocked` → needs a human · `pause` → every agent stops.
+`plan` → the administrator splits it into `ready` issues · `ready` → the dispatcher gives it to an agent ·
+`size:S` / `size:M` → Sonnet · `size:L` → Opus · `ui` → Antigravity · `to:codex` → Codex · `to:<agent>` → assigned ·
+`claimed` → an agent is on it · `in-review` → PR open · `blocked` → needs you · `pause` → every agent in that repo stops ·
+`home:<agent>` on a repo → only that agent works there.
+
+## Dispatcher
+
+`dispatch/` holds a dispatcher that wakes the agents only when they have work. `.github/workflows/dispatch.yml` runs it every 15 minutes. It uses no AI itself, and its Actions minutes are free because this repo is public. It sizes and routes work: a Fable administrator plans and sizes, Opus takes hard tasks, Sonnet takes normal ones, Antigravity gets UI tasks, and Codex takes over PRs an agent couldn't fix. It also keeps every Claude account under its caps. Setup: `dispatch/SETUP.md`. Settings: `dispatch/config.json`.
