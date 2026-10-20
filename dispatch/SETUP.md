@@ -16,7 +16,7 @@ On each account, go to claude.ai/code (connect GitHub if asked), then claude.ai/
 
 - **Prompt:** the text of that row's prompt file with `AGENT_NAME` replaced by the row's name (for example `claude-3`) and `OWNER` by your GitHub user. The administrator never writes code, so it may see the fenced repos.
 - **Environment:** Default. **Connectors:** remove all.
-- **Trigger:** no schedule. Add trigger → **API** → **Generate token**. Copy the URL and the token (the token is shown once).
+- **Trigger:** no schedule, only **API**. The token is shown once, when you create the routine (or press **Generate token**): copy it straight into the routine's secret below.
 
 Keep fenced repos (the ones whose `.claude/settings.json` blocks human-only files) in a routine of their own, so their blocks always apply.
 
@@ -26,10 +26,12 @@ GitHub → this repo → Settings → Secrets and variables → Actions → **Ne
 
 | Secret | Value |
 |---|---|
-| `ROUTINE_ADMIN`, `ROUTINE_CLAUDE_1` … `ROUTINE_CLAUDE_4` | the routine's URL on the first line, its token on the second |
+| `ROUTINE_ADMIN`, `ROUTINE_CLAUDE_1` … `ROUTINE_CLAUDE_4` | the routine's token (its URL may go on the line above it) |
 | `DISPATCH_GH_TOKEN` | a fine-grained token named `dispatcher`, with only the agent repos selected; repository permissions **Issues: Read and write**, **Pull requests: Read and write**, **Actions: Read**, **Contents: Read** |
 
-A routine without its secret is shown as "off" and simply gets no work.
+Unless a secret already holds the URL, add the routine's URL under **Variables** in the same place: `ROUTINE_ADMIN_URL`, `ROUTINE_CLAUDE_1_URL` … `ROUTINE_CLAUDE_4_URL` (`https://api.anthropic.com/v1/claude_code/routines/trig_…/fire`, shown on the routine's page; it is useless without the token).
+
+A routine without its token is shown as "off" and simply gets no work.
 
 ## 3. Home labels
 

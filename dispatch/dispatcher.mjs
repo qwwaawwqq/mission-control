@@ -80,8 +80,10 @@ export async function run({ config, env = {}, now = Date.now(), fetchImpl = fetc
   }
 
   /* ---------- agents ---------- */
+  /* The routine's secret holds its token (and may hold its URL too); the URL can also come from the
+     Actions variable <SECRET>_URL, so a freshly generated token can be pasted on its own. */
   function fireTarget(a) {
-    const raw = env[a.secret] || '';
+    const raw = `${env[a.secret] || ''}\n${env[`${a.secret}_URL`] || ''}`;
     const url = (raw.match(/https:\/\/api\.anthropic\.com\/v1\/claude_code\/routines\/trig_[A-Za-z0-9]+\/fire/) || [])[0];
     const token = (raw.match(/sk-ant-[A-Za-z0-9_-]+/) || [])[0];
     return url && token ? { url, token } : null;

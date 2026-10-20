@@ -30,3 +30,9 @@ jobs:
           ROUTINE_CLAUDE_2: ${{ secrets.ROUTINE_CLAUDE_2 }}
           ROUTINE_CLAUDE_3: ${{ secrets.ROUTINE_CLAUDE_3 }}
           ROUTINE_CLAUDE_4: ${{ secrets.ROUTINE_CLAUDE_4 }}
+          # each routine's URL, if it is not in the secret (Settings → Secrets and variables → Actions → Variables)
+          ROUTINE_ADMIN_URL: ${{ vars.ROUTINE_ADMIN_URL }}
+          ROUTINE_CLAUDE_1_URL: ${{ vars.ROUTINE_CLAUDE_1_URL }}
+          ROUTINE_CLAUDE_2_URL: ${{ vars.ROUTINE_CLAUDE_2_URL }}
+          ROUTINE_CLAUDE_3_URL: ${{ vars.ROUTINE_CLAUDE_3_URL }}
+          ROUTINE_CLAUDE_4_URL: ${{ vars.ROUTINE_CLAUDE_4_URL }}
