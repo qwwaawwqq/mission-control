@@ -18,6 +18,7 @@ no repo names: the page finds your agent repos by itself (every repo of yours th
 | **Team** | Every lane: the Fable administrator, the Claude agents (account, model, job), Codex and Antigravity, with what each is doing now, tasks started in the last 5 hours and 7 days against its caps, per-account load, and the dispatcher's last run. |
 | **Agents** | Every agent seen recently (`Claimed by claude-1`, `Agent: claude-2`, Codex, Antigravity) with last-seen time. |
 | **Activity** | Comments, PRs, merges, commits and CI runs across all repos, newest first. |
+| **Project form ↗** (top bar) | Opens the project management form: a private claude.ai page with every project, including papers and folders that aren't GitHub repos, with status, last activity and next step. Only people the owner shares it with can open it; this repo holds just the link. |
 
 Buttons that change GitHub ask for a second tap and need **Issues: Read and write** on the token.
 
