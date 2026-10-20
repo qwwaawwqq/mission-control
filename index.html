@@ -374,8 +374,24 @@ async function loadRepo(r, signal) {
       gh(base + '/pulls/' + pr.number + '/reviews?per_page=50', { signal }),
     ]);
     for (const s of [d, c, rv]) if (s.status === 'rejected' && s.reason && s.reason.name === 'AbortError') throw s.reason;
-    if (c.status === 'rejected' && !out.errors.some(e => e.what === 'checks')) out.errors.push({ what: 'checks', err: c.reason });
-    return analyzePR(pr, d.value, c.value, rv.value, reviewComments, comments);
+    let checks = c.status === 'fulfilled' ? c.value : null;
+    if (!checks) {
+      /* Fine-grained tokens cannot read the Checks API on private repos; the same CI results are
+         readable as the Actions runs of the PR's head commit (Actions: Read). Latest run per workflow. */
+      try {
+        const runs = await gh(base + '/actions/runs?head_sha=' + encodeURIComponent(pr.head.sha) + '&per_page=50', { signal });
+        const latest = new Map();
+        for (const w of ((runs && runs.workflow_runs) || [])) {
+          const prev = latest.get(w.name);
+          if (!prev || (w.created_at || '') > (prev.created_at || '')) latest.set(w.name, w);
+        }
+        checks = { check_runs: [...latest.values()].map(w => ({ name: w.name, status: w.status, conclusion: w.conclusion, completed_at: w.updated_at })) };
+      } catch (e) {
+        if (e && e.name === 'AbortError') throw e;
+        if (!out.errors.some(x => x.what === 'checks')) out.errors.push({ what: 'checks', err: e });
+      }
+    }
+    return analyzePR(pr, d.value, checks, rv.value, reviewComments, comments);
   }));
   out.stuck = out.claimed.filter(i => hoursSince(i.updated_at) > cfg.claimHours && !out.prs.some(p => mentions(p.pr.body, i.number)));
 
