@@ -5,7 +5,9 @@ name: dispatch
 # the secrets.
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    # Every 15 minutes, off the quarter hours: GitHub delays or drops scheduled runs most at the
+    # start of the hour, and on 20-21 Oct a '*/15' schedule here ran only every 2.5 to 5 hours.
+    - cron: '4,19,34,49 * * * *'
   workflow_dispatch: {}
 
 permissions:

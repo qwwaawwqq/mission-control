@@ -41,6 +41,19 @@ A repo with the label `home:claude-1` is served only by claude-1, which is how f
 
 Turn off any old hourly routines, then Actions → **dispatch** → **Run workflow** once. The log prints counts only, for example `{"repos":4,"fired":2,...}`, plus each agent's load.
 
+## Optional: a trigger that does not lag
+
+GitHub runs scheduled workflows on a best-effort basis; a busy hour can delay or drop them. For a
+dispatcher that wakes every 15 minutes without fail, also start it from an outside cron service
+(for example cron-job.org, free):
+
+1. GitHub → Settings → Developer settings → Fine-grained tokens → **Generate new token**: name
+   `dispatch-trigger`, only this repository, permission **Actions: Read and write**, nothing else.
+2. In the cron service, add a job every 15 minutes: `POST https://api.github.com/repos/OWNER/mission-control/actions/workflows/dispatch.yml/dispatches`
+   with headers `Authorization: Bearer <that token>`, `Accept: application/vnd.github+json` and body `{"ref":"main"}`.
+
+The workflow's `concurrency` group keeps the two triggers from running the dispatcher twice at once.
+
 ## How tasks are routed
 
 | What | Goes to |
