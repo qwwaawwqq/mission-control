@@ -37,6 +37,8 @@ A routine without its token is shown as "off" and simply gets no work.
 
 A repo with the label `home:claude-1` is served only by claude-1, which is how fenced repos stay with their own routine. Other agent repos have no `home:` label and go to claude-2/3/4.
 
+**Whenever you add a `home:<agent>` label to a repo, also add that repo to the agent's routine** (claude.ai/code/routines → the routine → Edit → Repositories). A routine can only work in the repos it was given; without it the agent is woken, stops at once, and the work waits.
+
 ## 4. Switch over
 
 Turn off any old hourly routines, then Actions → **dispatch** → **Run workflow** once. The log prints counts only, for example `{"repos":4,"fired":2,...}`, plus each agent's load.
@@ -68,7 +70,7 @@ The workflow's `concurrency` group keeps the two triggers from running the dispa
 
 Safeguards against draining usage:
 - Each agent has a 5-hour and a 7-day cap on tasks and gets at most one new task per hour; each account also has a 5-hour cap across all its routines (all in `config.json`).
-- An agent that does not claim its task within 45 minutes is treated as out of usage for 5 hours, and the task moves on.
+- An agent that does not claim its task within 45 minutes is skipped for 5 hours, and the task moves on. The usual causes are a routine that does not have that repo attached (check it whenever you add a `home:` label) or an account out of usage; Mission Control tells the two apart.
 - A claim with no PR after 3 hours is freed.
 - An open issue labelled `pause` stops everything in that repo.
 
