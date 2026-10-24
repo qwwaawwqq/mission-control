@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#0b0b0b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mission">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
 <title>Mission Control</title>
 <style>
 :root {
@@ -42,8 +48,9 @@ button { font: inherit; color: inherit; }
 .wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px 56px; }
 header.top { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
 header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 10px; padding-bottom: 10px; }
+header.top .wrap.statusrow { padding-top: 0; padding-bottom: 9px; display: block; }
 .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.brand h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: -.01em; white-space: nowrap; }
+.brand h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .brand .sub { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
 .dot.ok { background: var(--good); } .dot.busy { background: var(--warn); animation: pulse 1s infinite alternate; } .dot.bad { background: var(--bad); }
@@ -58,37 +65,72 @@ header.top .wrap { display: flex; align-items: center; justify-content: space-be
 .btn.danger { color: var(--bad-text); }
 .btn.sm { padding: 4px 9px; font-size: 13px; border-radius: 7px; }
 .btn.ghost { background: transparent; }
+a.btn { color: var(--ink); display: inline-flex; align-items: center; }
+a.btn:hover { text-decoration: none; }
+.lnk-narrow { display: none; }
 .btn.armed { background: var(--bad); color: #fff; border-color: transparent; }
 main.wrap { padding-top: 16px; }
 section { margin-bottom: 22px; }
 h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 h2 .count { background: var(--chip); color: var(--ink-2); border-radius: 999px; padding: 1px 8px; font-size: 12px; letter-spacing: 0; }
+h2 .count.you { background: var(--bad); color: #fff; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; }
-.tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; min-width: 0; }
-.tile .label { color: var(--ink-2); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tile .value { font-size: 26px; font-weight: 600; line-height: 1.15; margin-top: 2px; }
-.tile .hint { color: var(--muted); font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tile.you .value { color: var(--bad-text); }
-.tile.good .value { color: var(--good-text); }
-.needs { display: flex; flex-direction: column; gap: 8px; }
-.need { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--you-bg); border: 1px solid var(--border); }
-.need.info { background: var(--wait-bg); }
-.need .ic { flex: none; width: 22px; text-align: center; font-size: 16px; line-height: 1.3; }
-.need .body { flex: 1; min-width: 0; }
-.need .t { font-weight: 550; }
-.need .s { color: var(--ink-2); font-size: 13px; margin-top: 1px; overflow-wrap: anywhere; }
-.need .act { flex: none; display: flex; gap: 6px; }
 .empty { color: var(--muted); font-size: 14px; padding: 8px 2px; }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: 12px; align-items: start; }
-.repo { display: flex; flex-direction: column; gap: 10px; }
-.repo.paused { outline: 2px solid var(--bad); outline-offset: -1px; }
-.repo .head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.repo .head .name { font-size: 16px; font-weight: 650; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.repo .head .name a { color: inherit; }
-.repo .links { font-size: 12px; color: var(--muted); white-space: nowrap; }
-.repo .links a { color: var(--ink-2); }
-.repo .note { color: var(--muted); font-size: 12px; margin-top: -6px; }
+.err { color: var(--bad-text); font-size: 13px; overflow-wrap: anywhere; }
+.warnline { color: var(--warn-text); font-size: 13px; }
+.hid { display: none !important; }
+
+/* status line: the one sentence you read first */
+.statusline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; font-size: 13.5px; color: var(--ink-2); }
+.statusline .s-you { color: var(--bad-text); font-weight: 650; }
+.statusline .s-ok { color: var(--good-text); font-weight: 650; }
+.statusline .s-warn { color: var(--warn-text); font-weight: 600; }
+.statusline b { color: var(--ink); font-weight: 600; }
+
+/* inbox: every row says what happened, what to do next, and by when */
+.inbox { display: flex; flex-direction: column; gap: 8px; }
+.item { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 4px 10px; align-items: start; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); }
+.item.sev1 { background: var(--you-bg); border-color: color-mix(in srgb, var(--bad) 35%, transparent); }
+.item.sev2 { background: var(--wait-bg); }
+.item .ic { font-size: 16px; line-height: 1.35; text-align: center; }
+.item .t { font-weight: 600; overflow-wrap: anywhere; }
+.item .t .proj { color: var(--muted); font-weight: 500; }
+.item .why { color: var(--ink-2); font-size: 13px; margin-top: 2px; overflow-wrap: anywhere; }
+.item .next { font-size: 13px; margin-top: 3px; overflow-wrap: anywhere; }
+.item .next > b { font-weight: 650; }
+.item .act { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.cd { display: inline-block; font-size: 12px; font-weight: 650; padding: 1px 8px; border-radius: 999px; background: var(--chip); color: var(--ink-2); margin-left: 6px; white-space: nowrap; font-variant-numeric: tabular-nums; vertical-align: 1px; }
+.cd.open { background: var(--bad); color: #fff; }
+.cd.soon { background: var(--warn); color: #111; }
+.inbox-foot { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+
+/* deadlines */
+.dl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.dl:last-child { border-bottom: 0; }
+.dl .when { color: var(--ink-2); font-size: 13px; text-align: right; white-space: nowrap; }
+
+/* projects: one compact row each, tap to open the details */
+.weekline { font-size: 13.5px; color: var(--ink-2); margin: -2px 0 10px; }
+.weekline b { color: var(--ink); }
+.plist { display: flex; flex-direction: column; gap: 8px; }
+details.prow { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+details.prow.paused { outline: 2px solid var(--bad); outline-offset: -1px; }
+details.prow > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 12px minmax(90px, .9fr) minmax(0, 2fr) auto; gap: 4px 12px; align-items: center; padding: 11px 14px; }
+details.prow > summary::-webkit-details-marker { display: none; }
+details.prow > summary:hover { background: var(--hover); border-radius: 12px; }
+details.prow[open] > summary { border-bottom: 1px solid var(--line); border-radius: 12px 12px 0 0; }
+details.prow .pbody { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 10px; }
+.hdot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+.hdot.good { background: var(--good); } .hdot.warn { background: var(--warn); } .hdot.bad { background: var(--bad); } .hdot.idle { background: transparent; border: 1.5px solid var(--muted); }
+.pname { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pstate { font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pnums { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.pnum { font-size: 12px; color: var(--ink-2); background: var(--chip); border-radius: 999px; padding: 1px 7px; white-space: nowrap; }
+.pnum b { color: var(--ink); font-weight: 650; }
+.pnum.bad { background: var(--you-bg); } .pnum.bad b { color: var(--bad-text); }
+.pnum.ok b { color: var(--good-text); }
+.repo-links { font-size: 12px; color: var(--muted); }
+.repo-links a { color: var(--ink-2); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; background: var(--chip); font-size: 12.5px; color: var(--ink-2); border: 1px solid transparent; }
 .chip b { font-weight: 650; color: var(--ink); }
@@ -105,49 +147,29 @@ h2 .count { background: var(--chip); color: var(--ink-2); border-radius: 999px; 
 .pr .title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 550; }
 .pr .title a { color: inherit; }
 .pr .who { color: var(--muted); font-size: 12px; white-space: nowrap; }
-.pr .st { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12.5px; color: var(--ink-2); }
-.st .ok { color: var(--good-text); } .st .bad { color: var(--bad-text); } .st .wait { color: var(--warn-text); }
+.st { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12.5px; color: var(--ink-2); }
+.st .ok, .ok { color: var(--good-text); } .st .bad, .bad { color: var(--bad-text); } .st .wait, .wait { color: var(--warn-text); }
 .verdict { font-weight: 600; }
 .verdict.you { color: var(--bad-text); } .verdict.agent { color: var(--warn-text); } .verdict.wait { color: var(--ink-2); }
 .foot { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 2px; }
-.err { color: var(--bad-text); font-size: 13px; overflow-wrap: anywhere; }
-.warnline { color: var(--warn-text); font-size: 13px; }
+
+/* agents */
 table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 th { text-align: left; color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; padding: 6px 8px; border-bottom: 1px solid var(--line); }
-td { padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
 tr:last-child td { border-bottom: 0; }
-.feed { display: flex; flex-direction: column; }
-.ev { display: grid; grid-template-columns: 62px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
-.ev:last-child { border-bottom: 0; }
-.ev .when { color: var(--muted); font-size: 12px; padding-top: 2px; white-space: nowrap; }
-.ev .what { min-width: 0; overflow-wrap: anywhere; }
-.ev .what .tag { color: var(--muted); font-size: 12px; margin-right: 6px; }
-.ev .what .who { font-weight: 600; }
-.taskform { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px dashed var(--border); border-radius: 8px; }
-input[type=text], input[type=password], input[type=number], textarea, select { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; width: 100%; }
-textarea { min-height: 64px; resize: vertical; }
-label.f { display: block; font-size: 13px; color: var(--ink-2); margin-top: 8px; }
-label.f > span { display: block; margin-bottom: 4px; }
-.setup ol { padding-left: 20px; margin: 8px 0; }
-.setup li { margin: 4px 0; }
-.setup code { background: var(--chip); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
-dialog { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--ink); padding: 18px 18px 14px; width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; }
-dialog::backdrop { background: rgba(0,0,0,.45); }
-dialog h3 { margin: 0 0 8px; font-size: 17px; }
-.dlg-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
-.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 9px 14px; border-radius: 10px; font-size: 14px; max-width: calc(100vw - 32px); box-shadow: 0 6px 24px rgba(0,0,0,.25); z-index: 20; }
-.toast.bad { background: var(--bad); color: #fff; }
-footer { color: var(--muted); font-size: 12px; margin-top: 24px; display: flex; flex-wrap: wrap; gap: 6px 16px; }
-details summary { cursor: pointer; color: var(--ink-2); font-size: 13.5px; }
-.hid { display: none !important; }
-table.team td { white-space: normal; }
-table.team td:first-child { white-space: nowrap; }
-.model { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--chip); color: var(--ink); white-space: nowrap; }
+table.team td.c-name { white-space: nowrap; }
+.model { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--chip); color: var(--ink); white-space: nowrap; margin-left: 6px; }
 .model.m-fable { background: color-mix(in srgb, var(--violet) 22%, transparent); }
 .model.m-opus { background: color-mix(in srgb, var(--accent) 22%, transparent); }
 .model.m-sonnet { background: color-mix(in srgb, var(--aqua) 22%, transparent); }
 .model.m-gpt { background: color-mix(in srgb, var(--good) 18%, transparent); }
 .model.m-gemini { background: color-mix(in srgb, var(--warn) 22%, transparent); }
+.state { display: inline-block; font-size: 12px; font-weight: 650; padding: 1px 8px; border-radius: 999px; background: var(--chip); color: var(--ink-2); white-space: nowrap; }
+.state.working, .state.starting, .state.sizing { background: color-mix(in srgb, var(--good) 20%, transparent); color: var(--good-text); }
+.state.misconfigured { background: var(--bad); color: #fff; }
+.state.noshow, .state.capped { background: var(--warn); color: #111; }
+.cause { font-size: 12.5px; color: var(--ink-2); margin-top: 3px; max-width: 520px; }
 .meter { position: relative; display: inline-flex; align-items: center; width: 84px; height: 18px; border-radius: 9px; background: color-mix(in srgb, var(--accent) 14%, transparent); overflow: hidden; vertical-align: middle; }
 .meter .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 9px; }
 .meter.high .fill { background: var(--warn); }
@@ -155,40 +177,84 @@ table.team td:first-child { white-space: nowrap; }
 .meter .num { position: relative; width: 100%; text-align: center; font-size: 11.5px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
 .chip .meter { width: 64px; height: 16px; }
 .chip.warnchip { background: var(--wait-bg); color: var(--warn-text); }
-table.team .ok { color: var(--good-text); }
-table.team .wait { color: var(--warn-text); }
-@media (max-width: 640px) {
-  table.team thead { display: none; }
-  table.team, table.team tbody { display: block; }
-  table.team tr { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "name model m5" "now now now" "job job job" "m7 m7 m7"; gap: 4px 10px; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: center; }
-  table.team tr:last-child { border-bottom: 0; }
-  table.team td { display: block; padding: 0; border: 0; }
-  table.team td.c-name { grid-area: name; } table.team td.c-model { grid-area: model; } table.team td.c-5h { grid-area: m5; }
-  table.team td.c-now { grid-area: now; } table.team td.c-job { grid-area: job; } table.team td.c-7d { grid-area: m7; }
-  table.team td.c-name .meta { display: inline; margin-left: 6px; }
-  table.team td.c-5h::before { content: '5h '; color: var(--muted); font-size: 12px; }
-  table.team td.c-7d:has(.meter)::before { content: '7 days '; color: var(--muted); font-size: 12px; }
-  table.team td.c-7d > .meter { width: 120px; }
-}
-.onlynarrow { display: none; }
+
+/* outside the labels, system, activity */
+.urow { padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; overflow-wrap: anywhere; }
+.urow:last-child { border-bottom: 0; }
+.sys { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 10px; }
+.sys .big { font-size: 22px; font-weight: 650; line-height: 1.2; }
+.sys .big.bad { color: var(--bad-text); } .sys .big.warn { color: var(--warn-text); } .sys .big.ok { color: var(--good-text); }
+details.sec > summary { list-style: none; cursor: pointer; }
+details.sec > summary::-webkit-details-marker { display: none; }
+details.sec > summary h2::before { content: '\25B8'; font-size: 11px; }
+details.sec[open] > summary h2::before { content: '\25BE'; }
+.feed { display: flex; flex-direction: column; }
+.ev { display: grid; grid-template-columns: 62px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+.ev:last-child { border-bottom: 0; }
+.ev .when { color: var(--muted); font-size: 12px; padding-top: 2px; white-space: nowrap; }
+.ev .what { min-width: 0; overflow-wrap: anywhere; }
+.ev .what .tag { color: var(--muted); font-size: 12px; margin-right: 6px; }
+.ev .what .who { font-weight: 600; }
+
+/* forms and dialogs */
+.taskform { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px dashed var(--border); border-radius: 8px; }
+input[type=text], input[type=password], input[type=number], textarea, select { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; width: 100%; }
+textarea { min-height: 64px; resize: vertical; }
+label.f { display: block; font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+label.f > span { display: block; margin-bottom: 4px; }
+.setup ol { padding-left: 20px; margin: 8px 0; }
+.setup li { margin: 4px 0; }
+code { background: var(--chip); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+dialog { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--ink); padding: 18px 18px 14px; width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; }
+dialog::backdrop { background: rgba(0,0,0,.45); }
+dialog h3 { margin: 0 0 8px; font-size: 17px; }
+.dlg-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 9px 14px; border-radius: 10px; font-size: 14px; max-width: calc(100vw - 32px); box-shadow: 0 6px 24px rgba(0,0,0,.25); z-index: 20; }
+.toast.bad { background: var(--bad); color: #fff; }
 .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+footer { color: var(--muted); font-size: 12px; margin-top: 24px; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+
 @media (max-width: 640px) {
   header .sub, header #lastRefresh { display: none; }
-  .onlynarrow { display: block; }
-  .need { flex-wrap: wrap; }
-  .need .act { width: 100%; justify-content: flex-end; }
+  .lnk-wide { display: none; } .lnk-narrow { display: inline; }
+  .actions { gap: 6px; }
+  .actions .btn { padding: 7px 10px; }
+  .brand h1 { font-size: 16px; }
+  .statusline { font-size: 12.5px; gap: 2px 12px; }
+  .statusline > * { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .statusline .s-fresh { display: none; }
+  .dl { grid-template-columns: minmax(0, 1fr); }
+  .dl .when { text-align: left; }
+  .item { grid-template-columns: 22px minmax(0, 1fr); }
+  .item .act { grid-column: 1 / -1; justify-content: flex-end; }
+  details.prow > summary { grid-template-columns: 12px minmax(0, 1fr); }
+  details.prow > summary .pstate, details.prow > summary .pnums { grid-column: 2; justify-content: flex-start; }
+  table.team thead { display: none; }
+  table.team, table.team tbody { display: block; }
+  table.team tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name m5" "now now" "last m7"; gap: 6px 10px; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: center; }
+  table.team tr:last-child { border-bottom: 0; }
+  table.team td { display: block; padding: 0; border: 0; }
+  table.team td.c-name { grid-area: name; white-space: normal; } table.team td.c-5h { grid-area: m5; } table.team td.c-now { grid-area: now; }
+  table.team td.c-last { grid-area: last; } table.team td.c-7d { grid-area: m7; }
+  table.team td.c-5h:has(.meter)::before { content: '5h '; color: var(--muted); font-size: 12px; }
+  table.team td.c-7d:has(.meter)::before { content: '7d '; color: var(--muted); font-size: 12px; }
 }
 </style>
 </head>
 <body>
-<header class="top"><div class="wrap">
-  <div class="brand"><span class="dot" id="statusDot"></span><h1>Mission Control</h1><span class="sub" id="ownerLabel"></span></div>
-  <div class="actions">
-    <span class="meta" id="lastRefresh"></span>
-    <button class="btn" id="btnRefresh" type="button">Refresh</button>
-    <button class="btn ghost" id="btnSettings" type="button" aria-label="Settings" title="Settings">&#9881;</button>
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><span class="dot" id="statusDot"></span><h1>Mission Control</h1><span class="sub" id="ownerLabel"></span></div>
+    <div class="actions">
+      <span class="meta" id="lastRefresh"></span>
+      <a class="btn" id="lnkProjectForm" href="https://claude.ai/artifact/Jchh6A2dWfUQZKNxHEJsPT" target="_blank" rel="noopener" title="Project management form: every project, including ones that aren't GitHub repos (private claude.ai page)"><span class="lnk-wide">Project form</span><span class="lnk-narrow">Form</span>&nbsp;&#8599;</a>
+      <button class="btn" id="btnTask" type="button" title="New task for the agents" aria-label="New task">+<span class="lnk-wide">&nbsp;Task</span></button>
+      <button class="btn" id="btnRefresh" type="button" aria-label="Refresh"><span class="lnk-wide">Refresh</span><span class="lnk-narrow">&#8635;</span></button>
+      <button class="btn ghost" id="btnSettings" type="button" aria-label="Settings" title="Settings">&#9881;</button>
+    </div>
   </div>
-</div></header>
+  <div class="wrap statusrow"><div class="statusline hid" id="statusLine" aria-live="polite"></div></div>
+</header>
 <main class="wrap" id="app"><noscript>This page needs JavaScript.</noscript></main>
 <div id="toast" class="toast hid" role="status"></div>
 
@@ -199,6 +265,7 @@ table.team .wait { color: var(--warn-text); }
     <label class="f"><span>Owner (GitHub user or org)</span><input type="text" id="fOwner"></label>
     <label class="f"><span>Repositories — one per line: <code>repo | short name | note</code></span><textarea id="fRepos" rows="6"></textarea></label>
     <div class="toolbar" style="margin:6px 0 0"><button class="btn sm" type="button" id="btnDiscover">Find my agent repos</button><span class="meta" id="discoverMsg"></span></div>
+    <label class="f"><span>Repos attached to each routine (optional, stays in this browser) — one per line: <code>claude-1: fenced-repo, other-fenced-repo</code>. With it, the page can tell a missing repo from "out of usage" when an agent doesn't start.</span><textarea id="fRoutineRepos" rows="3" placeholder="claude-1: repo-a, repo-b"></textarea></label>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px">
       <label class="f"><span>Auto-refresh (min)</span><input type="number" id="fRefresh" min="1" max="120"></label>
       <label class="f"><span>Stalled after (h)</span><input type="number" id="fStale" min="1" max="72" step="0.5"></label>
@@ -209,12 +276,26 @@ table.team .wait { color: var(--warn-text); }
     <details style="margin-top:10px"><summary>How to create the token</summary>
       <div class="setup" id="tokenHelp2"></div>
     </details>
+    <details style="margin-top:6px"><summary>Deadlines for owner-only work</summary>
+      <div class="setup">
+        <p class="kv">Add lines like these to an open issue's description and the page shows a live countdown, ranks it in the inbox and lists it under Deadlines (times use the zone you write; <code>ET</code>, <code>UTC</code>/<code>Z</code> and <code>TPE</code> work too):</p>
+        <p><code>Window: Sat 06:00-13:00 America/New_York weekly until 2026-11-15 | Weekly owner steps</code></p>
+        <p><code>Window: Sun 00:05 UTC - Mon 04:05 UTC weekly until 2026-11-15 | Sunday lock</code></p>
+        <p><code>Due: 2026-11-06 18:00 Asia/Taipei | Send the monthly report</code></p>
+      </div>
+    </details>
     <div class="dlg-actions">
       <button class="btn danger" type="button" id="btnForget">Forget token</button>
       <button class="btn" type="button" id="btnCancel">Cancel</button>
       <button class="btn primary" type="submit" id="btnSave">Save</button>
     </div>
   </form>
+</dialog>
+
+<dialog id="taskDlg">
+  <h3>New task for the agents</h3>
+  <label class="f"><span>Project</span><select id="tRepo"></select></label>
+  <div id="tHost" style="margin-top:8px"></div>
 </dialog>
 
 <script>
@@ -229,14 +310,17 @@ const DEFAULTS = {
   repos: [],
   hidden: [],
   refreshMin: 5, staleHours: 2, claimHours: 3, failHours: 3, includedMinutes: 2000,
+  routineRepos: {},
 };
-const LS = { token: 'mc.token', config: 'mc.config' };
+const LS = { token: 'mc.token', config: 'mc.config', snooze: 'mc.snooze', open: 'mc.open' };
 const LABELS = ['plan', 'ready', 'claimed', 'in-review', 'blocked', 'pause'];
 const DISPATCH_RE = /^Dispatch:\s*([\w.-]+)\s*·\s*([^·\n]*?)\s*·\s*([\w-]+)(?:\s*·\s*sha=([0-9a-f]{7,40}))?/m;
+const MIN = 6e4, HOUR = 36e5, DAY = 864e5;
 /* The team roster mirrors dispatch/config.json (fetched at start-up when served from GitHub Pages). */
-const DEFAULT_TEAM = {"claimTimeoutMinutes": 45, "coolingHours": 5, "agents": [{"name": "admin", "account": 2, "model": "Fable", "pool": "admin", "cap5h": 4, "cap7d": 30, "perHour": 2, "role": "Administrator: plans plan issues, sizes new issues; never writes code"}, {"name": "claude-1", "account": 1, "model": "Opus", "pool": "home", "cap5h": 5, "cap7d": 50, "perHour": 1, "role": "Fenced repos (trading app): every build and fix there"}, {"name": "claude-2", "account": 2, "model": "Opus", "pool": "general", "cap5h": 5, "cap7d": 50, "perHour": 1, "role": "Hard tasks (size:L) and overflow"}, {"name": "claude-3", "account": 3, "model": "Sonnet", "pool": "general", "cap5h": 8, "cap7d": 80, "perHour": 1, "role": "Normal tasks (size:S/M)"}, {"name": "claude-4", "account": 4, "model": "Sonnet", "pool": "general", "cap5h": 8, "cap7d": 80, "perHour": 1, "role": "Normal tasks (size:S/M)"}], "accounts": {"1": {"cap5h": 6}, "2": {"cap5h": 8}, "3": {"cap5h": 10}, "4": {"cap5h": 10}}, "codex": {"enabled": true, "model": "GPT", "cooldownHours": 24, "role": "Reviews every PR; takes over PRs an agent could not fix"}, "antigravity": {"enabled": true, "model": "Gemini", "role": "ui / visual tasks, worked on your Mac"}};
+const DEFAULT_TEAM = {"everyMinutes": 15, "claimTimeoutMinutes": 45, "coolingHours": 5, "agents": [{"name": "admin", "account": 2, "model": "Fable", "pool": "admin", "cap5h": 4, "cap7d": 30, "perHour": 2, "role": "Administrator: plans plan issues, sizes new issues; never writes code"}, {"name": "claude-1", "account": 1, "model": "Opus", "pool": "home", "cap5h": 5, "cap7d": 50, "perHour": 1, "role": "Fenced repos (trading app): every build and fix there"}, {"name": "claude-2", "account": 2, "model": "Opus", "pool": "general", "cap5h": 5, "cap7d": 50, "perHour": 1, "role": "Hard tasks (size:L) and overflow"}, {"name": "claude-3", "account": 3, "model": "Sonnet", "pool": "general", "cap5h": 8, "cap7d": 80, "perHour": 1, "role": "Normal tasks (size:S/M)"}, {"name": "claude-4", "account": 4, "model": "Sonnet", "pool": "general", "cap5h": 8, "cap7d": 80, "perHour": 1, "role": "Normal tasks (size:S/M)"}], "accounts": {"1": {"cap5h": 6}, "2": {"cap5h": 8}, "3": {"cap5h": 10}, "4": {"cap5h": 10}}, "codex": {"enabled": true, "model": "GPT", "cooldownHours": 24, "role": "Reviews every PR; takes over PRs an agent could not fix"}, "antigravity": {"enabled": true, "model": "Gemini", "role": "ui / visual tasks, worked on your Mac"}};
 let team = DEFAULT_TEAM;
 let dispatcher = null;
+let systemPRs = null;
 const API = 'https://api.github.com';
 
 let cfg = loadConfig();
@@ -247,9 +331,15 @@ let rate = null;
 let inflight = null;
 let busy = false;
 let tokenBad = false;
-let feedScope = 'all';
+let feedScope = 'exceptions';
 let discoveredThisLoad = false;
+let showAllInbox = false;
+let showSnoozed = false;
+let snoozed = loadJSON(LS.snooze, {});
+const openState = new Set(loadJSON(LS.open, []));
 
+function loadJSON(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v == null ? fallback : v; } catch (e) { return fallback; } }
+function saveJSON(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
 function loadConfig() {
   try {
     const s = JSON.parse(localStorage.getItem(LS.config) || 'null');
@@ -257,10 +347,13 @@ function loadConfig() {
       const c = Object.assign({}, DEFAULTS, s);
       c.repos = Array.isArray(c.repos) ? c.repos.filter(r => r && /^[\w.-]+$/.test(r.name || '')) : [];
       c.hidden = Array.isArray(c.hidden) ? c.hidden.filter(n => typeof n === 'string') : [];
+      const rr = {};
+      if (c.routineRepos && typeof c.routineRepos === 'object') for (const [k, v] of Object.entries(c.routineRepos)) if (Array.isArray(v)) rr[k.toLowerCase()] = v.filter(x => typeof x === 'string' && /^[\w.-]+$/.test(x));
+      c.routineRepos = rr;
       return c;
     }
   } catch (e) { /* storage unavailable */ }
-  return Object.assign({}, DEFAULTS, { repos: [] });
+  return Object.assign({}, DEFAULTS, { repos: [], routineRepos: {} });
 }
 function saveConfig() { try { localStorage.setItem(LS.config, JSON.stringify(cfg)); } catch (e) { toast('Could not save settings in this browser', true); } }
 function loadToken() { try { return localStorage.getItem(LS.token) || ''; } catch (e) { return ''; } }
@@ -294,22 +387,150 @@ function ago(iso) {
   const hh = m / 60; if (hh < 48) return Math.round(hh) + 'h ago';
   return Math.round(hh / 24) + 'd ago';
 }
+function dur(ms) {
+  const m = Math.max(0, Math.round(ms / MIN));
+  if (m < 60) return m + 'm';
+  const hh = Math.floor(m / 60), mm = m % 60;
+  if (hh < 24) return hh + 'h' + (mm ? ' ' + mm + 'm' : '');
+  const dd = Math.floor(hh / 24), rh = hh % 24;
+  return dd + 'd' + (rh && dd < 3 ? ' ' + rh + 'h' : '');
+}
 const fmtClock = (ms) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const fmtDay = (ms) => new Date(ms).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+function fmtRange(a, b) {
+  const same = new Date(a).toDateString() === new Date(b).toDateString();
+  return fmtDay(a) + ' – ' + (same ? fmtClock(b) : fmtDay(b));
+}
 const fmtNum = (n) => (n == null || isNaN(n)) ? '—' : Number(n).toLocaleString();
 const firstLine = (s, max = 110) => { const l = String(s || '').split('\n').find(x => x.trim()) || ''; return l.length > max ? l.slice(0, max - 1) + '…' : l; };
 const agentOf = (body) => { const m = /^\s*Agent:\s*([\w.-]+)/im.exec(body || ''); return m ? m[1].toLowerCase() : null; };
 const isCodex = (login) => /codex/i.test(login || '');
 const isJules = (login) => /jules/i.test(login || '');
-const isBot = (login) => /\[bot\]$/i.test(login || '');
 const issueNum = (url) => { const m = /\/(\d+)$/.exec(url || ''); return m ? +m[1] : null; };
 const labelsOf = (i) => (i.labels || []).map(l => typeof l === 'string' ? l : l.name);
 const has = (i, l) => labelsOf(i).includes(l);
 const mentions = (body, n) => new RegExp('(^|[^\\w])#' + n + '(?!\\d)').test(body || '');
+const names = (list) => list.length <= 1 ? list.join('') : list.slice(0, -1).join(', ') + ' and ' + list[list.length - 1];
+const plural = (n, word) => n + ' ' + word + (n === 1 ? '' : 's');
 
 let toastTimer = 0;
 function toast(msg, bad) {
   const t = $('#toast'); t.textContent = msg; t.classList.toggle('bad', !!bad); t.classList.remove('hid');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hid'), bad ? 6000 : 3500);
+}
+function snooze(key, ms) {
+  const t = now();
+  for (const k of Object.keys(snoozed)) if (snoozed[k] < t) delete snoozed[k];
+  if (ms > 0) snoozed[key] = t + ms; else delete snoozed[key];
+  saveJSON(LS.snooze, snoozed);
+  render();
+}
+const isSnoozed = (key) => !!snoozed[key] && snoozed[key] > now();
+function keepOpen(key, el) {
+  if (openState.has(key)) el.open = true;
+  el.addEventListener('toggle', () => { if (el.open) openState.add(key); else openState.delete(key); saveJSON(LS.open, [...openState]); });
+  return el;
+}
+
+/* ---------- deadlines: "Window:" / "Due:" lines in an issue's description ---------- */
+const LOCAL_TZ = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch (e) { return 'UTC'; } })();
+const TZ_ALIAS = { z: 'UTC', utc: 'UTC', gmt: 'UTC', et: 'America/New_York', est: 'America/New_York', edt: 'America/New_York', ct: 'America/Chicago', cdt: 'America/Chicago', pt: 'America/Los_Angeles', pst: 'America/Los_Angeles', pdt: 'America/Los_Angeles', tpe: 'Asia/Taipei', taipei: 'Asia/Taipei', jst: 'Asia/Tokyo', cet: 'Europe/Paris', bst: 'Europe/London' };
+const DOW = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
+function zoneOf(s) {
+  if (!s) return LOCAL_TZ;
+  const k = s.toLowerCase();
+  if (TZ_ALIAS[k]) return TZ_ALIAS[k];
+  try { new Intl.DateTimeFormat('en-US', { timeZone: s }); return s; } catch (e) { return LOCAL_TZ; }
+}
+const dtfCache = new Map();
+function partsIn(ms, tz) {
+  if (!dtfCache.has(tz)) dtfCache.set(tz, new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+  const o = {};
+  for (const p of dtfCache.get(tz).formatToParts(new Date(ms))) o[p.type] = p.value;
+  return { y: +o.year, m: +o.month, d: +o.day, h: (+o.hour) % 24, mi: +o.minute, s: +o.second };
+}
+function tzOffset(ms, tz) { const p = partsIn(ms, tz); return Date.UTC(p.y, p.m - 1, p.d, p.h, p.mi, p.s) - Math.floor(ms / 1000) * 1000; }
+function zonedToUtc(y, mo, d, hh, mi, tz) {
+  const guess = Date.UTC(y, mo - 1, d, hh, mi);
+  let ms = guess - tzOffset(guess, tz);
+  const second = guess - tzOffset(ms, tz);
+  if (second !== ms) ms = second;
+  return ms;
+}
+function parseDeadlines(body) {
+  const out = [];
+  for (const raw of String(body || '').split('\n')) {
+    const m = /^\s*(?:[-*]\s+)?(?:⏰\s*)?(window|due)\s*:\s*(.+)$/i.exec(raw.replace(/[`*]/g, ' '));
+    if (!m) continue;
+    let rest = m[2], label = '', until = null;
+    const bar = rest.indexOf('|'); if (bar >= 0) { label = rest.slice(bar + 1).trim(); rest = rest.slice(0, bar); }
+    rest = rest.replace(/\buntil\s+(\d{4}-\d{2}-\d{2})\b/i, (_, d) => { until = d; return ' '; }).replace(/\bweekly\b/ig, ' ').trim();
+    if (/^due$/i.test(m[1])) {
+      const d = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{1,2}):(\d{2}))?\s*(Z\b|[A-Za-z][\w\/+-]*)?/.exec(rest);
+      if (!d) continue;
+      const tz = zoneOf(d[6]);
+      out.push({ kind: 'due', at: zonedToUtc(+d[1], +d[2], +d[3], d[4] != null ? +d[4] : 23, d[5] != null ? +d[5] : 59, tz), tz, label });
+    } else {
+      const w = /^(sun|mon|tue|wed|thu|fri|sat)[a-z]*\.?\s+(\d{1,2}):(\d{2})\s*(Z\b|[A-Za-z][\w\/+-]*)?\s*[-–—]\s*(?:(sun|mon|tue|wed|thu|fri|sat)[a-z]*\.?\s+)?(\d{1,2}):(\d{2})\s*(Z\b|[A-Za-z][\w\/+-]*)?/i.exec(rest);
+      if (!w) continue;
+      const sd = DOW[w[1].slice(0, 3).toLowerCase()], ed = w[5] ? DOW[w[5].slice(0, 3).toLowerCase()] : sd;
+      out.push({ kind: 'window', sd, sh: +w[2], sm: +w[3], ed, eh: +w[6], em: +w[7], tz: zoneOf(w[8] || w[4]), until, label });
+    }
+  }
+  return out;
+}
+/* The occurrence of a weekly window that is open now or comes next (null once `until` has passed). */
+function windowInstance(w, nowMs) {
+  const p = partsIn(nowMs, w.tz);
+  let best = null;
+  for (let k = -7; k <= 8; k++) {
+    const day = new Date(Date.UTC(p.y, p.m - 1, p.d + k));
+    if (day.getUTCDay() !== w.sd) continue;
+    const y = day.getUTCFullYear(), mo = day.getUTCMonth() + 1, d = day.getUTCDate();
+    if (w.until && (y + '-' + String(mo).padStart(2, '0') + '-' + String(d).padStart(2, '0')) > w.until) continue;
+    const start = zonedToUtc(y, mo, d, w.sh, w.sm, w.tz);
+    const e = new Date(Date.UTC(y, mo - 1, d + ((w.ed - w.sd + 7) % 7)));
+    let end = zonedToUtc(e.getUTCFullYear(), e.getUTCMonth() + 1, e.getUTCDate(), w.eh, w.em, w.tz);
+    if (end <= start) end += DAY;
+    if (end <= nowMs) continue;
+    if (!best || start < best.start) best = { start, end };
+  }
+  return best;
+}
+function deadlineNow(spec, nowMs) {
+  if (spec.kind === 'due') return { kind: 'due', at: spec.at, label: spec.label, spec };
+  const w = windowInstance(spec, nowMs);
+  return w ? { kind: 'window', start: w.start, end: w.end, label: spec.label, spec } : null;
+}
+const dlTime = (d) => d.kind === 'window' ? d.start : d.at;
+function cdState(d, nowMs) {
+  if (d.kind === 'window') {
+    if (nowMs >= d.start && nowMs < d.end) return { text: 'open · closes in ' + dur(d.end - nowMs), cls: 'open', sev: 1, open: true };
+    if (nowMs < d.start) { const s = d.start - nowMs; return { text: 'opens in ' + dur(s), cls: s < DAY ? 'soon' : '', sev: s < 12 * HOUR ? 2 : 3 }; }
+    return { text: 'closed', cls: '', sev: 3 };
+  }
+  if (nowMs < d.at) { const s = d.at - nowMs; return { text: 'due in ' + dur(s), cls: s < DAY ? 'open' : s < 3 * DAY ? 'soon' : '', sev: s < DAY ? 1 : s < 3 * DAY ? 2 : 3 }; }
+  return { text: 'overdue by ' + dur(nowMs - d.at), cls: 'open', sev: 1 };
+}
+function paintCd(el, nowMs) {
+  const d = el.dataset.cd === 'window' ? { kind: 'window', start: +el.dataset.a, end: +el.dataset.b } : { kind: 'due', at: +el.dataset.a };
+  const s = cdState(d, nowMs);
+  el.textContent = s.text; el.className = 'cd ' + s.cls;
+}
+function cdNode(d) {
+  const el = h('span', { class: 'cd', 'data-cd': d.kind, 'data-a': d.kind === 'window' ? d.start : d.at, 'data-b': d.kind === 'window' ? d.end : 0 });
+  paintCd(el, now());
+  return el;
+}
+function tickCountdowns() { const t = now(); document.querySelectorAll('[data-cd]').forEach(el => paintCd(el, t)); }
+const dlWhen = (d) => d.kind === 'window' ? fmtRange(d.start, d.end) : fmtDay(d.at);
+const dlTitle = (d) => d.label || ('#' + d.spec.issue.number + ' ' + firstLine(d.spec.issue.title, 60));
+function deadlineList(m, nowMs) {
+  const out = [];
+  for (const s of m.deadlines) { const d = deadlineNow(s, nowMs); if (d) out.push(d); }
+  const st = (d) => cdState(d, nowMs);
+  out.sort((a, b) => (st(b).open ? 1 : 0) - (st(a).open ? 1 : 0) || dlTime(a) - dlTime(b));
+  return out;
 }
 
 /* ---------- GitHub API ---------- */
@@ -353,10 +574,10 @@ async function discoverRepos(signal) {
 }
 const shortName = (n) => n.length > 22 && n.includes('-') ? n.split('-').slice(0, 2).join('-') : n;
 /* Adds newly found repos, except ones you removed in Settings (kept in cfg.hidden). */
-function mergeRepos(names) {
+function mergeRepos(found) {
   const have = new Set(cfg.repos.map(r => r.name.toLowerCase()).concat(cfg.hidden || []));
   let added = 0;
-  for (const n of names) if (!have.has(n.toLowerCase())) { cfg.repos.push({ name: n, nick: shortName(n), note: '' }); have.add(n.toLowerCase()); added++; }
+  for (const n of found) if (!have.has(n.toLowerCase())) { cfg.repos.push({ name: n, nick: shortName(n), note: '' }); have.add(n.toLowerCase()); added++; }
   cfg.discoveredAt = new Date().toISOString();
   saveConfig();
   return added;
@@ -370,7 +591,7 @@ async function loadRepo(r, signal) {
     meta: gh(base, { signal }),
     issues: gh(base + '/issues?state=open&per_page=100', { signal }),
     pulls: gh(base + '/pulls?state=open&per_page=50', { signal }),
-    comments: gh(base + '/issues/comments?sort=updated&direction=desc&per_page=100&since=' + encodeURIComponent(new Date(now() - 7 * 864e5).toISOString()), { signal }),
+    comments: gh(base + '/issues/comments?sort=updated&direction=desc&per_page=100&since=' + encodeURIComponent(new Date(now() - 7 * DAY).toISOString()), { signal }),
     labels: gh(base + '/labels?per_page=100', { signal }),
     reviewComments: gh(base + '/pulls/comments?sort=updated&direction=desc&per_page=40', { signal }),
     runs: gh(base + '/actions/runs?per_page=20', { signal }),
@@ -399,6 +620,9 @@ async function loadRepo(r, signal) {
   out.claimed = issues.filter(i => has(i, 'claimed'));
   out.working = issues.filter(i => has(i, 'claimed') && !has(i, 'in-review'));
   out.plans = issues.filter(i => has(i, 'plan'));
+  out.untracked = issues.filter(i => !LABELS.some(L => has(i, L)));
+  out.deadlines = [];
+  for (const i of issues) for (const s of parseDeadlines(i.body)) out.deadlines.push(Object.assign({ repo: out, issue: i }, s));
 
   const comments = got.comments || [];
   const reviewComments = got.reviewComments || [];
@@ -408,12 +632,19 @@ async function loadRepo(r, signal) {
   out.home = (got.labels || []).map(l => l.name).filter(n => n.startsWith('home:')).map(n => n.slice(5).toLowerCase());
   out.commentsByIssue = new Map();
   out.dispatches = [];
+  out.lastDispatchByIssue = new Map();
   for (const c of comments) {
     const n = issueNum(c.issue_url); if (n == null) continue;
     if (!out.commentsByIssue.has(n)) out.commentsByIssue.set(n, []);
     out.commentsByIssue.get(n).push(c);
     const m = DISPATCH_RE.exec(c.body || '');
-    if (m) out.dispatches.push({ who: m[1].toLowerCase(), model: m[2], mode: m[3].toLowerCase(), sha: m[4] || '', at: c.created_at, num: n, url: c.html_url, repo: out });
+    if (m) {
+      const sm = /^Session:\s*(https:\/\/claude\.ai\/\S+)/m.exec(c.body || '');
+      const x = { who: m[1].toLowerCase(), model: m[2], mode: m[3].toLowerCase(), sha: m[4] || '', at: c.created_at, num: n, url: c.html_url, session: sm ? sm[1] : '', repo: out };
+      out.dispatches.push(x);
+      const prev = out.lastDispatchByIssue.get(n);
+      if (!prev || x.at > prev.at) out.lastDispatchByIssue.set(n, x);
+    }
   }
 
   const pulls = got.pulls || [];
@@ -460,7 +691,7 @@ async function loadRepo(r, signal) {
   for (const p of out.prs) {
     if (p.agent) beats.push({ agent: p.agent, at: p.pr.updated_at, what: 'PR #' + p.number + ' updated', url: p.pr.html_url });
     else if (isJules(p.pr.user && p.pr.user.login)) beats.push({ agent: 'jules', at: p.pr.updated_at, what: 'PR #' + p.number + ' updated', url: p.pr.html_url });
-    for (const r of p.codexReviews) beats.push({ agent: 'codex', at: r.submitted_at, what: 'reviewed PR #' + p.number, url: r.html_url || p.pr.html_url });
+    for (const rr of p.codexReviews) beats.push({ agent: 'codex', at: rr.submitted_at, what: 'reviewed PR #' + p.number, url: rr.html_url || p.pr.html_url });
   }
   out.beats = beats;
   const claudeBeats = beats.filter(b => /^claude/.test(b.agent));
@@ -472,6 +703,7 @@ async function loadRepo(r, signal) {
   const runs = (got.runs && got.runs.workflow_runs) || [];
   out.runs = runs;
   out.mainRun = runs.find(x => x.head_branch === out.defaultBranch) || null;
+  out.mainFailing = !!out.mainRun && out.mainRun.status === 'completed' && ['failure', 'timed_out', 'startup_failure'].includes(out.mainRun.conclusion);
   out.ciError = out.errors.find(e => e.what === 'runs');
 
   const commits = got.commits || [];
@@ -479,14 +711,18 @@ async function loadRepo(r, signal) {
   const merged = (got.merged || []).filter(p => p.merged_at && hoursSince(p.merged_at) <= 24 * 7);
   out.merged7d = merged;
 
+  /* which agents have ever worked here: tells "never got access" apart from "out of usage" */
+  out.agentsSeen = new Set(beats.map(b => b.agent));
+  for (const p of (got.merged || [])) { const a = agentOf(p.body); if (a) out.agentsSeen.add(a); }
+
   /* activity feed */
   const feed = [];
-  for (const c of comments) { const dm = DISPATCH_RE.exec(c.body || ''); feed.push({ at: c.created_at, repo: out, kind: dm ? 'dispatch' : 'comment', who: dm ? dm[1] : (c.user && c.user.login), text: '#' + issueNum(c.issue_url) + ' ' + (dm ? dm[3] + ' · ' + dm[2] : firstLine(c.body)), url: c.html_url }); }
+  for (const c of comments) { const dm = DISPATCH_RE.exec(c.body || ''); feed.push({ at: c.created_at, repo: out, kind: dm ? 'dispatch' : 'comment', mode: dm ? dm[3].toLowerCase() : '', who: dm ? dm[1] : (c.user && c.user.login), text: '#' + issueNum(c.issue_url) + ' ' + (dm ? dm[3] + ' · ' + dm[2] : firstLine(c.body)), url: c.html_url }); }
   for (const c of reviewComments) feed.push({ at: c.created_at, repo: out, kind: 'review', who: c.user && c.user.login, text: 'PR #' + issueNum(c.pull_request_url) + ' ' + firstLine(c.body), url: c.html_url });
   for (const p of out.prs) feed.push({ at: p.pr.created_at, repo: out, kind: 'pr', who: p.agent || (p.pr.user && p.pr.user.login), text: 'opened PR #' + p.number + ' ' + p.title, url: p.pr.html_url });
   for (const p of merged) feed.push({ at: p.merged_at, repo: out, kind: 'merged', who: p.merged_by ? p.merged_by.login : 'merged', text: 'merged PR #' + p.number + ' ' + p.title, url: p.html_url });
   for (const c of commits.slice(0, 8)) feed.push({ at: (c.commit && c.commit.committer && c.commit.committer.date) || '', repo: out, kind: 'commit', who: (c.author && c.author.login) || (c.commit && c.commit.author && c.commit.author.name), text: firstLine(c.commit && c.commit.message), url: c.html_url });
-  for (const r of runs.slice(0, 8)) feed.push({ at: r.updated_at, repo: out, kind: 'ci', who: r.name, text: (r.status === 'completed' ? (r.conclusion || 'done') : r.status) + ' · ' + r.head_branch + ' · ' + r.event, url: r.html_url, conclusion: r.conclusion, status: r.status });
+  for (const w of runs.slice(0, 8)) feed.push({ at: w.updated_at, repo: out, kind: 'ci', who: w.name, text: (w.status === 'completed' ? (w.conclusion || 'done') : w.status) + ' · ' + w.head_branch + ' · ' + w.event, url: w.html_url, conclusion: w.conclusion, status: w.status });
   out.feed = feed.filter(f => f.at);
   return out;
 }
@@ -515,24 +751,24 @@ function analyzePR(pr, detail, checks, reviews, reviewComments, comments) {
   p.size = detail ? { add: detail.additions, del: detail.deletions, files: detail.changed_files } : null;
 
   const ageH = hoursSince(pr.created_at);
-  let verdict, level;
+  let verdict, level, next;
   if (p.draft) { verdict = 'Draft'; level = 'wait'; }
-  else if (p.mergeable === false || p.mergeableState === 'dirty') { verdict = 'Merge conflict'; level = 'you'; }
+  else if (p.mergeable === false || p.mergeableState === 'dirty') { verdict = 'Merge conflict'; level = 'you'; next = 'Resolve the conflict, or ask the agent to rebase.'; }
   else if (ck.state === 'failure') {
     const failH = ck.failedAt ? hoursSince(ck.failedAt) : ageH;
-    if (p.agent && failH < cfg.failHours) { verdict = 'Checks failing · agent retries hourly'; level = 'agent'; }
-    else { verdict = 'Checks failing'; level = 'you'; }
+    if (p.agent && failH < cfg.failHours) { verdict = 'Checks failing · agent retries'; level = 'agent'; }
+    else { verdict = 'Checks failing'; level = 'you'; next = 'Read the failing check: the agents have stopped retrying.'; }
   }
   else if (p.changes.length) {
     if (p.agent) { verdict = 'Changes requested · agent will fix'; level = 'agent'; }
-    else { verdict = 'Changes requested'; level = 'you'; }
+    else { verdict = 'Changes requested'; level = 'you'; next = 'Address the requested changes.'; }
   }
   else if (ck.state === 'pending') { verdict = 'Checks running'; level = 'wait'; }
-  else if (p.mergeableState === 'blocked') { verdict = 'Blocked by branch rules'; level = 'you'; }
-  else if (p.mergeableState === 'behind') { verdict = 'Behind base · update branch'; level = 'you'; }
-  else { verdict = 'Ready to merge'; level = 'you'; }
-  if (level === 'you' && verdict === 'Ready to merge' && p.codexNotes.length) verdict += ' · read Codex notes';
-  p.verdict = verdict; p.level = level;
+  else if (p.mergeableState === 'blocked') { verdict = 'Blocked by branch rules'; level = 'you'; next = 'Approve it, or adjust the branch rules.'; }
+  else if (p.mergeableState === 'behind') { verdict = 'Behind base · update branch'; level = 'you'; next = 'Press "Update branch" on GitHub.'; }
+  else { verdict = 'Ready to merge'; level = 'you'; next = 'Review it and merge.'; }
+  if (level === 'you' && verdict === 'Ready to merge' && p.codexNotes.length) { verdict += ' · read Codex notes'; next = 'Read the Codex notes, then merge.'; }
+  p.verdict = verdict; p.level = level; p.next = next || '';
   return p;
 }
 
@@ -548,22 +784,53 @@ async function loadBilling(signal) {
     const u = await gh('/users/' + user + '/settings/billing/usage?year=' + d.getUTCFullYear() + '&month=' + (d.getUTCMonth() + 1), { signal });
     const items = (u && u.usageItems) || [];
     let used = 0, net = 0, seen = false;
-    for (const it of items) if (/actions/i.test(it.product || '') && /minute/i.test(it.unitType || '')) { used += +it.quantity || 0; net += +it.netAmount || 0; seen = true; }
-    if (seen) return { used: Math.round(used), included: cfg.includedMinutes, net, source: 'usage' };
+    const byRepo = new Map();
+    for (const it of items) if (/actions/i.test(it.product || '') && /minute/i.test(it.unitType || '')) {
+      used += +it.quantity || 0; net += +it.netAmount || 0; seen = true;
+      const repo = it.repositoryName || it.repository_name || '';
+      if (repo) byRepo.set(repo, (byRepo.get(repo) || 0) + (+it.quantity || 0));
+    }
+    const nick = (n) => { const r = cfg.repos.find(x => x.name.toLowerCase() === n.toLowerCase()); return r ? (r.nick || r.name) : n; };
+    const top = [...byRepo.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([repo, min]) => ({ repo: nick(repo.split('/').pop()), min: Math.round(min) }));
+    if (seen) return { used: Math.round(used), included: cfg.includedMinutes, net, top, source: 'usage' };
   } catch (e) { if (e.name === 'AbortError') throw e; }
   return null;
 }
+function withProjection(b) {
+  if (!b) return b;
+  const d = new Date(), start = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
+  const days = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+  const elapsed = Math.max(0.5, (now() - start) / DAY);
+  return Object.assign({}, b, { projected: Math.round(b.used / elapsed * days) });
+}
 
-/* ---------- team roster + dispatcher status ---------- */
+/* ---------- team roster, dispatcher, the monitor's own PRs ---------- */
 async function loadTeam() {
   try { const r = await fetch('dispatch/config.json', { cache: 'no-cache' }); if (r.ok) { const j = await r.json(); if (j && Array.isArray(j.agents)) team = j; } } catch (e) { /* opened from disk: keep the built-in roster */ }
 }
 async function loadDispatcher(signal) {
   try {
-    const r = await gh('/repos/' + cfg.owner + '/mission-control/actions/workflows/dispatch.yml/runs?per_page=1', { signal });
-    const run = r && r.workflow_runs && r.workflow_runs[0];
-    return run ? { at: run.updated_at, status: run.status, conclusion: run.conclusion, url: run.html_url } : { none: true };
+    const r = await gh('/repos/' + cfg.owner + '/mission-control/actions/workflows/dispatch.yml/runs?per_page=60', { signal });
+    const runs = (r && r.workflow_runs) || [];
+    if (!runs.length) return { none: true };
+    const run = runs[0];
+    const since = now() - DAY;
+    const times = runs.map(x => Date.parse(x.run_started_at || x.created_at)).filter(t => t >= since).sort((a, b) => a - b);
+    const gaps = []; for (let i = 1; i < times.length; i++) gaps.push(times[i] - times[i - 1]);
+    gaps.sort((a, b) => a - b);
+    return {
+      at: run.updated_at, startedAt: run.run_started_at || run.created_at, status: run.status, conclusion: run.conclusion, url: run.html_url,
+      count24: times.length, median: gaps.length ? gaps[Math.floor(gaps.length / 2)] : null, max: gaps.length ? gaps[gaps.length - 1] : null,
+      failed24: runs.filter(x => Date.parse(x.created_at) >= since && x.status === 'completed' && !['success', 'skipped', 'cancelled'].includes(x.conclusion)).length,
+      listUrl: 'https://github.com/' + cfg.owner + '/mission-control/actions/workflows/dispatch.yml',
+    };
   } catch (e) { if (e && e.name === 'AbortError') throw e; return { error: (e && e.status) || true }; }
+}
+async function loadSystemPRs(signal) {
+  try {
+    const prs = await gh('/repos/' + cfg.owner + '/mission-control/pulls?state=open&per_page=20', { signal });
+    return (prs || []).map(p => ({ number: p.number, title: p.title, url: p.html_url, at: p.created_at, draft: !!p.draft }));
+  } catch (e) { if (e && e.name === 'AbortError') throw e; return null; }
 }
 
 /* ---------- refresh ---------- */
@@ -572,6 +839,7 @@ async function refresh() {
   if (inflight) inflight.abort();
   const ctrl = new AbortController(); inflight = ctrl;
   setBusy(true);
+  if (!model) render();
   try {
     tokenBad = false;
     await ensureOwner(ctrl.signal);
@@ -581,14 +849,18 @@ async function refresh() {
       const found = await discoverRepos(ctrl.signal).catch(e => { if (e && e.name === 'AbortError') throw e; return null; });
       if (found) { const added = mergeRepos(found); if (added) toast('Added ' + added + ' new agent repo' + (added > 1 ? 's' : '')); }
     }
-    const repos = await Promise.all(cfg.repos.map(r => loadRepo(r, ctrl.signal).catch(e => {
-      if (e && e.name === 'AbortError') throw e;
-      return { cfg: r, name: r.name, nick: r.nick || r.name, note: r.note || '', url: 'https://github.com/' + cfg.owner + '/' + r.name, errors: [], fatal: e };
-    })));
-    const billing = await loadBilling(ctrl.signal);
-    dispatcher = await loadDispatcher(ctrl.signal);
+    const [repos, billing, disp, sysPRs] = await Promise.all([
+      Promise.all(cfg.repos.map(r => loadRepo(r, ctrl.signal).catch(e => {
+        if (e && e.name === 'AbortError') throw e;
+        return { cfg: r, name: r.name, nick: r.nick || r.name, note: r.note || '', url: 'https://github.com/' + cfg.owner + '/' + r.name, errors: [], fatal: e };
+      }))),
+      loadBilling(ctrl.signal),
+      loadDispatcher(ctrl.signal),
+      loadSystemPRs(ctrl.signal),
+    ]);
     if (ctrl.signal.aborted) return;
-    model = buildModel(repos, billing);
+    dispatcher = disp; systemPRs = sysPRs;
+    model = buildModel(repos, withProjection(billing));
     tokenBad = repos.length > 0 && repos.every(r => r.fatal && r.fatal.status === 401);
     lastRefresh = now();
   } catch (e) {
@@ -602,17 +874,13 @@ async function refresh() {
 }
 
 function buildModel(repos, billing) {
-  const needs = [], agents = new Map(), feed = [];
+  const agents = new Map(), feed = [];
   const totals = { queue: 0, working: 0, prs: 0, blocked: 0, merged: 0, paused: 0, plans: 0 };
-  for (const r of repos) {
-    if (r.fatal) continue;
+  const live = repos.filter(r => !r.fatal);
+  for (const r of live) {
     totals.queue += r.queue.length; totals.working += r.working.length; totals.prs += r.prs.length;
     totals.blocked += r.blocked.length; totals.merged += r.merged7d.length; totals.plans += r.plans.length;
-    if (r.paused) { totals.paused++; needs.push({ kind: 'paused', repo: r, text: 'Paused', sub: 'Open issue ' + r.pauseIssues.map(i => '#' + i.number).join(', ') + ' carries the pause label; every agent skips this repo until it is closed.', url: r.pauseIssues[0].html_url, action: { label: 'Resume', run: () => resumeRepo(r), danger: false } }); }
-    for (const p of r.prs) if (p.level === 'you') needs.push({ kind: 'pr', repo: r, text: 'PR #' + p.number + ' · ' + p.verdict, sub: p.title + ' — by ' + (p.agent || (p.pr.user && p.pr.user.login) || '?') + ', ' + ago(p.pr.created_at), url: p.pr.html_url });
-    for (const i of r.stuck) needs.push({ kind: 'stuck', repo: r, text: '#' + i.number + ' claimed ' + Math.round(hoursSince(i.updated_at)) + 'h ago, no PR', sub: i.title + ' — the agent run probably died; unclaim it so the next run can take it.', url: i.html_url, action: { label: 'Unclaim', run: () => unclaim(r, i.number) } });
-    for (const i of r.blocked) { const lc = r.lastCommentByIssue.get(i.number); needs.push({ kind: 'blocked', repo: r, text: '#' + i.number + ' is blocked', sub: i.title + (lc ? ' — ' + firstLine(lc.body, 140) : ''), url: i.html_url }); }
-    if (r.stalled) needs.push({ kind: 'stalled', repo: r, info: true, text: r.queue.length + ' ready issue' + (r.queue.length > 1 ? 's' : '') + ' waiting, no Claude activity for ' + (r.lastClaudeAt ? Math.round(hoursSince(r.lastClaudeAt)) + 'h' : 'a while'), sub: 'The hourly routine may be off, out of usage, or failing. Check its run list.', url: 'https://claude.ai/code/routines' });
+    if (r.paused) totals.paused++;
     for (const b of r.beats) {
       const a = agents.get(b.agent) || { agent: b.agent, last: null, repos: new Set() };
       if (!a.last || b.at > a.last.at) a.last = Object.assign({ repo: r }, b);
@@ -620,18 +888,20 @@ function buildModel(repos, billing) {
     }
     feed.push(...r.feed);
   }
-  if (billing && billing.included && billing.used / billing.included >= 0.9) needs.push({ kind: 'billing', info: true, text: 'GitHub Actions minutes: ' + fmtNum(billing.used) + ' of ' + fmtNum(billing.included) + ' used this month', sub: 'Private-repo workflows stop (or bill) past the included minutes. Public repos are free.', url: 'https://github.com/settings/billing/summary' });
-  const order = { paused: 0, pr: 1, stuck: 2, blocked: 3, stalled: 4, billing: 5 };
-  needs.sort((a, b) => order[a.kind] - order[b.kind]);
   feed.sort((a, b) => b.at.localeCompare(a.at));
   const agentList = [...agents.values()].sort((a, b) => (b.last ? b.last.at : '').localeCompare(a.last ? a.last.at : ''));
-  return { repos, needs, agents: agentList, feed, billing, totals, team: buildTeam(repos, agentList) };
+  return {
+    repos, agents: agentList, feed, billing, totals,
+    team: buildTeam(repos, agentList),
+    deadlines: live.flatMap(r => r.deadlines),
+    untracked: live.flatMap(r => r.untracked.map(i => ({ r, i }))),
+  };
 }
 
-/* ---------- team: who works on what, load against caps ---------- */
+/* ---------- team: who works on what, and why an agent is not working ---------- */
 function buildTeam(repos, beatAgents) {
-  const T = team, HOUR = 36e5, nowMs = now();
-  const claimMs = (T.claimTimeoutMinutes || 45) * 6e4, coolMs = (T.coolingHours || 5) * HOUR;
+  const T = team, nowMs = now();
+  const claimMs = (T.claimTimeoutMinutes || 45) * MIN, coolMs = (T.coolingHours || 5) * HOUR;
   const live = repos.filter(r => !r.fatal);
   const disp = live.flatMap(r => r.dispatches || []);
   const claimerOf = (r, n) => {
@@ -647,28 +917,63 @@ function buildTeam(repos, beatAgents) {
     const i = r.issues.find(k => k.number === x.num);
     return !i || has(i, 'claimed') || has(i, 'in-review') || has(i, 'blocked');
   };
+  /* An agent that was woken and never claimed: missing repo access, or out of usage? */
+  const diagnose = (a, x) => {
+    const r = x.repo;
+    const listed = (cfg.routineRepos || {})[a.name];
+    const inList = listed && listed.length ? listed.some(n => n.toLowerCase() === r.name.toLowerCase()) : null;
+    const where = 'claude.ai/code/routines → "AI team · ' + a.name + '" → Edit → Repositories';
+    const base = { repo: r, num: x.num, url: x.url, at: x.at, session: x.session };
+    if (inList === false) return Object.assign(base, { cause: 'repo', why: 'Woken ' + ago(x.at) + ' for #' + x.num + ', but its routine doesn\'t have ' + r.name + ' attached (per Settings), so it stops at once.', fix: 'Add ' + r.name + ' in ' + where + '.' });
+    if (inList === null && !(r.agentsSeen && r.agentsSeen.has(a.name))) return Object.assign(base, { cause: 'repo?', why: 'Woken ' + ago(x.at) + ' for #' + x.num + ' and never claimed it. It has never worked in ' + r.name + ', so most likely its routine doesn\'t have that repo attached (otherwise: out of usage).', fix: 'Check ' + where + ' lists ' + r.name + '.' });
+    return Object.assign(base, { cause: 'usage', why: 'Woken ' + ago(x.at) + ' for #' + x.num + ' and never claimed it. It has worked in ' + r.name + ' before, so probably out of usage; skipped until about ' + fmtClock(Date.parse(x.at) + coolMs) + '.', fix: 'Usually nothing. If it repeats, check the account\'s usage and the routine\'s run list.' });
+  };
+  const generalRepos = live.filter(r => !r.home.length);
+  const eligibleFor = (a) => {
+    if (a.pool === 'admin') return live.reduce((s, r) => s + (r.paused ? 0 : r.plans.filter(i => !['claimed', 'blocked'].some(l => has(i, l))).length + r.queue.filter(i => !['size:S', 'size:M', 'size:L', 'ui'].some(l => has(i, l))).length), 0);
+    const rs = a.pool === 'home' ? live.filter(r => r.home.includes(a.name)) : generalRepos;
+    return rs.reduce((s, r) => s + (r.paused ? 0 : r.queue.length), 0);
+  };
   const acct = {};
-  const rows = (T.agents || []).map(a => {
+  const pre = (T.agents || []).map(a => {
     const seen = new Set(), mine = [];
     for (const x of disp) {
       if (x.who !== a.name || !['build', 'plan', 'fix-pr', 'triage'].includes(x.mode)) continue;
-      if (x.mode === 'triage') { const k = Math.floor(Date.parse(x.at) / 6e4); if (seen.has(k)) continue; seen.add(k); }
+      if (x.mode === 'triage') { const k = Math.floor(Date.parse(x.at) / MIN); if (seen.has(k)) continue; seen.add(k); }
       mine.push(x);
     }
     mine.sort((p, q) => q.at.localeCompare(p.at));
     const load5h = mine.filter(x => nowMs - Date.parse(x.at) <= 5 * HOUR).length;
     acct[a.account] = (acct[a.account] || 0) + load5h;
-    let status = mine.length ? 'idle' : 'no tasks yet', doing = null;
-    if (mine.some(x => x.mode !== 'triage' && nowMs - Date.parse(x.at) >= claimMs && nowMs - Date.parse(x.at) <= coolMs && !answered(x))) status = 'cooling';
-    if (status !== 'cooling') {
-      for (const r of live) for (const i of r.working) if (claimerOf(r, i.number) === a.name) { status = 'working'; doing = { r, n: i.number, url: i.html_url }; break; }
-      const last = mine[0];
-      if (!doing && last && nowMs - Date.parse(last.at) < claimMs) { if (last.mode === 'triage') status = 'sizing'; else { status = 'starting'; doing = { r: last.repo, n: last.num, url: last.url }; } }
+    return { a, mine, load5h };
+  });
+  const rows = pre.map(({ a, mine, load5h }) => {
+    let status = 'idle', doing = null, why = '';
+    const un = mine.filter(x => x.mode !== 'triage' && nowMs - Date.parse(x.at) >= claimMs && nowMs - Date.parse(x.at) <= coolMs && !answered(x))[0];
+    const noshow = un ? diagnose(a, un) : null;
+    for (const r of live) for (const i of r.working) if (!doing && claimerOf(r, i.number) === a.name) { status = 'working'; doing = { r, n: i.number, url: i.html_url }; }
+    const last = mine[0];
+    if (!doing && last && nowMs - Date.parse(last.at) < claimMs) { if (last.mode === 'triage') status = 'sizing'; else { status = 'starting'; doing = { r: last.repo, n: last.num, url: last.url }; } }
+    if (status === 'idle' && noshow) { status = noshow.cause === 'usage' ? 'noshow' : 'misconfigured'; why = noshow.why; }
+    const acctCap = ((T.accounts || {})[String(a.account)] || {}).cap5h;
+    if (status === 'idle') {
+      if (load5h >= a.cap5h) {
+        const oldest = mine.filter(x => nowMs - Date.parse(x.at) <= 5 * HOUR).map(x => Date.parse(x.at)).sort((p, q) => p - q)[0];
+        status = 'capped'; why = load5h + ' of ' + a.cap5h + ' tasks used in 5 hours' + (oldest ? '; a slot frees up at ' + fmtClock(oldest + 5 * HOUR) : '') + '.';
+      } else if (acctCap != null && acct[a.account] >= acctCap) { status = 'capped'; why = 'Account ' + a.account + ' is at its 5-hour cap (' + acct[a.account] + ' of ' + acctCap + ').'; }
+      else if (mine.length >= a.cap7d) { status = 'capped'; why = 'Weekly cap reached (' + mine.length + ' of ' + a.cap7d + ').'; }
     }
+    const eligible = eligibleFor(a);
+    let idleNoWork = false;
+    if (status === 'idle') {
+      if (!eligible) { idleNoWork = true; why = a.pool === 'admin' ? 'Nothing to plan or size: no plan issues and no unsized ready issues.' : mine.length ? 'Nothing to do: no ready issues in the repos it serves.' : 'Never woken yet: no ready issues in the repos it serves.'; }
+      else why = plural(eligible, 'task') + ' waiting for the next dispatcher run.';
+    }
+    if (status === 'working' && noshow) why = 'Also: ' + noshow.why;
     const serves = a.pool === 'admin' ? 'all repos: planning + sizing'
       : a.pool === 'home' ? (live.filter(r => r.home.includes(a.name)).map(r => r.nick).join(', ') || 'its home repo (label home:' + a.name + ')')
-      : 'all other agent repos';
-    return { name: a.name, model: a.model, account: a.account, role: a.role || '', serves, status, doing, load5h, cap5h: a.cap5h, load7d: mine.length, cap7d: a.cap7d, last: mine[0] || null };
+      : (generalRepos.map(r => r.nick).join(', ') || 'all other agent repos');
+    return { name: a.name, model: a.model, account: a.account, role: a.role || '', pool: a.pool, serves, status, why, doing, noshow, idleNoWork, eligible, load5h, cap5h: a.cap5h, load7d: mine.length, cap7d: a.cap7d, last: mine[0] || null };
   });
   const issuesAll = live.flatMap(r => r.paused ? [] : r.issues.map(i => ({ r, i })));
   const anyTo = (i) => labelsOf(i).some(l => l.startsWith('to:'));
@@ -678,8 +983,82 @@ function buildTeam(repos, beatAgents) {
   const codexQueue = issuesAll.filter(({ i }) => has(i, 'to:codex') && !has(i, 'in-review')).length;
   const codexTakeovers = disp.filter(x => x.who === 'codex' && x.mode === 'fix-pr').length;
   const beat = (n) => (beatAgents.find(b => b.agent === n) || {}).last || null;
-  return { rows, acct, unassigned, agQueue, agWorking, codexQueue, codexTakeovers, codexLast: beat('codex'), agLast: beat('antigravity'),
+  const known = new Set((T.agents || []).map(a => a.name).concat(['codex', 'antigravity']));
+  const others = beatAgents.filter(b => !known.has(b.agent) && b.last);
+  return { rows, acct, unassigned, agQueue, agWorking, codexQueue, codexTakeovers, codexLast: beat('codex'), agLast: beat('antigravity'), others,
            human: live.reduce((s, r) => s + r.blocked.length, 0), dispatches7d: disp.length };
+}
+
+/* ---------- the inbox: everything that needs you, ranked ---------- */
+function buildInbox(m) {
+  const items = [], nowMs = now(), live = m.repos.filter(r => !r.fatal);
+  const push = (o) => items.push(Object.assign({ sev: 2, order: items.length }, o));
+  const dlByIssue = new Map();
+  for (const s of m.deadlines) {
+    const d = deadlineNow(s, nowMs); if (!d) continue;
+    const k = s.repo.name + '#' + s.issue.number, cur = dlByIssue.get(k);
+    if (!cur || dlTime(d) < dlTime(cur)) dlByIssue.set(k, d);
+  }
+
+  for (const r of live) if (r.paused) push({ key: 'paused:' + r.name, sev: 2, icon: '⏸', repo: r, title: 'Paused', why: 'Issue ' + r.pauseIssues.map(i => '#' + i.number).join(', ') + ' carries the pause label, so every agent skips this repo.', next: 'Resume when you want the agents back.', url: r.pauseIssues[0].html_url, actions: [armedButton('Resume', () => resumeRepo(r))] });
+
+  for (const r of live) for (const i of r.blocked) {
+    const d = dlByIssue.get(r.name + '#' + i.number), st = d ? cdState(d, nowMs) : null;
+    const lc = r.lastCommentByIssue.get(i.number);
+    const said = lc && !DISPATCH_RE.test(lc.body || '') ? firstLine(lc.body, 150) : '';
+    push({ key: 'blocked:' + r.name + '#' + i.number, sev: st ? Math.min(2, st.sev) : 2, icon: d ? '⏰' : '⛔', repo: r, title: '#' + i.number + ' ' + i.title,
+      why: said ? 'Latest comment: ' + said : 'Labelled blocked: only you can move it.',
+      next: d ? dlTitle(d) + ' · ' + dlWhen(d) : 'Decide, or answer what the agent asked, then remove the blocked label.', deadline: d, url: i.html_url });
+  }
+  for (const [k, d] of dlByIssue) {
+    const s = d.spec; if (has(s.issue, 'blocked')) continue;
+    const st = cdState(d, nowMs); if (st.sev > 2) continue;
+    push({ key: 'deadline:' + k, sev: st.sev, icon: '⏰', repo: s.repo, title: '#' + s.issue.number + ' ' + s.issue.title, why: d.label || 'Deadline from the issue description.', next: dlWhen(d), deadline: d, url: s.issue.html_url });
+  }
+  for (const r of live) for (const p of r.prs) if (p.level === 'you') push({ key: 'pr:' + r.name + '#' + p.number + ':' + p.verdict, sev: 2, icon: '⇄', repo: r, title: 'PR #' + p.number + ' · ' + p.verdict, why: p.title + ' — by ' + (p.agent || (p.pr.user && p.pr.user.login) || '?') + ', ' + ago(p.pr.created_at), next: p.next, url: p.pr.html_url });
+  for (const r of live) for (const i of r.stuck) push({ key: 'stuck:' + r.name + '#' + i.number, sev: 2, icon: '⏳', repo: r, title: '#' + i.number + ' claimed ' + Math.round(hoursSince(i.updated_at)) + 'h ago, no PR', why: i.title + ' — the agent run probably died.', next: 'Unclaim it so the next run can take it.', url: i.html_url, actions: [armedButton('Unclaim', () => unclaim(r, i.number))] });
+
+  const covered = new Set();
+  for (const a of m.team.rows) if (a.noshow) {
+    const ns = a.noshow, repoCause = ns.cause !== 'usage';
+    covered.add(ns.repo.name);
+    const extra = [link(ns.url, '#' + ns.num)];
+    if (ns.session) extra.push(' · ', link(ns.session, 'its session'));
+    push({ key: 'noshow:' + a.name + ':' + ns.repo.name + '#' + ns.num, sev: repoCause ? 1 : 2, icon: repoCause ? '🔧' : '💤', repo: ns.repo, title: a.name + ' didn\'t start its task', why: ns.why, next: ns.fix, extra, url: 'https://claude.ai/code/routines', linkText: 'Routines ↗' });
+  }
+  for (const r of live) if (r.stalled && !covered.has(r.name)) push({ key: 'stalled:' + r.name, sev: 2, icon: '💤', repo: r, title: plural(r.queue.length, 'ready issue') + ' waiting, no Claude activity for ' + (r.lastClaudeAt ? Math.round(hoursSince(r.lastClaudeAt)) + 'h' : 'a while'), why: 'No routine has touched this repo. Its routine may lack the repo, be out of usage, or be failing.', next: 'Check the routine that serves ' + r.nick + ' (repositories and run list).', url: 'https://claude.ai/code/routines', linkText: 'Routines ↗' });
+
+  const d = dispatcher, every = (team.everyMinutes || 15) * MIN;
+  if (d && !d.none && !d.error) {
+    const age = nowMs - Date.parse(d.startedAt || d.at);
+    if (age > Math.max(3 * HOUR, 8 * every)) push({ key: 'disp:stale', sev: 1, icon: '⏱', title: 'Dispatcher hasn\'t run for ' + dur(age), why: 'No agent is woken until it runs again.', next: 'Open Actions → dispatch, press Run workflow, and check the schedule is still enabled.', url: d.listUrl });
+    else if (d.median && d.median > 4 * every) push({ key: 'disp:slow', sev: 2, icon: '⏱', title: 'Dispatcher runs every ~' + dur(d.median) + ', not every ' + dur(every), why: 'GitHub delays or drops scheduled runs at busy times: ' + d.count24 + ' runs in the last 24 hours instead of ~' + Math.round(DAY / every) + ', so agents wake hours late.', next: 'Add the outside trigger from dispatch/SETUP.md (a free cron service, every 15 minutes).', url: 'https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/SETUP.md#optional-a-trigger-that-does-not-lag' });
+    if (d.status === 'completed' && d.conclusion && !['success', 'skipped', 'cancelled'].includes(d.conclusion)) push({ key: 'disp:fail:' + d.url, sev: 1, icon: '✗', title: 'Last dispatcher run: ' + d.conclusion, why: 'Agents are not being woken while it fails.', next: 'Open the run and read the error.', url: d.url });
+  } else if (d && (d.none || d.error)) push({ key: 'disp:none', sev: 3, icon: '⏱', title: 'Dispatcher not running yet', why: 'Agents are only woken by the dispatcher.', next: 'Follow dispatch/SETUP.md.', url: 'https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/SETUP.md' });
+
+  for (const r of live) if (r.mainFailing) {
+    const age = nowMs - Date.parse(r.mainRun.updated_at);
+    push({ key: 'ci:' + r.name + ':' + r.mainRun.id, sev: age < 2 * DAY ? 2 : 3, icon: '✗', repo: r, title: r.mainRun.name + ' failing on ' + r.defaultBranch, why: 'Latest run on the default branch: ' + r.mainRun.conclusion + ' (' + r.mainRun.event + '), ' + ago(r.mainRun.updated_at) + '.', next: age < 2 * DAY ? 'Open the run and fix or re-run it.' : 'Old failure: re-run it, or disable that workflow if it is stale.', url: r.mainRun.html_url });
+  }
+
+  const idle = m.team.rows.filter(a => a.pool === 'general' && a.idleNoWork && (!a.last || nowMs - Date.parse(a.last.at) > 6 * HOUR));
+  if (idle.length) {
+    const fencedOnly = m.totals.queue > 0 ? ' (the ' + plural(m.totals.queue, 'ready issue') + ' sit in fenced repos)' : '';
+    push({ key: 'idle:' + idle.map(a => a.name).join(','), sev: 3, icon: '➕', title: names(idle.map(a => a.name)) + (idle.length > 1 ? ' are' : ' is') + ' idle', why: 'No ready issues in the repos they serve' + fencedOnly + '. Paid capacity is going unused.', next: 'Add a task, or label an existing issue ready (plan for a big goal the administrator splits up).', actions: [h('button', { class: 'btn sm primary', type: 'button', onclick: () => openTaskDialog() }, '+ Task')] });
+  }
+
+  const sysList = systemPRs || [];
+  const ut = m.untracked.length + sysList.length;
+  if (ut) {
+    const ex = m.untracked.slice(0, 2).map(({ r, i }) => r.nick + ' #' + i.number).concat(sysList.slice(0, 2).map(p => 'mission-control PR #' + p.number));
+    push({ key: 'untracked:' + ut, sev: 3, icon: '❔', title: plural(ut, 'item') + ' outside the agents\' labels', why: ex.join(' · ') + (ut > ex.length ? ' …' : ''), next: 'Label issues ready or plan (or close them); merge or close the PRs.', url: '#untracked', linkText: 'Show ↓' });
+  }
+
+  const b = m.billing;
+  if (b && b.included && b.used / b.included >= 0.9) push({ key: 'billing:' + new Date().getUTCMonth() + ':' + (b.used > b.included ? 'over' : 'near'), sev: 3, icon: '💳', title: 'Actions minutes: ' + fmtNum(b.used) + ' of ' + fmtNum(b.included) + (b.net ? ' · $' + b.net.toFixed(2) : ''), why: (b.projected ? 'On track for ~' + fmtNum(b.projected) + ' by month end. ' : '') + (b.top && b.top.length ? 'Most used by ' + b.top.map(t => t.repo + ' (' + fmtNum(t.min) + ')').join(', ') + '.' : 'Private-repo workflows bill past the included minutes; public repos are free.'), next: 'Trim scheduled or repeated workflows in private repos, or set a spending limit.', url: 'https://github.com/settings/billing/usage' });
+
+  items.sort((x, y) => x.sev - y.sev || ((x.deadline ? dlTime(x.deadline) : 9e15) - (y.deadline ? dlTime(y.deadline) : 9e15)) || x.order - y.order);
+  return items;
 }
 
 /* ---------- write actions ---------- */
@@ -726,6 +1105,38 @@ function renderHeader() {
   d.classList.toggle('ok', !!model && !tokenBad && !busy);
   $('#lastRefresh').textContent = lastRefresh ? ('updated ' + fmtClock(lastRefresh) + ' · auto ' + cfg.refreshMin + 'm') : '';
 }
+function setFavicon(level) {
+  const fill = level === 'bad' ? '%23d03b3b' : level === 'warn' ? '%23fab219' : level === 'ok' ? '%230ca30c' : '%23898781';
+  const href = "data:image/svg+xml," + "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230b0b0b'/><circle cx='32' cy='32' r='13' fill='" + fill + "'/></svg>";
+  let l = document.querySelector('link[rel="icon"]');
+  if (!l) { l = document.createElement('link'); l.rel = 'icon'; document.head.append(l); }
+  l.type = 'image/svg+xml'; l.href = href;
+}
+function nextDeadline(m) {
+  const list = m ? deadlineList(m, now()) : [];
+  return list[0] || null;
+}
+function renderStatus(items) {
+  const el = $('#statusLine');
+  el.replaceChildren();
+  if (!token || !model || tokenBad) { el.classList.add('hid'); document.title = 'Mission Control'; setFavicon(null); return; }
+  el.classList.remove('hid');
+  const vis = items.filter(i => !isSnoozed(i.key));
+  const you = vis.filter(i => i.sev <= 2).length, urgent = vis.filter(i => i.sev === 1).length;
+  el.append(you
+    ? h('a', { class: 's-you', href: '#inbox' }, '● ' + you + ' need' + (you === 1 ? 's' : '') + ' you' + (urgent ? ' · ' + urgent + ' urgent' : ''))
+    : h('span', { class: 's-ok' }, '✓ Nothing needs you'));
+  const nd = nextDeadline(model);
+  if (nd) { const c = cdNode(nd); c.style.margin = '0 6px 0 0'; el.append(h('span', { class: 's-dl' }, '⏰ ', c, h('b', null, dlTitle(nd)))); }
+  const rows = model.team.rows;
+  const working = rows.filter(r => ['working', 'starting', 'sizing'].includes(r.status)).length;
+  const stuck = rows.filter(r => r.noshow).length;
+  const idle = rows.filter(r => r.idleNoWork).length;
+  el.append(h('span', { class: stuck ? 's-warn' : '' }, 'Agents: ' + working + ' working' + (stuck ? ' · ' + stuck + ' not starting' : '') + (idle ? ' · ' + idle + ' idle' : '')));
+  if (lastRefresh) el.append(h('span', { class: 'meta s-fresh' }, 'data from ' + fmtClock(lastRefresh)));
+  document.title = (you ? '(' + you + ') ' : '') + 'Mission Control';
+  setFavicon(urgent ? 'bad' : you ? 'warn' : 'ok');
+}
 
 function tokenHelp() {
   const repoList = cfg.repos.length ? cfg.repos.map(r => r.name).join(', ') : 'every repo your AI agents work on';
@@ -750,39 +1161,48 @@ function renderSetup() {
     h('div', { style: 'display:flex;gap:8px;margin-top:10px;flex-wrap:wrap' }, h('div', { style: 'flex:1;min-width:220px' }, input), btn)));
 }
 
-function tile(label, value, hint, cls) {
-  return h('div', { class: 'tile ' + (cls || '') }, h('div', { class: 'label' }, label), h('div', { class: 'value' }, value), hint ? h('div', { class: 'hint' }, hint) : null);
+function renderItem(it, snoozedView) {
+  const acts = [...(it.actions || [])];
+  if (it.url) acts.push(it.url.startsWith('#') ? h('a', { class: 'btn sm', href: it.url }, it.linkText || 'Show ↓') : link(it.url, it.linkText || 'Open ↗', 'btn sm'));
+  acts.push(snoozedView
+    ? h('button', { class: 'btn sm ghost', type: 'button', onclick: () => snooze(it.key, 0) }, 'Unsnooze')
+    : h('button', { class: 'btn sm ghost', type: 'button', title: 'Hide this for a day', onclick: () => snooze(it.key, DAY) }, 'Snooze'));
+  return h('div', { class: 'item sev' + it.sev },
+    h('div', { class: 'ic', 'aria-hidden': 'true' }, it.icon || '•'),
+    h('div', { class: 'body' },
+      h('div', { class: 't' }, it.repo ? h('span', { class: 'proj' }, it.repo.nick + ' · ') : null, it.title, it.deadline ? cdNode(it.deadline) : null),
+      it.why ? h('div', { class: 'why' }, it.why) : null,
+      it.next ? h('div', { class: 'next' }, h('b', null, 'Next: '), it.next, it.extra ? [' · ', it.extra] : null) : null),
+    h('div', { class: 'act' }, acts));
 }
 
-function renderTiles(m) {
-  const t = m.totals, b = m.billing;
-  const youCount = m.needs.length;
-  const tiles = [
-    tile('Needs you', String(youCount), youCount ? 'items in the list above' : 'nothing waiting', youCount ? 'you' : 'good'),
-    tile('Ready queue', String(t.queue), t.plans ? t.plans + ' plan issue' + (t.plans > 1 ? 's' : '') + ' to split' : 'issues agents can take'),
-    tile('Agents working', String(t.working), 'claimed, no PR yet'),
-    tile('In review', String(t.prs), 'open pull requests'),
-    tile('Blocked', String(t.blocked), 'need a human', t.blocked ? 'you' : ''),
-    tile('Merged · 7d', String(t.merged), 'shipped this week', t.merged ? 'good' : ''),
-    tile('Actions minutes', b ? fmtNum(b.used) : '—', b ? ('of ' + fmtNum(b.included) + ' included' + (b.net ? ' · $' + b.net.toFixed(2) : '')) : 'needs Plan: Read', b && b.used / b.included >= 0.9 ? 'you' : ''),
-  ];
-  return h('section', null, h('div', { class: 'tiles' }, tiles));
+function renderInbox(m, items) {
+  const vis = items.filter(i => !isSnoozed(i.key)), sn = items.filter(i => isSnoozed(i.key));
+  const you = vis.filter(i => i.sev <= 2).length;
+  const shown = showAllInbox ? vis : vis.slice(0, 6);
+  const nd = nextDeadline(m);
+  const body = vis.length
+    ? h('div', { class: 'inbox' }, shown.map(i => renderItem(i)))
+    : h('div', { class: 'card empty' }, '✅ Nothing needs you. ', nd ? ['Next deadline: ', h('b', null, dlTitle(nd)), cdNode(nd), '. '] : null, 'Agents are working, or idle with an empty queue.');
+  const foot = h('div', { class: 'inbox-foot' },
+    vis.length > shown.length ? h('button', { class: 'btn sm', type: 'button', onclick: () => { showAllInbox = true; render(); } }, 'Show ' + (vis.length - shown.length) + ' more') : null,
+    sn.length ? h('button', { class: 'btn sm ghost', type: 'button', onclick: () => { showSnoozed = !showSnoozed; render(); } }, showSnoozed ? 'Hide snoozed' : plural(sn.length, 'snoozed item')) : null);
+  return h('section', { id: 'inbox' },
+    h('h2', null, 'Needs you', h('span', { class: 'count' + (you ? ' you' : '') }, String(you)), vis.length > you ? h('span', { class: 'count' }, '+' + (vis.length - you) + ' FYI') : null),
+    body, foot,
+    showSnoozed && sn.length ? h('div', { class: 'inbox', style: 'margin-top:8px;opacity:.75' }, sn.map(i => renderItem(i, true))) : null);
 }
 
-function renderNeeds(m) {
-  const items = m.needs.map(n => {
-    const icon = n.kind === 'paused' ? '⏸' : n.kind === 'pr' ? '⇄' : n.kind === 'blocked' ? '⛔' : n.kind === 'stuck' ? '⏳' : n.kind === 'stalled' ? '💤' : '⏱';
-    const act = [];
-    if (n.action) act.push(armedButton(n.action.label, n.action.run));
-    act.push(n.url ? link(n.url, 'Open ↗', 'btn sm') : null);
-    return h('div', { class: 'need' + (n.info ? ' info' : '') },
-      h('div', { class: 'ic', 'aria-hidden': 'true' }, icon),
-      h('div', { class: 'body' }, h('div', { class: 't' }, n.repo ? h('span', { class: 'meta' }, n.repo.nick + ' · ') : null, n.text), n.sub ? h('div', { class: 's' }, n.sub) : null),
-      h('div', { class: 'act' }, act));
-  });
+function renderDeadlines(m) {
+  if (!m.deadlines.length) return null;
+  const nowMs = now();
+  const list = deadlineList(m, nowMs).filter(d => dlTime(d) - nowMs < 8 * DAY || cdState(d, nowMs).open);
+  const rows = list.map(d => h('div', { class: 'dl' },
+    h('div', null, h('b', null, dlTitle(d)), cdNode(d), h('div', { class: 'meta' }, d.spec.repo.nick + ' · ', link(d.spec.issue.html_url, '#' + d.spec.issue.number + ' ' + firstLine(d.spec.issue.title, 80)))),
+    h('div', { class: 'when' }, dlWhen(d))));
   return h('section', null,
-    h('h2', null, 'Needs you', h('span', { class: 'count' }, String(m.needs.length))),
-    items.length ? h('div', { class: 'needs' }, items) : h('div', { class: 'card empty' }, 'Nothing needs you right now. Agents are either working or idle with an empty queue.'));
+    h('h2', null, 'Deadlines · next 7 days', h('span', { class: 'count' }, String(list.length))),
+    h('div', { class: 'card' }, rows.length ? rows : h('div', { class: 'empty' }, 'None in the next 7 days.')));
 }
 
 function checksText(p) {
@@ -794,12 +1214,12 @@ function checksText(p) {
   return h('span', { class: 'ok' }, '✓ ' + c.success + ' passed');
 }
 
-function renderPR(p, r) {
-  const who = p.agent ? p.agent : ((p.pr.user && p.pr.user.login) || '?') + (p.agent ? '' : ' (human)');
+function renderPR(p) {
+  const who = p.agent ? p.agent : ((p.pr.user && p.pr.user.login) || '?') + ' (human)';
   const st = [checksText(p)];
   if (p.approved.length) st.push(h('span', { class: 'ok' }, '✓ approved by ' + p.approved.join(', ')));
   if (p.changes.length) st.push(h('span', { class: 'bad' }, '✎ changes requested by ' + p.changes.join(', ')));
-  if (p.codexNotes.length || p.codexReviews.length) st.push(h('span', null, 'Codex: ' + (p.codexNotes.length ? p.codexNotes.length + ' note' + (p.codexNotes.length > 1 ? 's' : '') : 'reviewed') + (p.lastCodexAt ? ' ' + ago(p.lastCodexAt) : '')));
+  if (p.codexNotes.length || p.codexReviews.length) st.push(h('span', null, 'Codex: ' + (p.codexNotes.length ? plural(p.codexNotes.length, 'note') : 'reviewed') + (p.lastCodexAt ? ' ' + ago(p.lastCodexAt) : '')));
   if (p.mergeable === false || p.mergeableState === 'dirty') st.push(h('span', { class: 'bad' }, '⚠ conflicts'));
   if (p.size) st.push(h('span', null, '+' + fmtNum(p.size.add) + ' −' + fmtNum(p.size.del) + ' · ' + p.size.files + ' files'));
   st.push(h('span', { class: 'verdict ' + p.level }, p.verdict));
@@ -808,7 +1228,7 @@ function renderPR(p, r) {
     h('div', { class: 'st' }, st));
 }
 
-function taskForm(r, host) {
+function taskForm(r, host, onDone) {
   const title = h('input', { type: 'text', placeholder: 'Task title (one sentence of what to build)' });
   const body = h('textarea', { placeholder: 'Details / acceptance criteria (optional)', rows: 3 });
   const sel = h('select', null, h('option', { value: 'ready' }, 'Build it: the dispatcher picks the agent'), h('option', { value: 'plan' }, 'Big goal: the administrator splits it into tasks'));
@@ -820,41 +1240,63 @@ function taskForm(r, host) {
     h('option', { value: 'ui' }, 'Visual / UI: Antigravity'),
     h('option', { value: 'to:codex' }, 'Give it to Codex'));
   sel.addEventListener('change', () => { size.disabled = sel.value === 'plan'; });
+  const close = () => { if (onDone) onDone(); else form.remove(); };
   const form = h('div', { class: 'taskform' }, title, body, sel, size,
+    r.home && r.home.length ? h('div', { class: 'meta' }, 'Fenced repo: only ' + r.home.join(', ') + ' builds here.') : null,
     h('div', { style: 'display:flex;gap:8px;justify-content:flex-end' },
-      h('button', { class: 'btn sm', type: 'button', onclick: () => form.remove() }, 'Cancel'),
+      h('button', { class: 'btn sm', type: 'button', onclick: close }, 'Cancel'),
       h('button', { class: 'btn sm primary', type: 'button', onclick: (ev) => {
         const t = title.value.trim(); if (!t) { toast('Give the task a title', true); return; }
         const labels = [sel.value]; if (sel.value === 'ready' && size.value) labels.push(size.value);
-        runAction(async () => { const i = await createIssue(r, t, body.value.trim(), labels); toast('Created #' + i.number + ' in ' + r.nick + ' (' + labels.join(', ') + ')'); }, ev.currentTarget);
+        runAction(async () => { const i = await createIssue(r, t, body.value.trim(), labels); toast('Created #' + i.number + ' in ' + r.nick + ' (' + labels.join(', ') + ')'); if (onDone) onDone(); }, ev.currentTarget);
       } }, 'Create issue')));
   host.append(form); title.focus();
 }
+function openTaskDialog(pre) {
+  const live = model ? model.repos.filter(r => !r.fatal) : [];
+  if (!live.length) { toast('Load your repos first', true); return; }
+  const sel = $('#tRepo');
+  sel.replaceChildren(...live.map(r => h('option', { value: r.name }, r.nick + (r.home.length ? ' — fenced (' + r.home.join(', ') + ')' : '') + (r.queue.length ? ' · ' + r.queue.length + ' ready' : ' · queue empty'))));
+  if (pre) sel.value = pre.name;
+  else { const empty = live.find(r => !r.home.length && !r.queue.length); if (empty) sel.value = empty.name; }
+  const draw = () => { const host = $('#tHost'); host.replaceChildren(); taskForm(live.find(x => x.name === sel.value), host, () => $('#taskDlg').close()); };
+  sel.onchange = draw;
+  $('#taskDlg').showModal();
+  draw();
+}
 
-function renderRepo(r) {
-  const card = h('div', { class: 'card repo' + (r.paused ? ' paused' : '') });
-  card.append(h('div', { class: 'head' },
-    h('div', { class: 'name' }, link(r.url, r.nick), r.paused ? h('span', { class: 'chip', style: 'margin-left:8px;vertical-align:middle' }, h('span', { class: 'sw pause' }), 'PAUSED') : null),
-    h('div', { class: 'links' }, link(r.url + '/issues?q=is%3Aopen+is%3Aissue', 'issues'), ' · ', link(r.url + '/pulls', 'PRs'), ' · ', link(r.url + '/actions', 'actions'))));
-  if (r.note) card.append(h('div', { class: 'note' }, r.note));
+function repoHealth(r, noshowRepos) {
+  if (r.fatal) return { level: 'bad', text: 'cannot read: ' + explain(r.fatal) };
+  if (r.paused) return { level: 'bad', text: 'paused' };
+  if (noshowRepos.has(r.name)) return { level: 'bad', text: 'its agent is not starting' };
+  if (r.blocked.length) return { level: 'bad', text: plural(r.blocked.length, 'issue') + ' blocked on you' };
+  if (r.stalled) return { level: 'warn', text: 'stalled: ready issues, no agent activity' };
+  if (r.prs.some(p => p.level === 'you')) return { level: 'warn', text: 'a PR waits for you' };
+  if (r.mainFailing) return { level: 'warn', text: 'CI failing on ' + r.defaultBranch };
+  if (r.working.length) return { level: 'good', text: 'agents working on ' + r.working.map(i => '#' + i.number).join(', ') };
+  if (r.queue.length) return { level: 'good', text: plural(r.queue.length, 'task') + ' queued' };
+  const unl = r.untracked.length ? ' · ' + plural(r.untracked.length, 'unlabeled issue') : '';
+  if (r.merged7d.length) return { level: 'idle', text: 'queue empty · shipped ' + r.merged7d.length + ' this week' + unl };
+  return { level: 'idle', text: 'queue empty' + unl };
+}
+
+function renderRepoBody(r) {
+  const out = [h('div', { class: 'repo-links' }, link(r.url, 'repo'), ' · ', link(r.url + '/issues?q=is%3Aopen+is%3Aissue', 'issues'), ' · ', link(r.url + '/pulls', 'PRs'), ' · ', link(r.url + '/actions', 'actions'), r.home && r.home.length ? ' · fenced: ' + r.home.join(', ') : '', r.note ? ' · ' + r.note : '')];
   if (r.fatal) {
-    card.append(h('div', { class: 'err' }, 'Cannot read this repo: ' + explain(r.fatal) + '. ' + (r.fatal.status === 404 || r.fatal.status === 403 ? 'Add it to the token\'s repository list.' : '')));
-    return card;
+    out.push(h('div', { class: 'err' }, 'Cannot read this repo: ' + explain(r.fatal) + '. ' + (r.fatal.status === 404 || r.fatal.status === 403 ? 'Add it to the token\'s repository list.' : '')));
+    return out;
   }
-  card.append(h('div', { class: 'chips' }, LABELS.map(L => {
+  out.push(h('div', { class: 'chips' }, LABELS.map(L => {
     const n = r.counts[L];
-    const c = h('a', { class: 'chip' + (n ? '' : ' zero'), href: r.url + '/issues?q=' + encodeURIComponent('is:open is:issue label:' + L), target: '_blank', rel: 'noopener noreferrer' }, h('span', { class: 'sw ' + L }), L + ' ', h('b', null, String(n)));
-    return c;
+    return h('a', { class: 'chip' + (n ? '' : ' zero'), href: r.url + '/issues?q=' + encodeURIComponent('is:open is:issue label:' + L), target: '_blank', rel: 'noopener noreferrer' }, h('span', { class: 'sw ' + L }), L + ' ', h('b', null, String(n)));
   })));
   const next = r.queue[0];
-  card.append(h('div', { class: 'kv' }, 'Next for agents: ', next ? [link(next.html_url, '#' + next.number + ' ' + next.title), r.queue.length > 1 ? ' (+' + (r.queue.length - 1) + ' more)' : ''] : h('span', { class: 'meta' }, r.paused ? 'paused' : 'queue empty — add a task')));
-  if (r.working.length) card.append(h('div', { class: 'kv' }, 'Working now: ', r.working.map((i, k) => [k ? ', ' : '', link(i.html_url, '#' + i.number), ' ', h('span', { class: 'meta' }, ago(i.updated_at))])));
-
+  out.push(h('div', { class: 'kv' }, 'Next for agents: ', next ? [link(next.html_url, '#' + next.number + ' ' + next.title), r.queue.length > 1 ? ' (+' + (r.queue.length - 1) + ' more)' : ''] : h('span', { class: 'meta' }, r.paused ? 'paused' : 'queue empty — add a task')));
+  if (r.working.length) out.push(h('div', { class: 'kv' }, 'Working now: ', r.working.map((i, k) => [k ? ', ' : '', link(i.html_url, '#' + i.number), ' ', h('span', { class: 'meta' }, ago(i.updated_at))])));
   const list = h('div', { class: 'list' });
-  if (r.prs.length) for (const p of r.prs) list.append(renderPR(p, r));
+  if (r.prs.length) for (const p of r.prs) list.append(renderPR(p));
   else list.append(h('div', { class: 'meta' }, 'No open pull requests'));
-  card.append(list);
-
+  out.push(list);
   const ciBits = [];
   if (r.ciError) ciBits.push(h('span', { class: 'wait' }, 'CI: ' + (r.ciError.err && r.ciError.err.status === 403 ? 'no access (token needs Actions: Read)' : explain(r.ciError.err))));
   else if (r.mainRun) {
@@ -862,19 +1304,42 @@ function renderRepo(r) {
     ciBits.push(h('span', { class: !done ? 'wait' : ok ? 'ok' : 'bad' }, (!done ? '◐ ' : ok ? '✓ ' : '✗ ') + r.defaultBranch + ' CI ' + (done ? (r.mainRun.conclusion || 'done') : r.mainRun.status) + ' '), link(r.mainRun.html_url, ago(r.mainRun.updated_at)));
   } else ciBits.push(h('span', null, 'CI: no runs'));
   if (r.lastCommit) ciBits.push(h('span', null, ' · last commit '), link(r.lastCommit.html_url, firstLine(r.lastCommit.commit && r.lastCommit.commit.message, 60)), h('span', { class: 'meta' }, ' ' + ago(r.lastCommit.commit && r.lastCommit.commit.committer && r.lastCommit.commit.committer.date)));
-  card.append(h('div', { class: 'kv st' }, ciBits));
-
+  out.push(h('div', { class: 'kv st' }, ciBits));
   const beat = r.lastBeat;
-  card.append(h('div', { class: 'kv' }, 'Agents: ', beat ? [h('b', null, beat.agent), ' ' + beat.what + ' ', link(beat.url, ago(beat.at))] : h('span', { class: 'meta' }, 'no agent activity in recent history'), r.merged7d.length ? h('span', { class: 'meta' }, ' · ' + r.merged7d.length + ' merged this week') : null));
-  if (r.stalled) card.append(h('div', { class: 'warnline' }, '💤 Ready issues are waiting but no Claude run has touched this repo for ' + (r.lastClaudeAt ? Math.round(hoursSince(r.lastClaudeAt)) + 'h' : 'a while') + ' — check the routine.'));
-  for (const e of r.errors) if (e.what !== 'runs' && e.what !== 'checks') card.append(h('div', { class: 'err' }, 'Partial data: ' + e.what + ' — ' + explain(e.err)));
+  out.push(h('div', { class: 'kv' }, 'Agents: ', beat ? [h('b', null, beat.agent), ' ' + beat.what + ' ', link(beat.url, ago(beat.at))] : h('span', { class: 'meta' }, 'no agent activity in recent history'), r.merged7d.length ? h('span', { class: 'meta' }, ' · ' + r.merged7d.length + ' merged this week') : null));
+  for (const e of r.errors) if (e.what !== 'runs' && e.what !== 'checks') out.push(h('div', { class: 'err' }, 'Partial data: ' + e.what + ' — ' + explain(e.err)));
+  out.push(h('div', { class: 'foot' },
+    h('button', { class: 'btn sm', type: 'button', onclick: () => openTaskDialog(r) }, '+ Task'),
+    r.paused ? armedButton('Resume', () => resumeRepo(r)) : armedButton('Pause agents', () => pauseRepo(r), 'danger')));
+  return out;
+}
 
-  const formHost = h('div');
-  const foot = h('div', { class: 'foot' },
-    h('button', { class: 'btn sm', type: 'button', onclick: () => { if (!formHost.querySelector('.taskform')) taskForm(r, formHost); } }, '+ Task'),
-    r.paused ? armedButton('Resume', () => resumeRepo(r)) : armedButton('Pause agents', () => pauseRepo(r), 'danger'));
-  card.append(foot, formHost);
-  return card;
+function renderProjects(m) {
+  const live = m.repos.filter(r => !r.fatal);
+  const noshowRepos = new Set(m.team.rows.filter(a => a.noshow).map(a => a.noshow.repo.name));
+  const t = m.totals;
+  const nd = nextDeadline(m);
+  const week = h('div', { class: 'weekline' }, 'This week: ', h('b', null, String(t.merged)), ' merged · ', h('b', null, String(t.queue)), ' ready', t.plans ? [' · ', h('b', null, String(t.plans)), ' to plan'] : null, ' · ', h('b', null, String(t.working)), ' in progress · ', h('b', null, String(t.prs)), ' open PRs · ', h('b', null, String(t.blocked)), ' blocked', nd ? [' · next deadline ', h('b', null, dlTitle(nd)), ' ', dlWhen(nd)] : null);
+  const rows = m.repos.map(r => {
+    const hl = repoHealth(r, noshowRepos);
+    const nums = r.fatal ? [] : [
+      h('span', { class: 'pnum' }, 'ready ', h('b', null, String(r.queue.length))),
+      r.prs.length ? h('span', { class: 'pnum' }, 'PRs ', h('b', null, String(r.prs.length))) : null,
+      r.blocked.length ? h('span', { class: 'pnum bad' }, 'blocked ', h('b', null, String(r.blocked.length))) : null,
+      h('span', { class: 'pnum' + (r.merged7d.length ? ' ok' : '') }, 'merged 7d ', h('b', null, String(r.merged7d.length))),
+      r.mainRun ? h('span', { class: 'pnum' + (r.mainFailing ? ' bad' : '') }, 'CI ', h('b', null, r.mainRun.status !== 'completed' ? '◐' : r.mainFailing ? '✗' : r.mainRun.conclusion === 'success' ? '✓' : '·')) : null,
+    ];
+    const el = h('details', { class: 'prow' + (r.paused ? ' paused' : '') },
+      h('summary', null, h('span', { class: 'hdot ' + hl.level, title: hl.text }), h('span', { class: 'pname' }, r.nick), h('span', { class: 'pstate' }, hl.text), h('span', { class: 'pnums' }, nums)),
+      h('div', { class: 'pbody' }, renderRepoBody(r)));
+    return keepOpen('p:' + r.name, el);
+  });
+  const pausedAll = live.length > 0 && live.every(r => r.paused);
+  const toolbar = h('div', { class: 'toolbar' },
+    h('span', { class: 'meta' }, pausedAll ? 'All repos are paused.' : (t.paused ? t.paused + ' of ' + live.length + ' repos paused.' : 'All agents allowed to run.')),
+    live.some(r => !r.paused) ? armedButton('Pause all repos', async () => { for (const r of live) if (!r.paused) await pauseRepo(r); }, 'danger') : null,
+    live.some(r => r.paused) ? armedButton('Resume all', async () => { for (const r of live) if (r.paused) await resumeRepo(r); }) : null);
+  return h('section', null, h('h2', null, 'Projects', h('span', { class: 'count' }, String(m.repos.length))), week, h('div', { class: 'plist' }, rows), h('div', { style: 'margin-top:10px' }, toolbar));
 }
 
 function meter(n, cap) {
@@ -882,87 +1347,115 @@ function meter(n, cap) {
   const cls = f >= 1 ? 'full' : f >= 0.7 ? 'high' : '';
   return h('span', { class: 'meter ' + cls, title: n + ' of ' + cap }, h('span', { class: 'fill', style: 'width:' + Math.round(f * 100) + '%' }), h('span', { class: 'num' }, n + '/' + cap));
 }
-function renderTeam(m) {
-  const t = m.team;
-  const d = dispatcher;
-  const dChip = !d ? h('span', { class: 'chip zero' }, 'Dispatcher: checking…')
-    : d.none || d.error ? h('a', { class: 'chip warnchip', href: 'https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/SETUP.md', target: '_blank', rel: 'noopener noreferrer' }, 'Dispatcher: not running yet — setup ↗')
-    : h('a', { class: 'chip', href: d.url, target: '_blank', rel: 'noopener noreferrer' }, h('span', { class: 'sw ' + (d.status !== 'completed' ? 'claimed' : d.conclusion === 'success' ? 'ready' : 'blocked') }), 'Dispatcher ' + (d.status !== 'completed' ? 'running' : d.conclusion === 'success' ? 'ok' : d.conclusion) + ' · ' + ago(d.at));
-  const chips = h('div', { class: 'chips', style: 'margin-bottom:10px' }, dChip,
-    h('span', { class: 'chip' + (t.unassigned ? '' : ' zero') }, 'Waiting for dispatch ', h('b', null, String(t.unassigned))),
-    h('span', { class: 'chip' + (t.agQueue ? '' : ' zero') }, h('span', { class: 'sw jules' }), 'Antigravity queue ', h('b', null, String(t.agQueue))),
-    h('span', { class: 'chip' + (t.codexTakeovers ? '' : ' zero') }, 'Codex takeovers · 7d ', h('b', null, String(t.codexTakeovers))),
-    h('span', { class: 'chip' + (t.human ? '' : ' zero') }, h('span', { class: 'sw blocked' }), 'Needs you ', h('b', null, String(t.human))));
-  const statusCell = (row) => {
-    if (row.status === 'working' || row.status === 'starting') return h('span', { class: 'st' }, h('span', { class: 'ok' }, row.status === 'working' ? 'working on ' : 'starting '), row.doing ? link(row.doing.url || row.doing.r.url, row.doing.r.nick + ' #' + row.doing.n) : '');
-    if (row.status === 'sizing') return h('span', { class: 'ok' }, 'sizing new issues');
-    if (row.status === 'cooling') return h('span', { class: 'wait', title: 'Did not start a task within ' + (team.claimTimeoutMinutes || 45) + ' min: probably out of usage. Skipped until the 5-hour window passes.' }, 'cooling (out of usage?)');
-    return h('span', { class: 'meta' }, row.status);
-  };
-  const rows = t.rows.map(r => h('tr', null,
-    h('td', { class: 'c-name' }, h('b', null, r.name), h('div', { class: 'meta' }, 'account ' + r.account)),
-    h('td', { class: 'c-model' }, h('span', { class: 'model m-' + String(r.model).toLowerCase() }, r.model)),
-    h('td', { class: 'c-job' }, h('div', null, r.role), h('div', { class: 'meta' }, r.serves)),
-    h('td', { class: 'c-now' }, statusCell(r), r.last ? h('div', { class: 'meta' }, 'last task ' + ago(r.last.at)) : null),
-    h('td', { class: 'c-5h' }, meter(r.load5h, r.cap5h)),
-    h('td', { class: 'c-7d' }, meter(r.load7d, r.cap7d))));
-  rows.push(h('tr', null,
-    h('td', { class: 'c-name' }, h('b', null, 'codex'), h('div', { class: 'meta' }, 'ChatGPT')),
-    h('td', { class: 'c-model' }, h('span', { class: 'model m-gpt' }, (team.codex && team.codex.model) || 'GPT')),
-    h('td', { class: 'c-job' }, h('div', null, (team.codex && team.codex.role) || 'Reviews every PR'), h('div', { class: 'meta' }, 'every repo')),
-    h('td', { class: 'c-now' }, t.codexLast ? h('span', { class: 'meta' }, t.codexLast.what + ' · ' + ago(t.codexLast.at)) : h('span', { class: 'meta' }, 'no activity seen'), t.codexQueue ? h('div', { class: 'meta' }, t.codexQueue + ' queued (start at chatgpt.com/codex)') : null),
-    h('td', { colspan: 2, class: 'c-7d' }, h('span', { class: 'meta' }, t.codexTakeovers + ' takeover' + (t.codexTakeovers === 1 ? '' : 's') + ' in 7 days'))));
-  rows.push(h('tr', null,
-    h('td', { class: 'c-name' }, h('b', null, 'antigravity'), h('div', { class: 'meta' }, 'your Mac')),
-    h('td', { class: 'c-model' }, h('span', { class: 'model m-gemini' }, (team.antigravity && team.antigravity.model) || 'Gemini')),
-    h('td', { class: 'c-job' }, h('div', null, (team.antigravity && team.antigravity.role) || 'ui tasks'), h('div', { class: 'meta' }, 'non-fenced repos')),
-    h('td', { class: 'c-now' }, t.agWorking ? h('span', { class: 'ok' }, 'working on ' + t.agWorking) : h('span', { class: 'meta' }, t.agQueue ? t.agQueue + ' waiting for the Mac' : 'idle')),
-    h('td', { colspan: 2, class: 'c-7d' }, h('span', { class: 'meta' }, t.agLast ? 'last seen ' + ago(t.agLast.at) : 'runs only while Antigravity is open'))));
-  const accounts = Object.keys(team.accounts || {}).map(k => h('span', { class: 'chip' }, 'account ' + k + ' ', meter(t.acct[k] || 0, (team.accounts[k] || {}).cap5h || 0)));
-  return h('section', null,
-    h('h2', null, 'Team', h('span', { class: 'count' }, String(t.rows.length + 2))),
-    chips,
-    h('div', { class: 'card', style: 'overflow:auto' }, h('table', { class: 'team' },
-      h('thead', null, h('tr', null, h('th', null, 'Agent'), h('th', null, 'Model'), h('th', null, 'Job'), h('th', null, 'Now'), h('th', null, 'Tasks · 5h'), h('th', null, 'Tasks · 7d'))),
-      h('tbody', null, rows))),
-    accounts.length ? h('div', { class: 'chips', style: 'margin-top:8px' }, h('span', { class: 'meta', style: 'align-self:center' }, 'Accounts, all routines · 5h:'), accounts) : null);
-}
-
+const STATE_LABEL = { working: 'working', starting: 'starting', sizing: 'sizing issues', misconfigured: 'not starting', noshow: 'skipped · usage?', capped: 'at cap', idle: 'idle' };
 function renderAgents(m) {
-  const rows = m.agents.map(a => h('tr', null,
-    h('td', null, h('b', null, a.agent)),
-    h('td', null, a.last ? [link(a.last.url, ago(a.last.at))] : '—'),
-    h('td', null, a.last ? a.last.repo.nick + ' · ' + a.last.what : ''),
-    h('td', null, [...a.repos].join(', '))));
-  const body = rows.length ? h('table', null, h('thead', null, h('tr', null, h('th', null, 'Agent'), h('th', null, 'Last seen'), h('th', null, 'Doing'), h('th', null, 'Repos'))), h('tbody', null, rows))
-    : h('div', { class: 'empty' }, 'No agent activity found yet. Agents leave "Claimed by …" comments and "Agent: …" pull requests when they run.');
+  const t = m.team;
+  const rows = t.rows.map(r => {
+    const now1 = [h('span', { class: 'state ' + r.status }, STATE_LABEL[r.status] || r.status)];
+    if (r.doing) now1.push(' ', link(r.doing.url || r.doing.r.url, r.doing.r.nick + ' #' + r.doing.n));
+    return h('tr', null,
+      h('td', { class: 'c-name' }, h('b', null, r.name), h('span', { class: 'model m-' + String(r.model).toLowerCase() }, r.model), h('div', { class: 'meta' }, 'account ' + r.account + ' · ' + r.serves)),
+      h('td', { class: 'c-now' }, now1, r.why ? h('div', { class: 'cause' }, r.why) : null, r.noshow && r.status !== 'working' ? h('div', { class: 'cause' }, h('b', null, 'Fix: '), r.noshow.fix) : null),
+      h('td', { class: 'c-5h' }, meter(r.load5h, r.cap5h)),
+      h('td', { class: 'c-7d' }, meter(r.load7d, r.cap7d)),
+      h('td', { class: 'c-last meta' }, r.last ? 'last task ' + ago(r.last.at) : 'no tasks yet'));
+  });
+  rows.push(h('tr', null,
+    h('td', { class: 'c-name' }, h('b', null, 'codex'), h('span', { class: 'model m-gpt' }, (team.codex && team.codex.model) || 'GPT'), h('div', { class: 'meta' }, 'ChatGPT · reviews every PR')),
+    h('td', { class: 'c-now' }, h('span', { class: 'state' }, t.codexQueue ? t.codexQueue + ' queued' : 'on call'), h('div', { class: 'cause' }, t.codexLast ? t.codexLast.what + ' · ' + ago(t.codexLast.at) : 'no activity seen', t.codexQueue ? ' · start queued work at chatgpt.com/codex' : '')),
+    h('td', { class: 'c-5h meta' }, ''),
+    h('td', { class: 'c-7d meta' }, t.codexTakeovers + ' takeover' + (t.codexTakeovers === 1 ? '' : 's') + ' · 7d'),
+    h('td', { class: 'c-last meta' }, '')));
+  rows.push(h('tr', null,
+    h('td', { class: 'c-name' }, h('b', null, 'antigravity'), h('span', { class: 'model m-gemini' }, (team.antigravity && team.antigravity.model) || 'Gemini'), h('div', { class: 'meta' }, 'your Mac · ui tasks in non-fenced repos')),
+    h('td', { class: 'c-now' }, h('span', { class: 'state' + (t.agWorking ? ' working' : '') }, t.agWorking ? 'working on ' + t.agWorking : t.agQueue ? t.agQueue + ' waiting' : 'idle'), h('div', { class: 'cause' }, t.agQueue ? 'Runs only while Antigravity is open on the Mac.' : 'Nothing queued for it.')),
+    h('td', { class: 'c-5h meta' }, ''),
+    h('td', { class: 'c-7d meta' }, ''),
+    h('td', { class: 'c-last meta' }, t.agLast ? 'last seen ' + ago(t.agLast.at) : '')));
+  const accounts = Object.keys(team.accounts || {}).map(k => h('span', { class: 'chip' }, 'account ' + k + ' ', meter(t.acct[k] || 0, (team.accounts[k] || {}).cap5h || 0)));
+  const others = t.others.map(o => [h('b', null, o.agent === 'claude' ? 'claude (your own sessions)' : o.agent), ' ' + o.last.what + ' in ' + o.last.repo.nick + ' ', link(o.last.url, ago(o.last.at))]);
   return h('section', null,
-    h('h2', null, 'Agents', h('span', { class: 'count' }, String(m.agents.length))),
-    h('div', { class: 'card', style: 'overflow:auto' }, body),
-    h('div', { class: 'meta', style: 'margin-top:6px' }, 'The dispatcher wakes a Claude routine only when it has a task for it: ', link('https://claude.ai/code/routines', 'routines'), ' · ', link('https://chatgpt.com/codex', 'Codex tasks')));
+    h('h2', null, 'Agents', h('span', { class: 'count' }, String(t.rows.length + 2))),
+    h('div', { class: 'card', style: 'overflow:auto' }, h('table', { class: 'team' },
+      h('thead', null, h('tr', null, h('th', null, 'Agent'), h('th', null, 'Now'), h('th', null, 'Tasks · 5h'), h('th', null, 'Tasks · 7d'), h('th', null, 'Last'))),
+      h('tbody', null, rows))),
+    h('div', { class: 'chips', style: 'margin-top:8px' },
+      accounts.length ? h('span', { class: 'meta', style: 'align-self:center' }, 'Accounts, all routines · 5h:') : null, accounts,
+      h('span', { class: 'chip' + (t.unassigned ? '' : ' zero') }, 'Waiting for dispatch ', h('b', null, String(t.unassigned)))),
+    others.length ? h('div', { class: 'meta', style: 'margin-top:6px' }, 'Also seen: ', others.map((o, i) => [i ? ' · ' : '', o])) : null,
+    h('div', { class: 'meta', style: 'margin-top:6px' }, 'The dispatcher wakes a routine only when it has a task for it: ', link('https://claude.ai/code/routines', 'routines'), ' · ', link('https://chatgpt.com/codex', 'Codex tasks')));
 }
 
+function renderUntracked(m) {
+  const rows = m.untracked.map(({ r, i }) => {
+    const ld = r.lastDispatchByIssue.get(i.number);
+    return h('div', { class: 'urow' }, h('span', { class: 'meta' }, r.nick + ' · issue '), link(i.html_url, '#' + i.number + ' ' + i.title),
+      h('div', { class: 'meta' }, 'No workflow label, so no agent will pick it up · opened ' + ago(i.created_at) + (ld ? ' · last dispatch: ' + ld.who + ' ' + ld.mode + ' ' + ago(ld.at) : '') + '. Label it ready or plan, or close it.'));
+  });
+  for (const p of (systemPRs || [])) rows.push(h('div', { class: 'urow' }, h('span', { class: 'meta' }, 'mission-control · PR '), link(p.url, '#' + p.number + ' ' + p.title),
+    h('div', { class: 'meta' }, (p.draft ? 'Draft · ' : '') + 'open ' + ago(p.at) + ' · this repo is outside the agents\' labels: review and merge, or close it.')));
+  if (!rows.length) return null;
+  return h('section', { id: 'untracked' }, h('h2', null, 'Outside the labels', h('span', { class: 'count' }, String(rows.length))), h('div', { class: 'card' }, rows));
+}
+
+function renderSystem(m, items) {
+  const d = dispatcher, every = (team.everyMinutes || 15) * MIN, b = m.billing;
+  const alert = items.some(i => !isSnoozed(i.key) && /^(disp|billing):/.test(i.key) && i.sev <= 2);
+  let dCard;
+  if (!d) dCard = h('div', { class: 'card' }, h('div', { class: 'meta' }, 'Dispatcher'), h('div', { class: 'big' }, '…'));
+  else if (d.none || d.error) dCard = h('div', { class: 'card' }, h('div', { class: 'meta' }, 'Dispatcher'), h('div', { class: 'big warn' }, 'not running yet'), link('https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/SETUP.md', 'setup ↗'));
+  else {
+    const slow = d.median && d.median > 4 * every;
+    const failed = d.status === 'completed' && d.conclusion && !['success', 'skipped', 'cancelled'].includes(d.conclusion);
+    dCard = h('div', { class: 'card' }, h('div', { class: 'meta' }, 'Dispatcher'),
+      h('div', { class: 'big ' + (failed ? 'bad' : slow ? 'warn' : 'ok') }, failed ? d.conclusion : d.status !== 'completed' ? 'running' : slow ? 'slow' : 'ok', h('span', { class: 'meta', style: 'font-size:13px;font-weight:400' }, ' · last run ' + ago(d.at))),
+      h('div', { class: 'kv' }, 'Last 24 hours: ', h('b', null, String(d.count24)), ' runs (expected ~' + Math.round(DAY / every) + ')', d.median ? [' · typical gap ', h('b', null, dur(d.median))] : null, d.failed24 ? [' · ', h('span', { class: 'bad' }, d.failed24 + ' failed')] : null),
+      h('div', { class: 'kv', style: 'margin-top:4px' }, link(d.listUrl, 'runs ↗'), ' · ', link('https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/SETUP.md', 'setup ↗')));
+  }
+  const over = b && b.included && b.used > b.included;
+  const bCard = h('div', { class: 'card' }, h('div', { class: 'meta' }, 'GitHub Actions minutes this month'),
+    b ? [h('div', { class: 'big ' + (over ? 'bad' : b.used / b.included >= 0.9 ? 'warn' : 'ok') }, fmtNum(b.used), h('span', { class: 'meta', style: 'font-size:13px;font-weight:400' }, ' of ' + fmtNum(b.included) + (b.net ? ' · $' + b.net.toFixed(2) : ''))),
+      h('div', { class: 'kv' }, b.projected ? ['Projected by month end: ', h('b', null, '~' + fmtNum(b.projected))] : null),
+      b.top && b.top.length ? h('div', { class: 'kv' }, 'Most: ', b.top.map(x => x.repo + ' ' + fmtNum(x.min)).join(', ')) : null,
+      h('div', { class: 'kv', style: 'margin-top:4px' }, link('https://github.com/settings/billing/usage', 'billing ↗'))]
+      : h('div', { class: 'kv' }, 'Add the account permission ', h('b', null, 'Plan: Read'), ' to the token to see this.'));
+  const rCard = h('div', { class: 'card' }, h('div', { class: 'meta' }, 'GitHub API (this token)'),
+    h('div', { class: 'big' }, rate ? fmtNum(rate.remaining) : '—', h('span', { class: 'meta', style: 'font-size:13px;font-weight:400' }, rate ? ' of ' + fmtNum(rate.limit) + ' left this hour' : '')),
+    h('div', { class: 'kv' }, 'Auto-refresh every ' + cfg.refreshMin + ' min while this tab is visible.'));
+  const el = h('details', { class: 'sec' }, h('summary', null, h('h2', null, 'System & cost')), h('div', { class: 'sys' }, dCard, bCard, rCard));
+  if (alert) el.open = true;
+  return h('section', null, keepOpen('sec:system', el));
+}
+
+const isException = (f) => (f.kind === 'ci' && f.status === 'completed' && !['success', 'skipped', 'neutral', 'cancelled'].includes(f.conclusion))
+  || (f.kind === 'dispatch' && ['no-show', 'reclaimed', 'needs-you'].includes(f.mode))
+  || (f.kind === 'dispatch' && /^codex$/i.test(f.who || '') && f.mode === 'fix-pr');
 function renderFeed(m) {
-  const scopes = [['all', 'All']].concat(m.repos.filter(r => !r.fatal).map(r => [r.name, r.nick]));
+  const exceptions = m.feed.filter(isException);
+  const scopes = [['exceptions', 'Problems only (' + exceptions.length + ')'], ['all', 'All']].concat(m.repos.filter(r => !r.fatal).map(r => [r.name, r.nick]));
   const bar = h('div', { class: 'chips', style: 'margin-bottom:8px' }, scopes.map(([k, label]) => h('button', { class: 'chip' + (feedScope === k ? '' : ' zero'), type: 'button', style: 'cursor:pointer', onclick: () => { feedScope = k; render(); } }, label)));
-  const items = m.feed.filter(f => feedScope === 'all' || f.repo.name === feedScope).slice(0, 40);
+  const items = (feedScope === 'exceptions' ? exceptions : m.feed.filter(f => feedScope === 'all' || f.repo.name === feedScope)).slice(0, 40);
   const list = items.map(f => {
-    const tag = f.kind === 'ci' ? 'CI' : f.kind === 'review' ? 'review' : f.kind === 'pr' ? 'PR' : f.kind === 'merged' ? 'merged' : f.kind === 'commit' ? 'commit' : 'comment';
+    const tag = f.kind === 'ci' ? 'CI' : f.kind === 'review' ? 'review' : f.kind === 'pr' ? 'PR' : f.kind === 'merged' ? 'merged' : f.kind === 'commit' ? 'commit' : f.kind === 'dispatch' ? 'dispatch' : 'comment';
     const cls = f.kind === 'ci' ? (f.status !== 'completed' ? 'wait' : f.conclusion === 'success' ? 'ok' : 'bad') : '';
     return h('div', { class: 'ev' }, h('div', { class: 'when' }, ago(f.at)),
-      h('div', { class: 'what' }, h('span', { class: 'tag' }, (feedScope === 'all' ? f.repo.nick + ' · ' : '') + tag), h('span', { class: 'who ' + cls }, f.who || ''), ' ', link(f.url, f.text || '(no text)')));
+      h('div', { class: 'what' }, h('span', { class: 'tag' }, (feedScope === 'exceptions' || feedScope === 'all' ? f.repo.nick + ' · ' : '') + tag), h('span', { class: 'who ' + cls }, f.who || ''), ' ', link(f.url, f.text || '(no text)')));
   });
-  return h('section', null, h('h2', null, 'Activity'), bar, h('div', { class: 'card feed' }, list.length ? list : h('div', { class: 'empty' }, 'Nothing yet.')));
+  const el = h('details', { class: 'sec' }, h('summary', null, h('h2', null, 'Activity', h('span', { class: 'count' }, String(m.feed.length)))), bar,
+    h('div', { class: 'card feed' }, list.length ? list : h('div', { class: 'empty' }, feedScope === 'exceptions' ? 'No problems in the recent activity.' : 'Nothing yet.')));
+  return h('section', null, keepOpen('sec:feed', el));
 }
 
 function render() {
   renderHeader();
   const app = $('#app');
   app.replaceChildren();
-  if (!token) { app.append(renderSetup()); return; }
-  if (tokenBad) { app.append(h('section', null, h('div', { class: 'card err' }, 'GitHub rejected the token (401). Open Settings and paste a new one.')), renderSetup()); return; }
-  if (!model) { app.append(h('div', { class: 'empty' }, busy ? 'Loading your repos…' : 'Press Refresh to load.')); return; }
+  let items = [];
+  if (!token) { renderStatus(items); app.append(renderSetup()); return; }
+  if (tokenBad) { renderStatus(items); app.append(h('section', null, h('div', { class: 'card err' }, 'GitHub rejected the token (401). Open Settings and paste a new one.')), renderSetup()); return; }
+  if (!model) { renderStatus(items); app.append(h('div', { class: 'empty' }, busy ? 'Loading your repos…' : 'Press Refresh to load.')); return; }
   if (!model.repos.length) {
+    renderStatus(items);
     app.append(h('section', null, h('div', { class: 'card setup' },
       h('h2', null, 'No agent repos found yet'),
       h('p', { style: 'margin:0 0 8px' }, 'Mission Control lists every repo of yours that has the agents\' ', h('code', null, 'ready'), ' label; each Claude routine creates it on its first run. Either the routines have not run yet, or the token cannot see those repos.'),
@@ -971,20 +1464,17 @@ function render() {
         h('button', { class: 'btn', type: 'button', onclick: openSettings }, 'Add repos by name')))));
     return;
   }
-  app.append(h('div', { class: 'meta onlynarrow', style: 'margin:0 0 10px' }, 'Updated ' + fmtClock(lastRefresh) + ' · auto-refresh ' + cfg.refreshMin + 'm'));
-  app.append(renderNeeds(model), renderTiles(model), renderTeam(model));
-  const live = model.repos.filter(r => !r.fatal);
-  const pausedAll = live.length > 0 && live.every(r => r.paused);
-  const toolbar = h('div', { class: 'toolbar' },
-    h('span', { class: 'meta' }, pausedAll ? 'All repos are paused.' : (model.totals.paused ? model.totals.paused + ' of ' + live.length + ' repos paused.' : 'All agents allowed to run.')),
-    live.some(r => !r.paused) ? armedButton('Pause all repos', async () => { for (const r of live) if (!r.paused) await pauseRepo(r); }, 'danger') : null,
-    live.some(r => r.paused) ? armedButton('Resume all', async () => { for (const r of live) if (r.paused) await resumeRepo(r); }) : null);
-  app.append(h('section', null, h('h2', null, 'Projects', h('span', { class: 'count' }, String(model.repos.length))), toolbar, h('div', { class: 'grid' }, model.repos.map(renderRepo))));
-  app.append(renderAgents(model), renderFeed(model));
+  items = buildInbox(model);
+  renderStatus(items);
+  app.append(renderInbox(model, items));
+  const dl = renderDeadlines(model); if (dl) app.append(dl);
+  app.append(renderProjects(model), renderAgents(model));
+  const ut = renderUntracked(model); if (ut) app.append(ut);
+  app.append(renderSystem(model, items), renderFeed(model));
   app.append(h('footer', null,
-    h('span', null, rate ? ('GitHub API: ' + fmtNum(rate.remaining) + ' of ' + fmtNum(rate.limit) + ' calls left this hour') : ''),
     h('span', null, 'Labels: plan → the administrator splits it · ready → the dispatcher assigns it · size:S/M → Sonnet · size:L → Opus · ui → Antigravity · to:codex → Codex · claimed → agent on it · in-review → PR open · blocked → needs you · pause → everything stops'),
-    h('span', null, 'Auto-refresh every ' + cfg.refreshMin + ' min while this tab is visible.')));
+    h('span', null, 'Deadlines: add a "Window:" or "Due:" line to an issue (see Settings).'),
+    h('span', null, 'Install: Share → Add to Home Screen (phone) or the install icon in the address bar.')));
 }
 
 /* ---------- settings dialog ---------- */
@@ -996,6 +1486,7 @@ function openSettings() {
     if (r.note) parts.push(r.note);
     return parts.join(' | ');
   }).join('\n');
+  $('#fRoutineRepos').value = Object.entries(cfg.routineRepos || {}).map(([a, list]) => a + ': ' + list.join(', ')).join('\n');
   $('#fRefresh').value = cfg.refreshMin; $('#fStale').value = cfg.staleHours; $('#fClaim').value = cfg.claimHours; $('#fFail').value = cfg.failHours; $('#fMinutes').value = cfg.includedMinutes;
   $('#tokenHelp2').replaceChildren(tokenHelp());
   $('#settings').showModal();
@@ -1009,6 +1500,12 @@ function applySettings() {
   for (const r of cfg.repos) if (!kept.has(r.name.toLowerCase())) hidden.add(r.name.toLowerCase());
   cfg.hidden = [...hidden];
   cfg.repos = repos;
+  const rr = {};
+  for (const line of $('#fRoutineRepos').value.split('\n')) {
+    const mm = /^\s*([\w.-]+)\s*:\s*(.*)$/.exec(line);
+    if (mm) rr[mm[1].toLowerCase()] = mm[2].split(/[,\s]+/).map(x => x.trim()).filter(x => /^[\w.-]+$/.test(x));
+  }
+  cfg.routineRepos = rr;
   cfg.refreshMin = Math.max(1, +$('#fRefresh').value || DEFAULTS.refreshMin);
   cfg.staleHours = Math.max(0.5, +$('#fStale').value || DEFAULTS.staleHours);
   cfg.claimHours = Math.max(0.5, +$('#fClaim').value || DEFAULTS.claimHours);
@@ -1022,6 +1519,7 @@ function applySettings() {
 
 /* ---------- wiring ---------- */
 $('#btnRefresh').addEventListener('click', () => refresh());
+$('#btnTask').addEventListener('click', () => openTaskDialog());
 $('#btnSettings').addEventListener('click', openSettings);
 $('#btnCancel').addEventListener('click', () => $('#settings').close());
 $('#btnForget').addEventListener('click', () => { token = ''; saveToken(''); model = null; tokenBad = false; $('#settings').close(); render(); toast('Token removed from this browser'); });
@@ -1030,22 +1528,23 @@ $('#btnDiscover').addEventListener('click', async (ev) => {
   if (!token) { toast('Connect a token first', true); return; }
   const b = ev.currentTarget; b.disabled = true; $('#discoverMsg').textContent = 'Looking…';
   try {
-    const names = await discoverRepos();
+    const found = await discoverRepos();
     if (!$('#fOwner').value.trim()) $('#fOwner').value = cfg.owner;
     const ta = $('#fRepos');
     const lines = ta.value.split('\n').map(l => l.trim()).filter(Boolean);
     const have = new Set(lines.map(l => l.split('|')[0].trim().toLowerCase()));
-    const add = names.filter(n => !have.has(n.toLowerCase()));
+    const add = found.filter(n => !have.has(n.toLowerCase()));
     ta.value = lines.concat(add.map(n => shortName(n) === n ? n : n + ' | ' + shortName(n))).join('\n');
-    $('#discoverMsg').textContent = names.length ? 'Found ' + names.length + ', added ' + add.length + ' — press Save.' : 'None found yet.';
+    $('#discoverMsg').textContent = found.length ? 'Found ' + found.length + ', added ' + add.length + ' — press Save.' : 'None found yet.';
   } catch (e) { $('#discoverMsg').textContent = 'Failed: ' + explain(e); }
   finally { b.disabled = false; }
 });
+$('#taskDlg').addEventListener('click', (ev) => { if (ev.target === $('#taskDlg')) $('#taskDlg').close(); });
 /* Never refresh under someone typing: a refresh redraws the page and would drop an open task form. */
-const editing = () => !!document.querySelector('.taskform') || $('#settings').open;
+const editing = () => !!document.querySelector('.taskform') || $('#settings').open || $('#taskDlg').open;
 setInterval(() => { if (token && document.visibilityState === 'visible' && now() - lastRefresh > cfg.refreshMin * 60e3 && !busy && !editing()) refresh(); }, 20e3);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && token && now() - lastRefresh > 60e3 && !busy && !editing()) refresh(); });
-setInterval(() => { if (model && !busy) renderHeader(); }, 30e3);
+setInterval(() => { if (model && !busy) { renderHeader(); tickCountdowns(); } }, 30e3);
 
 render();
 loadTeam().then(() => { if (model) { model.team = buildTeam(model.repos, model.agents); render(); } });

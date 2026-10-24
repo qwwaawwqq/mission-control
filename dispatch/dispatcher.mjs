@@ -41,6 +41,17 @@ const numOf = (url) => { const m = /\/(\d+)$/.exec(url || ''); return m ? Number
 const agentOfBody = (b) => { const m = /^\s*Agent:\s*([\w.-]+)/im.exec(b || ''); return m ? m[1].toLowerCase() : null; };
 const isCodex = (login) => /codex/i.test(login || '');
 const mentions = (body, n) => new RegExp(`(^|[^\\w])#${n}(?!\\d)`).test(body || '');
+/* The routine trigger's reply may name the session it started; if it does, the Dispatch comment links it. */
+export function sessionUrlOf(reply) {
+  const found = [];
+  const walk = (v, depth) => {
+    if (v == null || depth > 3) return;
+    if (typeof v === 'string') { if (/^https:\/\/claude\.ai\/code\/[\w./?=&-]+$/.test(v)) found.push(v); return; }
+    if (typeof v === 'object') for (const x of Object.values(v)) walk(x, depth + 1);
+  };
+  walk(reply, 0);
+  return found[0] || '';
+}
 
 export async function run({ config, env = {}, now = Date.now(), fetchImpl = fetch, verbose = false } = {}) {
   const cfg = config;
@@ -105,7 +116,10 @@ export async function run({ config, env = {}, now = Date.now(), fetchImpl = fetc
         headers: { Authorization: `Bearer ${a.target.token}`, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
       });
-      return res.ok ? { ok: true } : { ok: false, why: `http-${res.status}` };
+      if (!res.ok) return { ok: false, why: `http-${res.status}` };
+      let session = '';
+      try { session = sessionUrlOf(await res.json()); } catch { /* no JSON body */ }
+      return { ok: true, session };
     } catch (e) {
       return { ok: false, why: 'network' };
     }
@@ -250,7 +264,7 @@ export async function run({ config, env = {}, now = Date.now(), fetchImpl = fetc
     const res = await fire(a, text);
     if (!res.ok) { a.cooling = true; stats.errors++; return false; }
     fires++; a.load5h++; a.load7d++; a.recent++; a.lastAt = NOW; acctLoad[a.account] = (acctLoad[a.account] || 0) + 1;
-    await comment(d, n, `Dispatch: ${a.name} · ${a.model} · ${mode}${sha ? ` · sha=${sha.slice(0, 7)}` : ''}\n\n${lines[0]}`);
+    await comment(d, n, `Dispatch: ${a.name} · ${a.model} · ${mode}${sha ? ` · sha=${sha.slice(0, 7)}` : ''}\n\n${lines[0]}${res.session ? `\nSession: ${res.session}` : ''}`);
     return true;
   }
 
@@ -371,7 +385,7 @@ export async function run({ config, env = {}, now = Date.now(), fetchImpl = fetc
             exclude.add(last.who);
             byName[last.who].cooling = true;
             await removeLabel(d, i.number, `to:${last.who}`);
-            await comment(d, i.number, `Dispatch: ${last.who} · ${byName[last.who].model} · no-show\n\n${last.who} did not start within ${cfg.claimTimeoutMinutes} minutes (probably out of usage); moving on.`);
+            await comment(d, i.number, `Dispatch: ${last.who} · ${byName[last.who].model} · no-show\n\n${last.who} did not start within ${cfg.claimTimeoutMinutes} minutes, so the task moves on. Usual causes: its routine does not have ${d.repo} attached (claude.ai/code/routines → the routine → Edit → Repositories), or its account is out of usage.`);
             stats.reassigned++;
           }
         }
