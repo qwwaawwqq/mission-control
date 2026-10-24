@@ -17,7 +17,7 @@
   color-scheme: light;
   --bg: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
   --line: #e1e0d9; --border: rgba(11,11,11,.10); --chip: rgba(11,11,11,.05); --hover: rgba(11,11,11,.04);
-  --accent: #2a78d6; --violet: #6250d6; --aqua: #1baf7a;
+  --accent: #1f6fd1; --accent-text: #1d5fae; --btn: #1f6fd1; --border-strong: rgba(11,11,11,.16); --violet: #6250d6; --aqua: #1baf7a;
   --good: #0ca30c; --good-text: #006300; --warn: #fab219; --warn-text: #7a5200; --serious: #ec835a; --bad: #d03b3b; --bad-text: #b02a2a;
   --you-bg: rgba(208,59,59,.08); --wait-bg: rgba(250,178,25,.12);
 }
@@ -26,7 +26,7 @@
     color-scheme: dark;
     --bg: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
     --line: #2c2c2a; --border: rgba(255,255,255,.10); --chip: rgba(255,255,255,.07); --hover: rgba(255,255,255,.05);
-    --accent: #3987e5; --violet: #9085e9; --aqua: #199e70;
+    --accent: #3987e5; --accent-text: #6aa6ef; --btn: #1f6fd1; --border-strong: rgba(255,255,255,.18); --violet: #9085e9; --aqua: #199e70;
     --good-text: #0ca30c; --warn-text: #fab219; --bad-text: #e66767;
     --you-bg: rgba(208,59,59,.16); --wait-bg: rgba(250,178,25,.14);
   }
@@ -35,7 +35,7 @@
   color-scheme: dark;
   --bg: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
   --line: #2c2c2a; --border: rgba(255,255,255,.10); --chip: rgba(255,255,255,.07); --hover: rgba(255,255,255,.05);
-  --accent: #3987e5; --violet: #9085e9; --aqua: #199e70;
+  --accent: #3987e5; --accent-text: #6aa6ef; --btn: #1f6fd1; --border-strong: rgba(255,255,255,.18); --violet: #9085e9; --aqua: #199e70;
   --good-text: #0ca30c; --warn-text: #fab219; --bad-text: #e66767;
   --you-bg: rgba(208,59,59,.16); --wait-bg: rgba(250,178,25,.14);
 }
@@ -45,216 +45,290 @@ body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 syst
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 button { font: inherit; color: inherit; }
-.wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px 56px; }
-header.top { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
-header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 10px; padding-bottom: 10px; }
-header.top .wrap.statusrow { padding-top: 0; padding-bottom: 9px; display: block; }
-.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.brand h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.brand .sub { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+svg { flex: none; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 24px 56px; }
+.grow { flex: 1 1 auto; }
+.hid { display: none !important; }
+.meta { color: var(--ink-2); font-size: 13px; }
+.bad-text { color: var(--bad-text); }
+.err { color: var(--bad-text); font-size: 13px; overflow-wrap: anywhere; }
+.warnline { color: var(--warn-text); font-size: 13px; }
+code { background: var(--chip); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+
+/* header: brand, the four views, actions */
+header.top { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+header.top .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; padding-top: 6px; padding-bottom: 6px; }
+.brand { display: flex; align-items: center; gap: 10px; min-height: 44px; min-width: 0; }
+.brand h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: -.01em; white-space: nowrap; }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
 .dot.ok { background: var(--good); } .dot.busy { background: var(--warn); animation: pulse 1s infinite alternate; } .dot.bad { background: var(--bad); }
 @keyframes pulse { from { opacity: .4 } to { opacity: 1 } }
-.actions { display: flex; align-items: center; gap: 8px; flex: none; }
-.meta { color: var(--muted); font-size: 12px; }
-.btn { border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 7px 12px; cursor: pointer; line-height: 1.2; font-size: 14px; }
-.btn:hover { background: var(--hover); }
+.views { display: flex; gap: 2px; }
+.views button { position: relative; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; border: 0; border-radius: 8px 8px 0 0; background: transparent; color: var(--ink-2); font-weight: 550; cursor: pointer; }
+.views button:hover { color: var(--ink); background: var(--hover); }
+.views button[aria-pressed="true"] { color: var(--ink); font-weight: 650; box-shadow: inset 0 -2px 0 var(--accent); }
+.views .vi { display: none; }
+.badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: #52514e; color: #fff; font-size: 11px; font-weight: 700; line-height: 1; }
+.badge.you { background: #c62f2f; }
+.badge.wait { background: var(--warn); color: #111; }
+.actions { display: flex; align-items: center; gap: 8px; }
+
+/* buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); color: var(--ink); cursor: pointer; font-size: 14px; font-weight: 550; line-height: 1.2; text-decoration: none; white-space: nowrap; }
+.btn:hover { background: var(--hover); text-decoration: none; }
 .btn:disabled { opacity: .5; cursor: default; }
-.btn.primary { background: var(--accent); color: #fff; border-color: transparent; }
-.btn.primary:hover { filter: brightness(1.08); }
+.btn.primary { background: var(--btn); color: #fff; border-color: transparent; }
+.btn.primary:hover { background: var(--btn); filter: brightness(1.08); }
 .btn.danger { color: var(--bad-text); }
-.btn.sm { padding: 4px 9px; font-size: 13px; border-radius: 7px; }
-.btn.ghost { background: transparent; }
-a.btn { color: var(--ink); display: inline-flex; align-items: center; }
-a.btn:hover { text-decoration: none; }
-.lnk-narrow { display: none; }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--ink-2); }
+.btn.ghost:hover { background: var(--hover); color: var(--ink); }
+.btn.icon { width: 40px; padding: 0; }
+.btn.sm { min-height: 34px; padding: 0 10px; font-size: 13px; border-radius: 7px; }
 .btn.armed { background: var(--bad); color: #fff; border-color: transparent; }
-main.wrap { padding-top: 16px; }
-section { margin-bottom: 22px; }
-h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-h2 .count { background: var(--chip); color: var(--ink-2); border-radius: 999px; padding: 1px 8px; font-size: 12px; letter-spacing: 0; }
-h2 .count.you { background: var(--bad); color: #fff; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
-.empty { color: var(--muted); font-size: 14px; padding: 8px 2px; }
-.err { color: var(--bad-text); font-size: 13px; overflow-wrap: anywhere; }
-.warnline { color: var(--warn-text); font-size: 13px; }
-.hid { display: none !important; }
+a.btn { color: var(--ink); } a.btn.primary { color: #fff; }
+.lnk-narrow, .only-narrow { display: none !important; }
 
-/* status line: the one sentence you read first */
-.statusline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; font-size: 13.5px; color: var(--ink-2); }
-.statusline .s-you { color: var(--bad-text); font-weight: 650; }
-.statusline .s-ok { color: var(--good-text); font-weight: 650; }
-.statusline .s-warn { color: var(--warn-text); font-weight: 600; }
-.statusline b { color: var(--ink); font-weight: 600; }
-
-/* inbox: every row says what happened, what to do next, and by when */
-.inbox { display: flex; flex-direction: column; gap: 8px; }
-.item { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 4px 10px; align-items: start; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); }
-.item.sev1 { background: var(--you-bg); border-color: color-mix(in srgb, var(--bad) 35%, transparent); }
-.item.sev2 { background: var(--wait-bg); }
-.item .ic { font-size: 16px; line-height: 1.35; text-align: center; }
-.item .t { font-weight: 600; overflow-wrap: anywhere; }
-.item .t .proj { color: var(--muted); font-weight: 500; }
-.item .why { color: var(--ink-2); font-size: 13px; margin-top: 2px; overflow-wrap: anywhere; }
-.item .next { font-size: 13px; margin-top: 3px; overflow-wrap: anywhere; }
-.item .next > b { font-weight: 650; }
-.item .act { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
-.cd { display: inline-block; font-size: 12px; font-weight: 650; padding: 1px 8px; border-radius: 999px; background: var(--chip); color: var(--ink-2); margin-left: 6px; white-space: nowrap; font-variant-numeric: tabular-nums; vertical-align: 1px; }
-.cd.open { background: var(--bad); color: #fff; }
-.cd.soon { background: var(--warn); color: #111; }
-.inbox-foot { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-
-/* deadlines */
-.dl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
-.dl:last-child { border-bottom: 0; }
-.dl .when { color: var(--ink-2); font-size: 13px; text-align: right; white-space: nowrap; }
-
-/* projects: one compact row each, tap to open the details */
-.weekline { font-size: 13.5px; color: var(--ink-2); margin: -2px 0 10px; }
-.weekline b { color: var(--ink); }
-.plist { display: flex; flex-direction: column; gap: 8px; }
-details.prow { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
-details.prow.paused { outline: 2px solid var(--bad); outline-offset: -1px; }
-details.prow > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 12px minmax(90px, .9fr) minmax(0, 2fr) auto; gap: 4px 12px; align-items: center; padding: 11px 14px; }
-details.prow > summary::-webkit-details-marker { display: none; }
-details.prow > summary:hover { background: var(--hover); border-radius: 12px; }
-details.prow[open] > summary { border-bottom: 1px solid var(--line); border-radius: 12px 12px 0 0; }
-details.prow .pbody { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 10px; }
-.hdot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+/* shared pieces */
+main.wrap { padding-top: 4px; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); margin: 0; font-weight: 650; }
+.count { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 8px; border-radius: 999px; background: var(--chip); color: var(--ink); font-size: 12px; font-weight: 650; }
+.count.you { background: #c62f2f; color: #fff; }
+.sec-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+.empty { color: var(--ink-2); font-size: 14px; padding: 8px 2px; }
+.tag { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; background: var(--chip); color: var(--ink-2); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.tag.auto { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent-text); }
+.pill { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 999px; font-size: 12px; font-weight: 650; white-space: nowrap; flex: none; }
+.pill.you { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad-text); }
+.fchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.fchip { display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--ink); font-size: 13px; font-weight: 600; cursor: pointer; }
+.fchip:hover { background: var(--hover); }
+.fchip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.cd { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 999px; background: var(--chip); color: var(--ink-2); font-size: 12px; font-weight: 650; white-space: nowrap; font-variant-numeric: tabular-nums; flex: none; }
+.cd.open { background: #c62f2f; color: #fff; }
+.cd.soon { background: color-mix(in srgb, var(--warn) 30%, transparent); color: var(--warn-text); }
+.cd.big { height: auto; padding: 0; background: none; font-size: 28px; line-height: 1.15; color: var(--ink); white-space: normal; }
+.cd.big.soon { color: var(--warn-text); background: none; }
+.cd.big.open { color: var(--bad-text); background: none; }
+.hdot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
 .hdot.good { background: var(--good); } .hdot.warn { background: var(--warn); } .hdot.bad { background: var(--bad); } .hdot.idle { background: transparent; border: 1.5px solid var(--muted); }
 .hdot.sched { background: transparent; border: 2px solid var(--accent); }
-.pname { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pstate { font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pnums { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-.pnum { font-size: 12px; color: var(--ink-2); background: var(--chip); border-radius: 999px; padding: 1px 7px; white-space: nowrap; }
-.pnum b { color: var(--ink); font-weight: 650; }
-.pnum.bad { background: var(--you-bg); } .pnum.bad b { color: var(--bad-text); }
-.pnum.ok b { color: var(--good-text); }
-.repo-links { font-size: 12px; color: var(--muted); }
-.repo-links a { color: var(--ink-2); }
+
+/* Today: the sentence, four tiles, then what needs you */
+.hero { padding-top: 28px; }
+.hero-date { margin: 0 0 6px; font-size: 14px; color: var(--ink-2); }
+.hero h1 { margin: 0; max-width: 960px; font-size: 32px; line-height: 1.2; font-weight: 650; letter-spacing: -.015em; overflow-wrap: anywhere; }
+.tiles { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+.tile { flex: 1 1 210px; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 14px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.tile-l { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.tile-v { font-size: 28px; font-weight: 650; line-height: 1.15; overflow-wrap: anywhere; }
+.tile-v.bad { color: var(--bad-text); } .tile-v.ok { color: var(--good-text); } .tile-v.warn { color: var(--warn-text); }
+.tile-s { font-size: 13px; color: var(--ink-2); overflow-wrap: anywhere; }
+.today { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; padding-top: 28px; }
+.inbox { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.side-col { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+.grp { display: flex; flex-direction: column; gap: 10px; }
+.grp-label { margin: 6px 0 0; font-size: 12px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+.grp-label.t-you { color: var(--bad-text); } .grp-label.t-wait { color: var(--warn-text); }
+.it-card { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); }
+.it-card.t-you { background: var(--you-bg); border-color: color-mix(in srgb, var(--bad) 30%, transparent); }
+.it-card.t-wait { background: var(--wait-bg); border-color: color-mix(in srgb, var(--warn) 45%, transparent); }
+.it-head { display: flex; gap: 14px; align-items: flex-start; }
+.it-ic { flex: none; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: var(--chip); color: var(--ink-2); }
+.it-ic.t-you { background: color-mix(in srgb, var(--bad) 16%, transparent); color: var(--bad-text); }
+.it-ic.t-wait { background: color-mix(in srgb, var(--warn) 26%, transparent); color: var(--warn-text); }
+.it-ic.t-ok { background: color-mix(in srgb, var(--good) 14%, transparent); color: var(--good-text); }
+.it-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.it-title { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.it-title .t { font-size: 16px; font-weight: 650; overflow-wrap: anywhere; }
+.it-why { color: var(--ink-2); font-size: 14px; overflow-wrap: anywhere; }
+.it-next { font-size: 14px; overflow-wrap: anywhere; }
+.it-next > b { font-weight: 650; }
+.it-act { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.rows { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.it-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 12px 14px; border-top: 1px solid var(--line); }
+.it-row:first-child { border-top: 0; }
+.it-row .it-head { flex: 1 1 360px; min-width: 0; gap: 12px; }
+.it-row .it-ic { width: 32px; height: 32px; border-radius: 9px; }
+.it-row .it-title .t { font-size: 15px; font-weight: 600; }
+.it-row .it-why, .it-row .it-next { font-size: 13px; }
+.it-row .it-act { gap: 4px; margin-left: auto; }
+.snoozed { opacity: .78; }
+.snoozed-list { margin-top: 2px; }
+.inbox-foot { display: flex; flex-wrap: wrap; gap: 8px; }
+.empty-ok { display: flex; align-items: center; gap: 12px; }
+.side { display: flex; flex-direction: column; gap: 12px; }
+.dl { display: flex; gap: 12px; align-items: flex-start; }
+.dl-date { flex: none; width: 50px; padding: 5px 0; border-radius: 10px; background: var(--chip); display: flex; flex-direction: column; align-items: center; font-size: 11px; font-weight: 650; color: var(--ink-2); }
+.dl-date b { font-size: 19px; line-height: 1.1; color: var(--ink); }
+.dl-date.soon { background: color-mix(in srgb, var(--warn) 20%, transparent); color: var(--warn-text); }
+.dl-date.soon b { color: var(--warn-text); }
+.dl-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 14px; overflow-wrap: anywhere; }
+.dl-title { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.autos { display: flex; flex-direction: column; }
+.auto { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-top: 1px solid var(--line); }
+.auto:first-child { border-top: 0; }
+.auto-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; font-size: 14px; }
+.auto-next { flex: none; display: flex; flex-direction: column; align-items: flex-end; font-size: 14px; font-variant-numeric: tabular-nums; }
+.side-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+
+/* Projects, Agents, System */
+.view { display: flex; flex-direction: column; gap: 14px; padding-top: 28px; }
+.view-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.view-head h1 { margin: 0; font-size: 28px; line-height: 1.2; font-weight: 650; letter-spacing: -.01em; }
+.weekline { margin: 0; font-size: 14px; color: var(--ink-2); }
+.weekline b { color: var(--ink); }
+.cards { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+.pcard, .acard, .stile { min-width: 0; display: flex; flex-direction: column; gap: 10px; padding: 16px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.pcard { flex: 1 1 360px; }
+.acard { flex: 1 1 270px; }
+.stile { flex: 1 1 320px; }
+.pcard.paused { border-color: color-mix(in srgb, var(--bad) 60%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 40%, transparent); }
+.acard.t-bad { background: var(--you-bg); border-color: color-mix(in srgb, var(--bad) 30%, transparent); }
+.acard.t-warn { background: var(--wait-bg); }
+.pc-head, .ac-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.pc-head h2, .ac-head h2, .stile h2 { font-size: 17px; text-transform: none; letter-spacing: -.005em; color: var(--ink); overflow-wrap: anywhere; }
+.ac-head h2, .stile h2 { font-size: 15px; }
+.pc-state, .ac-state { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.ac-state.t-good { color: var(--good-text); } .ac-state.t-bad { color: var(--bad-text); } .ac-state.t-warn { color: var(--warn-text); }
+.pcard p, .acard p, .stile p { margin: 0; }
+.flow { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: var(--chip); }
+.flow span { flex: 0 1 0; }
+.f-ready { background: var(--warn); } .f-work { background: var(--good); } .f-review { background: var(--accent); } .f-blocked { background: var(--bad); } .f-plan { background: var(--violet); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--ink-2); }
+.legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 8px; height: 8px; border-radius: 2px; }
+.legend b { color: var(--ink); }
+.pc-act { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pc-body { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; border-radius: 10px; background: var(--chip); }
+.times { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.time { display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 8px; background: var(--chip); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ac-meters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.mpair { display: inline-flex; align-items: center; gap: 6px; }
+.ac-fix { font-size: 13px; }
+.bigval { font-size: 26px; font-weight: 650; line-height: 1.15; }
+.bigval.bad { color: var(--bad-text); } .bigval.warn { color: var(--warn-text); } .bigval.ok { color: var(--good-text); }
+.bigval small { font-size: 14px; font-weight: 550; color: var(--ink-2); }
+.bars { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--ink-2); }
+.barrow { display: flex; align-items: center; gap: 10px; }
+.barrow > span:first-child { flex: none; width: 64px; }
+.barrow > b { flex: none; min-width: 36px; text-align: right; color: var(--ink); font-variant-numeric: tabular-nums; }
+.track { flex: 1 1 auto; height: 8px; border-radius: 999px; background: var(--chip); display: flex; overflow: hidden; }
+.track span { flex: none; height: 100%; }
+.untracked, .feedsec { display: flex; flex-direction: column; gap: 10px; }
+.repo-links { font-size: 13px; color: var(--ink-2); }
+.repo-links a { color: var(--ink-2); text-decoration: underline; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; background: var(--chip); font-size: 12.5px; color: var(--ink-2); border: 1px solid transparent; }
 .chip b { font-weight: 650; color: var(--ink); }
-.chip.zero { opacity: .55; }
+.chip.zero { opacity: .6; }
 .chip .sw { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
 .sw.plan { background: var(--violet); } .sw.ready { background: var(--good); } .sw.claimed { background: var(--warn); } .sw.in-review { background: var(--accent); } .sw.blocked { background: var(--bad); } .sw.jules { background: var(--aqua); } .sw.pause { background: var(--ink); }
-.kv { font-size: 13.5px; color: var(--ink-2); }
+.kv { font-size: 13.5px; color: var(--ink-2); overflow-wrap: anywhere; }
 .kv b { color: var(--ink); font-weight: 600; }
 .list { display: flex; flex-direction: column; gap: 6px; }
-.pr { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 8px; background: var(--chip); font-size: 13.5px; }
+.pr { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 8px; background: var(--surface); font-size: 13.5px; }
 .pr.you { background: var(--you-bg); }
 .pr.agent { background: var(--wait-bg); }
 .pr .row { display: flex; gap: 8px; align-items: baseline; }
 .pr .title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 550; }
 .pr .title a { color: inherit; }
-.pr .who { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.pr .who { color: var(--ink-2); font-size: 12px; white-space: nowrap; }
 .st { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12.5px; color: var(--ink-2); }
 .st .ok, .ok { color: var(--good-text); } .st .bad, .bad { color: var(--bad-text); } .st .wait, .wait { color: var(--warn-text); }
 .verdict { font-weight: 600; }
 .verdict.you { color: var(--bad-text); } .verdict.agent { color: var(--warn-text); } .verdict.wait { color: var(--ink-2); }
-.foot { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 2px; }
-
-/* agents */
-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-th { text-align: left; color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; padding: 6px 8px; border-bottom: 1px solid var(--line); }
-td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
-tr:last-child td { border-bottom: 0; }
-table.team td.c-name { white-space: nowrap; }
-.model { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--chip); color: var(--ink); white-space: nowrap; margin-left: 6px; }
+.model { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--chip); color: var(--ink); white-space: nowrap; }
 .model.m-fable { background: color-mix(in srgb, var(--violet) 22%, transparent); }
 .model.m-opus { background: color-mix(in srgb, var(--accent) 22%, transparent); }
 .model.m-sonnet { background: color-mix(in srgb, var(--aqua) 22%, transparent); }
 .model.m-gpt { background: color-mix(in srgb, var(--good) 18%, transparent); }
 .model.m-gemini { background: color-mix(in srgb, var(--warn) 22%, transparent); }
-.state { display: inline-block; font-size: 12px; font-weight: 650; padding: 1px 8px; border-radius: 999px; background: var(--chip); color: var(--ink-2); white-space: nowrap; }
-.state.working, .state.starting, .state.sizing { background: color-mix(in srgb, var(--good) 20%, transparent); color: var(--good-text); }
-.state.misconfigured { background: var(--bad); color: #fff; }
-.state.noshow, .state.capped { background: var(--warn); color: #111; }
-.cause { font-size: 12.5px; color: var(--ink-2); margin-top: 3px; max-width: 520px; }
 .meter { position: relative; display: inline-flex; align-items: center; width: 84px; height: 18px; border-radius: 9px; background: color-mix(in srgb, var(--accent) 14%, transparent); overflow: hidden; vertical-align: middle; }
-.meter .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 9px; }
+.meter .fill { position: absolute; left: 0; top: 0; bottom: 0; background: color-mix(in srgb, var(--accent) 55%, transparent); border-radius: 9px; }
 .meter.high .fill { background: var(--warn); }
 .meter.full .fill { background: var(--bad); }
-.meter .num { position: relative; width: 100%; text-align: center; font-size: 11.5px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.meter .num { position: relative; width: 100%; text-align: center; font-size: 11.5px; font-weight: 650; color: var(--ink); font-variant-numeric: tabular-nums; }
 .chip .meter { width: 64px; height: 16px; }
-.chip.warnchip { background: var(--wait-bg); color: var(--warn-text); }
-
-/* outside the labels, system, activity */
 .urow { padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; overflow-wrap: anywhere; }
 .urow:last-child { border-bottom: 0; }
-.sys { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 10px; }
-.sys .big { font-size: 22px; font-weight: 650; line-height: 1.2; }
-.sys .big.bad { color: var(--bad-text); } .sys .big.warn { color: var(--warn-text); } .sys .big.ok { color: var(--good-text); }
-details.sec > summary { list-style: none; cursor: pointer; }
-details.sec > summary::-webkit-details-marker { display: none; }
-details.sec > summary h2::before { content: '\25B8'; font-size: 11px; }
-details.sec[open] > summary h2::before { content: '\25BE'; }
 .feed { display: flex; flex-direction: column; }
 .ev { display: grid; grid-template-columns: 62px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
 .ev:last-child { border-bottom: 0; }
-.ev .when { color: var(--muted); font-size: 12px; padding-top: 2px; white-space: nowrap; }
+.ev .when { color: var(--ink-2); font-size: 12px; padding-top: 2px; white-space: nowrap; }
 .ev .what { min-width: 0; overflow-wrap: anywhere; }
-.ev .what .tag { color: var(--muted); font-size: 12px; margin-right: 6px; }
+.ev .what .tag { margin-right: 6px; }
 .ev .what .who { font-weight: 600; }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
 /* forms and dialogs */
 .taskform { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px dashed var(--border); border-radius: 8px; }
-input[type=text], input[type=password], input[type=number], textarea, select { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; width: 100%; }
-textarea { min-height: 64px; resize: vertical; }
+input[type=text], input[type=password], input[type=number], textarea, select { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--border-strong); border-radius: 8px; padding: 9px 10px; width: 100%; min-height: 44px; }
+textarea { min-height: 72px; resize: vertical; }
 label.f { display: block; font-size: 13px; color: var(--ink-2); margin-top: 8px; }
 label.f > span { display: block; margin-bottom: 4px; }
 .setup ol { padding-left: 20px; margin: 8px 0; }
 .setup li { margin: 4px 0; }
-code { background: var(--chip); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
 dialog { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--ink); padding: 18px 18px 14px; width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; }
 dialog::backdrop { background: rgba(0,0,0,.45); }
 dialog h3 { margin: 0 0 8px; font-size: 17px; }
 .dlg-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
-.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 9px 14px; border-radius: 10px; font-size: 14px; max-width: calc(100vw - 32px); box-shadow: 0 6px 24px rgba(0,0,0,.25); z-index: 20; }
-.toast.bad { background: var(--bad); color: #fff; }
-.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
-footer { color: var(--muted); font-size: 12px; margin-top: 24px; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; width: max-content; max-width: calc(100vw - 32px); padding: 6px 16px; border-radius: 12px; background: var(--ink); color: var(--bg); font-size: 14px; box-shadow: 0 6px 24px rgba(0,0,0,.25); z-index: 20; }
+.toast:has(button) { padding-right: 6px; }
+.toast > span { padding: 6px 0; }
+.toast.bad { background: #c62f2f; color: #fff; }
+.toast-btn { min-height: 36px; padding: 0 12px; border: 0; border-radius: 8px; background: color-mix(in srgb, var(--bg) 20%, transparent); color: inherit; font-weight: 650; cursor: pointer; }
+footer { color: var(--ink-2); font-size: 13px; margin-top: 40px; display: flex; flex-direction: column; gap: 4px; }
 
 @media (max-width: 640px) {
-  header .sub, header #lastRefresh { display: none; }
-  .lnk-wide { display: none; } .lnk-narrow { display: inline; }
-  .actions { gap: 6px; }
-  .actions .btn { padding: 7px 10px; }
-  .brand h1 { font-size: 16px; }
-  .statusline { font-size: 12.5px; gap: 2px 12px; }
-  .statusline > * { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .statusline .s-fresh { display: none; }
-  .dl { grid-template-columns: minmax(0, 1fr); }
-  .dl .when { text-align: left; }
-  .item { grid-template-columns: 22px minmax(0, 1fr); }
-  .item .act { grid-column: 1 / -1; justify-content: flex-end; }
-  details.prow > summary { grid-template-columns: 12px minmax(0, 1fr); }
-  details.prow > summary .pstate, details.prow > summary .pnums { grid-column: 2; justify-content: flex-start; }
-  table.team thead { display: none; }
-  table.team, table.team tbody { display: block; }
-  table.team tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name m5" "now now" "last m7"; gap: 6px 10px; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: center; }
-  table.team tr:last-child { border-bottom: 0; }
-  table.team td { display: block; padding: 0; border: 0; }
-  table.team td.c-name { grid-area: name; white-space: normal; } table.team td.c-5h { grid-area: m5; } table.team td.c-now { grid-area: now; }
-  table.team td.c-last { grid-area: last; } table.team td.c-7d { grid-area: m7; }
-  table.team td.c-5h:has(.meter)::before { content: '5h '; color: var(--muted); font-size: 12px; }
-  table.team td.c-7d:has(.meter)::before { content: '7d '; color: var(--muted); font-size: 12px; }
+  .wrap { padding: 0 16px 112px; }
+  header.top .bar { gap: 4px 8px; }
+  header.top { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--bg); }
+  #lastRefresh, .lnk-wide, #lnkProjectForm { display: none; }
+  .lnk-narrow { display: inline !important; } .only-narrow { display: inline-flex !important; }
+  .views { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; gap: 0; padding: 2px 6px calc(8px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--line); }
+  .views button { flex: 1 1 0; flex-direction: column; justify-content: center; gap: 2px; min-height: 56px; padding: 0 4px; border-radius: 0; font-size: 12px; }
+  .views button[aria-pressed="true"] { box-shadow: inset 0 2px 0 var(--accent); }
+  .views button[aria-pressed="true"] .vi { color: var(--accent); }
+  .views .vi { display: inline-flex; }
+  .views .badge { position: absolute; top: 5px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px; font-size: 10.5px; }
+  .actions { gap: 4px; }
+  .btn, .btn.sm, .fchip { min-height: 44px; }
+  .btn.icon { width: 44px; }
+  .hero { padding-top: 20px; }
+  .hero h1 { font-size: 24px; }
+  .tiles { gap: 10px; margin-top: 18px; }
+  .tile { flex-basis: 140px; padding: 12px 14px; }
+  .tile-v, .cd.big { font-size: 22px; }
+  .today { gap: 20px; padding-top: 20px; }
+  .it-card { padding: 14px; }
+  .it-head { gap: 12px; }
+  .it-row .it-act { margin-left: 44px; }
+  .view { padding-top: 20px; }
+  .view-head h1 { font-size: 24px; }
+  .toast { bottom: calc(80px + env(safe-area-inset-bottom)); }
 }
 </style>
 </head>
 <body>
 <header class="top">
-  <div class="wrap">
-    <div class="brand"><span class="dot" id="statusDot"></span><h1>Mission Control</h1><span class="sub" id="ownerLabel"></span></div>
+  <div class="wrap bar">
+    <div class="brand"><span class="dot" id="statusDot"></span><h1>Mission Control</h1></div>
+    <nav class="views" aria-label="Views">
+      <button type="button" data-view="today" id="nav-today" aria-pressed="true"><span class="vi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></span><span class="vl">Today</span><span class="badge hid"></span></button>
+      <button type="button" data-view="projects" id="nav-projects" aria-pressed="false"><span class="vi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg></span><span class="vl">Projects</span><span class="badge hid"></span></button>
+      <button type="button" data-view="agents" id="nav-agents" aria-pressed="false"><span class="vi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></span><span class="vl">Agents</span><span class="badge hid"></span></button>
+      <button type="button" data-view="system" id="nav-system" aria-pressed="false"><span class="vi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg></span><span class="vl">System</span><span class="badge hid"></span></button>
+    </nav>
+    <div class="grow"></div>
     <div class="actions">
       <span class="meta" id="lastRefresh"></span>
-      <a class="btn" id="lnkProjectForm" href="https://claude.ai/artifact/Jchh6A2dWfUQZKNxHEJsPT" target="_blank" rel="noopener" title="Project management form: every project, including ones that aren't GitHub repos (private claude.ai page)"><span class="lnk-wide">Project form</span><span class="lnk-narrow">Form</span>&nbsp;&#8599;</a>
-      <button class="btn" id="btnTask" type="button" title="New task for the agents" aria-label="New task">+<span class="lnk-wide">&nbsp;Task</span></button>
-      <button class="btn" id="btnRefresh" type="button" aria-label="Refresh"><span class="lnk-wide">Refresh</span><span class="lnk-narrow">&#8635;</span></button>
-      <button class="btn ghost" id="btnSettings" type="button" aria-label="Settings" title="Settings">&#9881;</button>
+      <button class="btn icon" id="btnRefresh" type="button" aria-label="Refresh" title="Refresh"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></button>
+      <button class="btn primary" id="btnTask" type="button" aria-label="New task" title="New task for the agents"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg><span class="lnk-wide">New task</span></button>
+      <a class="btn" id="lnkProjectForm" href="https://claude.ai/artifact/Jchh6A2dWfUQZKNxHEJsPT" target="_blank" rel="noopener" title="Project management form: every project, including ones that aren't GitHub repos (private claude.ai page)"><span class="lnk-wide">Project form</span><span class="lnk-narrow">Form</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg></a>
+      <button class="btn icon ghost" id="btnSettings" type="button" aria-label="Settings" title="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg></button>
     </div>
   </div>
-  <div class="wrap statusrow"><div class="statusline hid" id="statusLine" aria-live="polite"></div></div>
 </header>
 <main class="wrap" id="app"><noscript>This page needs JavaScript.</noscript></main>
 <div id="toast" class="toast hid" role="status"></div>
@@ -313,7 +387,7 @@ const DEFAULTS = {
   refreshMin: 5, staleHours: 2, claimHours: 3, failHours: 3, includedMinutes: 2000,
   routineRepos: {},
 };
-const LS = { token: 'mc.token', config: 'mc.config', snooze: 'mc.snooze', open: 'mc.open' };
+const LS = { token: 'mc.token', config: 'mc.config', snooze: 'mc.snooze', open: 'mc.open', view: 'mc.view' };
 const LABELS = ['plan', 'ready', 'claimed', 'in-review', 'blocked', 'pause'];
 const DISPATCH_RE = /^Dispatch:\s*([\w.-]+)\s*·\s*([^·\n]*?)\s*·\s*([\w-]+)(?:\s*·\s*sha=([0-9a-f]{7,40}))?/m;
 const MIN = 6e4, HOUR = 36e5, DAY = 864e5;
@@ -336,6 +410,10 @@ let feedScope = 'exceptions';
 let discoveredThisLoad = false;
 let showAllInbox = false;
 let showSnoozed = false;
+let view = (() => { const v = (location.hash || '').slice(1); return ['today', 'projects', 'agents', 'system'].includes(v) ? v : loadJSON(LS.view, 'today'); })();
+let inboxFilter = 'all';
+let projFilter = 'all';
+let showAllAutos = false;
 let snoozed = loadJSON(LS.snooze, {});
 const openState = new Set(loadJSON(LS.open, []));
 
@@ -415,9 +493,12 @@ const names = (list) => list.length <= 1 ? list.join('') : list.slice(0, -1).joi
 const plural = (n, word) => n + ' ' + word + (n === 1 ? '' : 's');
 
 let toastTimer = 0;
-function toast(msg, bad) {
-  const t = $('#toast'); t.textContent = msg; t.classList.toggle('bad', !!bad); t.classList.remove('hid');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hid'), bad ? 6000 : 3500);
+function toast(msg, bad, action) {
+  const t = $('#toast');
+  t.replaceChildren(h('span', null, msg));
+  if (action) t.append(h('button', { class: 'toast-btn', type: 'button', onclick: () => { clearTimeout(toastTimer); t.classList.add('hid'); action.fn(); } }, action.label));
+  t.classList.toggle('bad', !!bad); t.classList.remove('hid');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hid'), action ? 7000 : bad ? 6000 : 3500);
 }
 function snooze(key, ms) {
   const t = now();
@@ -516,14 +597,14 @@ function cdState(d, nowMs) {
 function paintCd(el, nowMs) {
   const d = el.dataset.cd === 'window' ? { kind: 'window', start: +el.dataset.a, end: +el.dataset.b } : { kind: 'due', at: +el.dataset.a };
   const s = cdState(d, nowMs);
-  el.textContent = s.text; el.className = 'cd ' + s.cls;
+  el.textContent = s.text; el.className = 'cd ' + s.cls + (el.dataset.big ? ' big' : '');
 }
-function cdNode(d) {
-  const el = h('span', { class: 'cd', 'data-cd': d.kind, 'data-a': d.kind === 'window' ? d.start : d.at, 'data-b': d.kind === 'window' ? d.end : 0 });
+function cdNode(d, big) {
+  const el = h('span', { class: 'cd', 'data-cd': d.kind, 'data-a': d.kind === 'window' ? d.start : d.at, 'data-b': d.kind === 'window' ? d.end : 0, 'data-big': big ? '1' : null });
   paintCd(el, now());
   return el;
 }
-function tickCountdowns() { const t = now(); document.querySelectorAll('[data-cd]').forEach(el => paintCd(el, t)); document.querySelectorAll('[data-nr]').forEach(el => paintNext(el, t)); }
+function tickCountdowns() { const t = now(); document.querySelectorAll('[data-cd]').forEach(el => paintCd(el, t)); document.querySelectorAll('[data-nr]').forEach(el => paintNext(el, t)); document.querySelectorAll('[data-nrin]').forEach(el => paintNextIn(el, t)); }
 const dlWhen = (d) => d.kind === 'window' ? fmtRange(d.start, d.end) : fmtDay(d.at);
 const dlTitle = (d) => d.label || ('#' + d.spec.issue.number + ' ' + firstLine(d.spec.issue.title, 60));
 function deadlineList(m, nowMs) {
@@ -892,6 +973,7 @@ async function refresh() {
     if (ctrl.signal.aborted) return;
     dispatcher = disp; systemPRs = sysPRs;
     model = buildModel(repos.filter(r => !r.retired), withProjection(billing));
+    model.retired = repos.filter(r => r.retired).map(r => r.nick);
     tokenBad = repos.length > 0 && repos.every(r => r.fatal && r.fatal.status === 401);
     lastRefresh = now();
   } catch (e) {
@@ -1130,11 +1212,13 @@ function armedButton(label, fn, cls) {
 /* ---------- rendering ---------- */
 function setBusy(b) { busy = b; const d = $('#statusDot'); d.classList.toggle('busy', b); $('#btnRefresh').disabled = b; }
 function renderHeader() {
-  $('#ownerLabel').textContent = (cfg.owner ? cfg.owner + ' · ' : '') + cfg.repos.length + (cfg.repos.length === 1 ? ' repo' : ' repos');
+  $('.brand').title = (cfg.owner ? cfg.owner + ' · ' : '') + plural(cfg.repos.length, 'repo');
   const d = $('#statusDot');
   d.classList.toggle('bad', !!tokenBad);
   d.classList.toggle('ok', !!model && !tokenBad && !busy);
-  $('#lastRefresh').textContent = lastRefresh ? ('updated ' + fmtClock(lastRefresh) + ' · auto ' + cfg.refreshMin + 'm') : '';
+  const lr = $('#lastRefresh');
+  lr.textContent = lastRefresh ? 'Updated ' + fmtClock(lastRefresh) : '';
+  lr.title = lastRefresh ? 'Refreshes by itself every ' + cfg.refreshMin + ' min while this tab is open' : '';
 }
 function setFavicon(level) {
   const fill = level === 'bad' ? '%23d03b3b' : level === 'warn' ? '%23fab219' : level === 'ok' ? '%230ca30c' : '%23898781';
@@ -1147,26 +1231,72 @@ function nextDeadline(m) {
   const list = m ? deadlineList(m, now()) : [];
   return list[0] || null;
 }
+
+/* Inline stroke icons (static, trusted markup). */
+const ICON_PATHS = {
+  wrench: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  hourglass: '<path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>',
+  stop: '<polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>',
+  pr: '<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" x2="6" y1="9" y2="21"/>',
+  pause: '<rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/>',
+  pulse: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  fail: '<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>',
+  plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  tag: '<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r="1"/>',
+  gauge: '<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>',
+  moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  ext: '<path d="M7 17 17 7"/><path d="M7 7h10v10"/>',
+  dot: '<circle cx="12" cy="12" r="4"/>'
+};
+function icon(name, size) {
+  const s = size || 18, t = document.createElement('template');
+  t.innerHTML = '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICON_PATHS[name] || ICON_PATHS.dot) + '</svg>';
+  return t.content.firstChild;
+}
+function iconFor(it) {
+  const k = it.key.split(':')[0];
+  if (k === 'noshow') return it.sev === 1 ? 'wrench' : 'hourglass';
+  if (k === 'disp') return it.key.startsWith('disp:fail') ? 'fail' : 'pulse';
+  return ({ blocked: it.deadline ? 'clock' : 'stop', deadline: 'clock', pr: 'pr', stuck: 'hourglass', stalled: 'hourglass', paused: 'pause', ci: 'fail', idle: 'plus', untracked: 'tag', billing: 'gauge' })[k] || 'dot';
+}
+const extLink = (href, text, cls) => h('a', { class: cls || 'btn', href, target: '_blank', rel: 'noopener noreferrer' }, text, icon('ext', 13));
+
+/* The views: Today (what needs you), Projects, Agents, System. */
+const VIEWS = ['today', 'projects', 'agents', 'system'];
+function setView(v, anchor) {
+  if (!VIEWS.includes(v)) v = 'today';
+  view = v; saveJSON(LS.view, v);
+  try { history.replaceState(null, '', '#' + v); } catch (e) { /* file:// or sandboxed */ }
+  render();
+  if (anchor) requestAnimationFrame(() => { const el = document.getElementById(anchor); if (el) el.scrollIntoView({ block: 'start' }); });
+  else window.scrollTo(0, 0);
+}
+function goTo(hash) {
+  const id = hash.replace(/^#/, '');
+  if (id === 'untracked') setView('projects', 'untracked');
+  else if (VIEWS.includes(id)) setView(id);
+}
+function setBadge(v, text, tone) {
+  const b = document.querySelector('#nav-' + v + ' .badge');
+  if (!b) return;
+  b.textContent = text || '';
+  b.className = 'badge' + (tone ? ' ' + tone : '') + (text ? '' : ' hid');
+}
+/* Tab title, icon colour and the view badges: the summary you see from another tab or the home screen. */
 function renderStatus(items) {
-  const el = $('#statusLine');
-  el.replaceChildren();
-  if (!token || !model || tokenBad) { el.classList.add('hid'); document.title = 'Mission Control'; setFavicon(null); return; }
-  el.classList.remove('hid');
-  const vis = items.filter(i => !isSnoozed(i.key));
-  const you = vis.filter(i => i.sev <= 2).length, urgent = vis.filter(i => i.sev === 1).length;
-  el.append(you
-    ? h('a', { class: 's-you', href: '#inbox' }, '● ' + you + ' need' + (you === 1 ? 's' : '') + ' you' + (urgent ? ' · ' + urgent + ' urgent' : ''))
-    : h('span', { class: 's-ok' }, '✓ Nothing needs you'));
-  const nd = nextDeadline(model);
-  if (nd) { const c = cdNode(nd); c.style.margin = '0 6px 0 0'; el.append(h('span', { class: 's-dl' }, '⏰ ', c, h('b', null, dlTitle(nd)))); }
-  const rows = model.team.rows;
-  const working = rows.filter(r => ['working', 'starting', 'sizing'].includes(r.status)).length;
-  const stuck = rows.filter(r => r.noshow).length;
-  const idle = rows.filter(r => r.idleNoWork).length;
-  el.append(h('span', { class: stuck ? 's-warn' : '' }, 'Agents: ' + working + ' working' + (stuck ? ' · ' + stuck + ' not starting' : '') + (idle ? ' · ' + idle + ' idle' : '')));
-  if (lastRefresh) el.append(h('span', { class: 'meta s-fresh' }, 'data from ' + fmtClock(lastRefresh)));
-  document.title = (you ? '(' + you + ') ' : '') + 'Mission Control';
-  setFavicon(urgent ? 'bad' : you ? 'warn' : 'ok');
+  const ok = !!(token && model && !tokenBad);
+  const vis = ok ? items.filter(i => !isSnoozed(i.key)) : [];
+  const urgent = vis.filter(i => i.sev === 1).length;
+  setBadge('today', vis.length ? String(vis.length) : '', urgent ? 'you' : '');
+  const stuck = ok ? model.team.rows.filter(r => r.noshow && r.status !== 'working').length : 0;
+  setBadge('agents', stuck ? String(stuck) : '', 'you');
+  setBadge('system', vis.some(i => /^(disp|billing):/.test(i.key) && i.sev <= 2) ? '!' : '', 'wait');
+  setBadge('projects', '', '');
+  for (const b of document.querySelectorAll('.views button')) b.setAttribute('aria-pressed', String(b.dataset.view === view));
+  document.title = (vis.length ? '(' + vis.length + ') ' : '') + 'Mission Control';
+  setFavicon(!ok ? null : urgent ? 'bad' : vis.some(i => i.sev === 2) ? 'warn' : 'ok');
 }
 
 function tokenHelp() {
@@ -1176,66 +1306,162 @@ function tokenHelp() {
       h('li', null, 'Open ', link('https://github.com/settings/personal-access-tokens/new', 'github.com → Settings → Developer settings → Fine-grained tokens → Generate new token'), '.'),
       h('li', null, 'Token name ', h('code', null, 'mission-control'), ', expiration: the longest offered. Resource owner: ', cfg.owner ? h('code', null, cfg.owner) : 'your account', '.'),
       h('li', null, 'Repository access: ', h('b', null, 'Only select repositories'), ' → ', repoList, '.'),
-      h('li', null, 'Repository permissions: ', h('b', null, 'Issues: Read and write'), ' (Read-only also works, but then the Pause / Resume / + Task buttons are disabled), ', h('b', null, 'Pull requests: Read'), ', ', h('b', null, 'Checks: Read'), ', ', h('b', null, 'Actions: Read'), ', ', h('b', null, 'Contents: Read'), '. Metadata is added automatically.'),
+      h('li', null, 'Repository permissions: ', h('b', null, 'Issues: Read and write'), ' (Read-only also works, but then the Pause / Resume / New task buttons fail), ', h('b', null, 'Pull requests: Read'), ', ', h('b', null, 'Checks: Read'), ', ', h('b', null, 'Actions: Read'), ', ', h('b', null, 'Contents: Read'), '. Metadata is added automatically.'),
       h('li', null, 'Optional — Account permissions: ', h('b', null, 'Plan: Read'), ' shows your GitHub Actions minutes.'),
       h('li', null, 'Generate, copy the ', h('code', null, 'github_pat_…'), ' value and paste it here.')),
     h('p', { class: 'kv' }, 'The token is kept only in this browser (localStorage) and is sent only to api.github.com. Use "Forget token" in Settings to remove it.'));
 }
 
 function renderSetup() {
-  const input = h('input', { type: 'password', id: 'setupToken', autocomplete: 'off', placeholder: 'github_pat_…' });
+  const input = h('input', { type: 'password', id: 'setupToken', autocomplete: 'off', placeholder: 'github_pat_…', 'aria-label': 'GitHub token' });
   const btn = h('button', { class: 'btn primary', type: 'button', onclick: () => { const v = input.value.trim(); if (!v) { toast('Paste the token first', true); return; } token = v; saveToken(v); tokenBad = false; refresh(); } }, 'Connect');
-  return h('section', null, h('div', { class: 'card setup' },
+  return h('section', { class: 'view' }, h('div', { class: 'card setup' },
     h('h2', null, 'Connect GitHub'),
-    h('p', { style: 'margin:0 0 8px' }, 'This page watches your repos, the AI agents\' issues and pull requests, and tells you what needs you. It needs one fine-grained GitHub token, limited to the repos your agents work on. It finds those repos by itself: every repo of yours with the agents\' ', h('code', null, 'ready'), ' label.'),
+    h('p', { style: 'margin:8px 0' }, 'This page watches your repos, the AI agents\' issues and pull requests, and tells you what needs you. It needs one fine-grained GitHub token, limited to the repos your agents work on. It finds those repos by itself: every repo of yours with the agents\' ', h('code', null, 'ready'), ' label.'),
     tokenHelp(),
     h('div', { style: 'display:flex;gap:8px;margin-top:10px;flex-wrap:wrap' }, h('div', { style: 'flex:1;min-width:220px' }, input), btn)));
 }
 
-function renderItem(it, snoozedView) {
-  const acts = [...(it.actions || [])];
-  if (it.url) acts.push(it.url.startsWith('#') ? h('a', { class: 'btn sm', href: it.url }, it.linkText || 'Show ↓') : link(it.url, it.linkText || 'Open ↗', 'btn sm'));
-  acts.push(snoozedView
-    ? h('button', { class: 'btn sm ghost', type: 'button', onclick: () => snooze(it.key, 0) }, 'Unsnooze')
-    : h('button', { class: 'btn sm ghost', type: 'button', title: 'Hide this for a day', onclick: () => snooze(it.key, DAY) }, 'Snooze'));
-  return h('div', { class: 'item sev' + it.sev },
-    h('div', { class: 'ic', 'aria-hidden': 'true' }, it.icon || '•'),
-    h('div', { class: 'body' },
-      h('div', { class: 't' }, it.repo ? h('span', { class: 'proj' }, it.repo.nick + ' · ') : null, it.title, it.deadline ? cdNode(it.deadline) : null),
-      it.why ? h('div', { class: 'why' }, it.why) : null,
-      it.next ? h('div', { class: 'next' }, h('b', null, 'Next: '), it.next, it.extra ? [' · ', it.extra] : null) : null),
-    h('div', { class: 'act' }, acts));
+/* ---------- Today ---------- */
+function tile(label, value, tone, sub) {
+  return h('div', { class: 'tile' }, h('span', { class: 'tile-l' }, label), value && value.nodeType ? value : h('span', { class: 'tile-v' + (tone ? ' ' + tone : '') }, value), h('span', { class: 'tile-s' }, sub));
+}
+function renderHero(m, items) {
+  const vis = items.filter(i => !isSnoozed(i.key));
+  const n = vis.length, urgent = vis.filter(i => i.sev === 1);
+  const t = vis.filter(i => i.sev === 2).length, w = vis.filter(i => i.sev === 3).length;
+  const end = (s) => /[.!?…]$/.test(s) ? s : s + '.';
+  const top = urgent[0];
+  const head = n
+    ? [n + (n === 1 ? ' thing needs you.' : ' things need you.'),
+       top ? [' ', h('span', { class: 'bad-text' }, urgent.length === 1 ? '1 is urgent:' : urgent.length + ' are urgent, first:'), ' ', end((top.repo ? top.repo.nick + ': ' : '') + top.title)] : null]
+    : 'Nothing needs you right now.';
+  const nd = nextDeadline(m);
+  const rows = m.team.rows;
+  const stuck = rows.filter(r => r.noshow && r.status !== 'working');
+  const working = rows.filter(r => ['working', 'starting', 'sizing'].includes(r.status)).length;
+  const idle = rows.filter(r => r.idleNoWork).length;
+  const agentsSub = [stuck.length ? names(stuck.map(r => r.name)) + ' not starting' : null, working ? working + ' working' : null, idle ? idle + ' idle, nothing queued' : null].filter(Boolean).join(' · ') || 'Everyone is resting';
+  const ndTile = nd ? h('div', { class: 'tile' }, h('span', { class: 'tile-l' }, 'Next deadline'), cdNode(nd, true), h('span', { class: 'tile-s' }, dlTitle(nd) + ' · ' + nd.spec.repo.nick))
+                    : tile('Next deadline', 'None', '', 'Add a Window: or Due: line to an issue');
+  return h('section', { class: 'hero', 'aria-labelledby': 'h-today' },
+    h('p', { class: 'hero-date' }, new Date().toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long' }) + ' · ' + fmtClock(now())),
+    h('h1', { id: 'h-today' }, head),
+    h('div', { class: 'tiles' },
+      tile('Needs you', String(n), urgent.length ? 'bad' : n ? '' : 'ok', urgent.length + ' urgent · ' + t + ' today · ' + w + ' this week'),
+      ndTile,
+      tile('Agents', stuck.length ? stuck.length + ' stuck' : working ? working + ' working' : 'All idle', stuck.length ? 'bad' : working ? 'ok' : '', agentsSub),
+      tile('Shipped', String(m.totals.merged), m.totals.merged ? 'ok' : '', 'pull requests merged in 7 days')));
 }
 
+const INBOX_FILTERS = [['all', 'All'], ['urgent', 'Urgent'], ['deadline', 'Deadlines'], ['pr', 'Pull requests'], ['blocked', 'Blocked'], ['system', 'Agents & system']];
+function inFilter(it, f) {
+  if (f === 'all') return true;
+  if (f === 'urgent') return it.sev === 1;
+  if (f === 'deadline') return !!it.deadline;
+  if (f === 'pr') return it.key.startsWith('pr:');
+  if (f === 'blocked') return it.key.startsWith('blocked:') && !it.deadline;
+  return !it.deadline && !/^(pr|blocked):/.test(it.key);
+}
+function snoozeWithUndo(it) {
+  snooze(it.key, DAY);
+  toast('Snoozed until this time tomorrow', false, { label: 'Undo', fn: () => snooze(it.key, 0) });
+}
+function itemActions(it, snoozedView, compact) {
+  const acts = [...(it.actions || [])];
+  if (it.url) {
+    const text = (it.linkText || 'Open').replace(/\s*[↗↓]$/, '');
+    if (it.url.startsWith('#')) acts.push(h('button', { class: 'btn', type: 'button', onclick: () => goTo(it.url) }, text));
+    else acts.push(extLink(it.url, text, compact ? 'btn' : 'btn primary'));
+  }
+  if (snoozedView) acts.push(h('button', { class: 'btn ghost', type: 'button', onclick: () => snooze(it.key, 0) }, 'Bring back'));
+  else if (compact) acts.push(h('button', { class: 'btn ghost icon', type: 'button', title: 'Snooze for a day', 'aria-label': 'Snooze for a day: ' + it.title, onclick: () => snoozeWithUndo(it) }, icon('moon', 18)));
+  else acts.push(h('button', { class: 'btn ghost', type: 'button', onclick: () => snoozeWithUndo(it) }, 'Snooze 1 day'));
+  return acts;
+}
+function renderItem(it, snoozedView) {
+  const card = it.sev <= 2 && !snoozedView;
+  const tone = it.sev === 1 ? 't-you' : it.sev === 2 ? 't-wait' : '';
+  const head = h('div', { class: 'it-head' },
+    h('span', { class: 'it-ic' + (tone ? ' ' + tone : '') }, icon(iconFor(it), card ? 18 : 16)),
+    h('div', { class: 'it-main' },
+      h('div', { class: 'it-title' }, h('span', { class: 't' }, it.title), it.repo ? h('span', { class: 'tag' }, it.repo.nick) : null),
+      it.why ? h('div', { class: 'it-why' }, it.why) : null,
+      it.next ? h('div', { class: 'it-next' }, h('b', null, 'Next: '), it.next, it.extra ? [' · ', it.extra] : null) : null),
+    it.deadline ? cdNode(it.deadline) : (card && it.sev === 1 ? h('span', { class: 'pill you' }, 'Urgent') : null));
+  if (!card) return h('div', { class: 'it-row' + (snoozedView ? ' snoozed' : '') }, head, h('div', { class: 'it-act' }, itemActions(it, snoozedView, true)));
+  return h('article', { class: 'it-card' + (tone ? ' ' + tone : '') }, head, h('div', { class: 'it-act' }, itemActions(it, false, false)));
+}
 function renderInbox(m, items) {
   const vis = items.filter(i => !isSnoozed(i.key)), sn = items.filter(i => isSnoozed(i.key));
-  const you = vis.filter(i => i.sev <= 2).length;
-  const shown = showAllInbox ? vis : vis.slice(0, 6);
+  const counts = {};
+  for (const [k] of INBOX_FILTERS) counts[k] = vis.filter(i => inFilter(i, k)).length;
+  if (inboxFilter !== 'all' && !counts[inboxFilter]) inboxFilter = 'all';
+  const chips = INBOX_FILTERS.filter(([k]) => k === 'all' || counts[k]).map(([k, label]) =>
+    h('button', { class: 'fchip', type: 'button', 'aria-pressed': String(inboxFilter === k), onclick: () => { inboxFilter = k; render(); } }, label + ' ' + counts[k]));
+  const shown = vis.filter(i => inFilter(i, inboxFilter));
+  const groups = [[1, 'Now', 't-you'], [2, 'Today', 't-wait'], [3, 'This week', '']].map(([sev, label, tone]) => {
+    const list = shown.filter(i => i.sev === sev);
+    if (!list.length) return null;
+    return h('div', { class: 'grp' }, h('p', { class: 'grp-label' + (tone ? ' ' + tone : '') }, label),
+      sev === 3 ? h('div', { class: 'rows' }, list.map(i => renderItem(i))) : list.map(i => renderItem(i)));
+  });
   const nd = nextDeadline(m);
-  const body = vis.length
-    ? h('div', { class: 'inbox' }, shown.map(i => renderItem(i)))
-    : h('div', { class: 'card empty' }, '✅ Nothing needs you. ', nd ? ['Next deadline: ', h('b', null, dlTitle(nd)), cdNode(nd), '. '] : null, 'Agents are working, or idle with an empty queue.');
-  const foot = h('div', { class: 'inbox-foot' },
-    vis.length > shown.length ? h('button', { class: 'btn sm', type: 'button', onclick: () => { showAllInbox = true; render(); } }, 'Show ' + (vis.length - shown.length) + ' more') : null,
-    sn.length ? h('button', { class: 'btn sm ghost', type: 'button', onclick: () => { showSnoozed = !showSnoozed; render(); } }, showSnoozed ? 'Hide snoozed' : plural(sn.length, 'snoozed item')) : null);
-  return h('section', { id: 'inbox' },
-    h('h2', null, 'Needs you', h('span', { class: 'count' + (you ? ' you' : '') }, String(you)), vis.length > you ? h('span', { class: 'count' }, '+' + (vis.length - you) + ' FYI') : null),
-    body, foot,
-    showSnoozed && sn.length ? h('div', { class: 'inbox', style: 'margin-top:8px;opacity:.75' }, sn.map(i => renderItem(i, true))) : null);
+  const empty = shown.length ? null : h('div', { class: 'card empty-ok' }, h('span', { class: 'it-ic t-ok' }, icon('check', 18)),
+    h('div', null, h('b', null, vis.length ? 'Nothing in this filter.' : 'Nothing needs you.'),
+      h('div', { class: 'it-why' }, vis.length ? plural(vis.length, 'item') + ' under All.' : nd ? ['Next deadline: ', dlTitle(nd), ' ', cdNode(nd)] : 'Agents are working, or resting with an empty queue.')));
+  return h('section', { id: 'inbox', class: 'inbox', 'aria-labelledby': 'h-inbox' },
+    h('div', { class: 'sec-head' }, h('h2', { id: 'h-inbox' }, 'Needs you'), h('span', { class: 'count' + (vis.some(i => i.sev === 1) ? ' you' : '') }, String(vis.length)), h('div', { class: 'grow' }), h('div', { class: 'fchips' }, chips)),
+    groups, empty,
+    sn.length ? h('div', { class: 'inbox-foot' }, h('button', { class: 'btn ghost', type: 'button', 'aria-expanded': String(showSnoozed), onclick: () => { showSnoozed = !showSnoozed; render(); } }, showSnoozed ? 'Hide snoozed' : 'Snoozed (' + sn.length + ')')) : null,
+    showSnoozed && sn.length ? h('div', { class: 'rows snoozed-list' }, sn.map(i => renderItem(i, true))) : null);
 }
 
 function renderDeadlines(m) {
-  if (!m.deadlines.length) return null;
   const nowMs = now();
   const list = deadlineList(m, nowMs).filter(d => dlTime(d) - nowMs < 8 * DAY || cdState(d, nowMs).open);
-  const rows = list.map(d => h('div', { class: 'dl' },
-    h('div', null, h('b', null, dlTitle(d)), cdNode(d), h('div', { class: 'meta' }, d.spec.repo.nick + ' · ', link(d.spec.issue.html_url, '#' + d.spec.issue.number + ' ' + firstLine(d.spec.issue.title, 80)))),
-    h('div', { class: 'when' }, dlWhen(d))));
-  return h('section', null,
-    h('h2', null, 'Deadlines · next 7 days', h('span', { class: 'count' }, String(list.length))),
-    h('div', { class: 'card' }, rows.length ? rows : h('div', { class: 'empty' }, 'None in the next 7 days.')));
+  const rows = list.map(d => {
+    const dt = new Date(dlTime(d));
+    return h('div', { class: 'dl' },
+      h('div', { class: 'dl-date' + (cdState(d, nowMs).sev <= 2 ? ' soon' : '') }, h('span', null, dt.toLocaleDateString([], { weekday: 'short' }).toUpperCase()), h('b', null, String(dt.getDate()))),
+      h('div', { class: 'dl-main' }, h('div', { class: 'dl-title' }, h('b', null, dlTitle(d)), cdNode(d)), h('span', { class: 'meta' }, d.spec.repo.nick + ' · ', link(d.spec.issue.html_url, '#' + d.spec.issue.number), ' · ' + dlWhen(d))));
+  });
+  return h('section', { class: 'card side', 'aria-labelledby': 'h-dl' },
+    h('div', { class: 'sec-head' }, h('h2', { id: 'h-dl' }, 'Deadlines'), h('span', { class: 'count' }, String(list.length)), h('div', { class: 'grow' }), h('span', { class: 'meta' }, 'next 7 days')),
+    rows.length ? rows : h('p', { class: 'meta', style: 'margin:0' }, 'None in the next 7 days. Add a ', h('code', null, 'Window:'), ' or ', h('code', null, 'Due:'), ' line to an issue to track one.'));
 }
 
+function schedText(t) {
+  const days = taskDays(t), tz = zoneOf(t.tz);
+  const times = t.times.filter(x => HHMM.test(String(x).trim())).join(' · ');
+  return (days.length ? days.map(d => d[0].toUpperCase() + d.slice(1)).join(', ') + ' ' : '') + times + (tz !== LOCAL_TZ ? ' (' + tz + ')' : '');
+}
+function paintNextIn(el, nowMs) {
+  const t = scheduledTasks()[+el.dataset.nrin];
+  const at = t ? nextRuns(t, nowMs, 1)[0] : null;
+  el.textContent = at ? 'in ' + dur(at - nowMs) : '';
+}
+function renderAutomations() {
+  const tasks = scheduledTasks();
+  if (!tasks.length) return null;
+  const nowMs = now();
+  const sorted = tasks.map((t, k) => ({ t, k, at: nextRuns(t, nowMs, 1)[0] || Infinity })).sort((a, b) => a.at - b.at);
+  const shown = showAllAutos ? sorted : sorted.slice(0, 5);
+  const rows = shown.map(({ t, k, at }) => {
+    const inEl = h('span', { class: 'meta', 'data-nrin': String(k) }); paintNextIn(inEl, nowMs);
+    return h('div', { class: 'auto' }, h('span', { class: 'hdot sched' }),
+      h('div', { class: 'auto-main' }, h('b', null, t.alias ? t.alias + ' · ' + t.name : t.name), h('span', { class: 'meta' }, schedText(t))),
+      h('div', { class: 'auto-next' }, h('b', null, at < Infinity ? (at - nowMs < 20 * HOUR ? fmtClock(at) : fmtDay(at)) : '—'), inEl));
+  });
+  return h('section', { class: 'card side', 'aria-labelledby': 'h-auto' },
+    h('div', { class: 'sec-head' }, h('h2', { id: 'h-auto' }, 'Automations'), h('span', { class: 'count' }, String(tasks.length)), h('div', { class: 'grow' }), h('span', { class: 'meta' }, 'by next run')),
+    h('div', { class: 'autos' }, rows),
+    h('div', { class: 'side-foot' },
+      tasks.length > 5 ? h('button', { class: 'btn', type: 'button', 'aria-expanded': String(showAllAutos), onclick: () => { showAllAutos = !showAllAutos; render(); } }, showAllAutos ? 'Show fewer' : 'Show all ' + tasks.length) : null,
+      h('span', { class: 'meta' }, 'Each reports by push notification. ', link('https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/config.json', 'Edit the list'))));
+}
+
+/* ---------- Projects ---------- */
 function checksText(p) {
   const c = p.checks;
   if (c.state === 'unknown') return h('span', { class: 'wait' }, 'checks: no access');
@@ -1260,10 +1486,10 @@ function renderPR(p) {
 }
 
 function taskForm(r, host, onDone) {
-  const title = h('input', { type: 'text', placeholder: 'Task title (one sentence of what to build)' });
-  const body = h('textarea', { placeholder: 'Details / acceptance criteria (optional)', rows: 3 });
-  const sel = h('select', null, h('option', { value: 'ready' }, 'Build it: the dispatcher picks the agent'), h('option', { value: 'plan' }, 'Big goal: the administrator splits it into tasks'));
-  const size = h('select', null,
+  const title = h('input', { type: 'text', placeholder: 'Task title (one sentence of what to build)', 'aria-label': 'Task title' });
+  const body = h('textarea', { placeholder: 'Details / acceptance criteria (optional)', rows: 3, 'aria-label': 'Details' });
+  const sel = h('select', { 'aria-label': 'How to start' }, h('option', { value: 'ready' }, 'Build it: the dispatcher picks the agent'), h('option', { value: 'plan' }, 'Big goal: the administrator splits it into tasks'));
+  const size = h('select', { 'aria-label': 'Size' },
     h('option', { value: '' }, 'Size: let the administrator decide'),
     h('option', { value: 'size:S' }, 'Small: Sonnet'),
     h('option', { value: 'size:M' }, 'Normal: Sonnet'),
@@ -1275,8 +1501,8 @@ function taskForm(r, host, onDone) {
   const form = h('div', { class: 'taskform' }, title, body, sel, size,
     r.home && r.home.length ? h('div', { class: 'meta' }, 'Fenced repo: only ' + r.home.join(', ') + ' builds here.') : null,
     h('div', { style: 'display:flex;gap:8px;justify-content:flex-end' },
-      h('button', { class: 'btn sm', type: 'button', onclick: close }, 'Cancel'),
-      h('button', { class: 'btn sm primary', type: 'button', onclick: (ev) => {
+      h('button', { class: 'btn', type: 'button', onclick: close }, 'Cancel'),
+      h('button', { class: 'btn primary', type: 'button', onclick: (ev) => {
         const t = title.value.trim(); if (!t) { toast('Give the task a title', true); return; }
         const labels = [sel.value]; if (sel.value === 'ready' && size.value) labels.push(size.value);
         runAction(async () => { const i = await createIssue(r, t, body.value.trim(), labels); toast('Created #' + i.number + ' in ' + r.nick + ' (' + labels.join(', ') + ')'); if (onDone) onDone(); }, ev.currentTarget);
@@ -1297,22 +1523,22 @@ function openTaskDialog(pre) {
 }
 
 function repoHealth(r, noshowRepos) {
-  if (r.fatal) return { level: 'bad', text: 'cannot read: ' + explain(r.fatal) };
-  if (r.paused) return { level: 'bad', text: 'paused' };
-  if (noshowRepos.has(r.name)) return { level: 'bad', text: 'its agent is not starting' };
+  if (r.fatal) return { level: 'bad', text: 'Cannot read: ' + explain(r.fatal) };
+  if (r.paused) return { level: 'bad', text: 'Paused: every agent stays out' };
+  if (noshowRepos.has(r.name)) return { level: 'bad', text: 'Its agent is not starting' };
   if (r.blocked.length) return { level: 'bad', text: plural(r.blocked.length, 'issue') + ' blocked on you' };
-  if (r.stalled) return { level: 'warn', text: 'stalled: ready issues, no agent activity' };
-  if (r.prs.some(p => p.level === 'you')) return { level: 'warn', text: 'a PR waits for you' };
+  if (r.stalled) return { level: 'warn', text: 'Stalled: ready issues, no agent activity' };
+  if (r.prs.some(p => p.level === 'you')) return { level: 'warn', text: 'A pull request waits for you' };
   if (r.mainFailing) return { level: 'warn', text: 'CI failing on ' + r.defaultBranch };
-  if (r.working.length) return { level: 'good', text: 'agents working on ' + r.working.map(i => '#' + i.number).join(', ') };
+  if (r.working.length) return { level: 'good', text: 'Agents working on ' + r.working.map(i => '#' + i.number).join(', ') };
   if (r.queue.length) return { level: 'good', text: plural(r.queue.length, 'task') + ' queued' };
-  const unl = r.untracked.length ? ' · ' + plural(r.untracked.length, 'unlabeled issue') : '';
-  if (r.merged7d.length) return { level: 'idle', text: 'queue empty · shipped ' + r.merged7d.length + ' this week' + unl };
-  return { level: 'idle', text: 'queue empty' + unl };
+  const unl = r.untracked.length ? ' · ' + plural(r.untracked.length, 'issue') + ' outside the labels' : '';
+  if (r.merged7d.length) return { level: 'idle', text: 'Queue empty · shipped ' + r.merged7d.length + ' this week' + unl };
+  return { level: 'idle', text: 'Queue empty' + unl };
 }
 
 function renderRepoBody(r) {
-  const out = [h('div', { class: 'repo-links' }, link(r.url, 'repo'), ' · ', link(r.url + '/issues?q=is%3Aopen+is%3Aissue', 'issues'), ' · ', link(r.url + '/pulls', 'PRs'), ' · ', link(r.url + '/actions', 'actions'), r.home && r.home.length ? ' · fenced: ' + r.home.join(', ') : '', r.note ? ' · ' + r.note : '')];
+  const out = [h('div', { class: 'repo-links' }, link(r.url, 'repo'), ' · ', link(r.url + '/issues?q=is%3Aopen+is%3Aissue', 'issues'), ' · ', link(r.url + '/pulls', 'pull requests'), ' · ', link(r.url + '/actions', 'actions'), r.note ? ' · ' + r.note : '')];
   if (r.fatal) {
     out.push(h('div', { class: 'err' }, 'Cannot read this repo: ' + explain(r.fatal) + '. ' + (r.fatal.status === 404 || r.fatal.status === 403 ? 'Add it to the token\'s repository list.' : '')));
     return out;
@@ -1322,7 +1548,7 @@ function renderRepoBody(r) {
     return h('a', { class: 'chip' + (n ? '' : ' zero'), href: r.url + '/issues?q=' + encodeURIComponent('is:open is:issue label:' + L), target: '_blank', rel: 'noopener noreferrer' }, h('span', { class: 'sw ' + L }), L + ' ', h('b', null, String(n)));
   })));
   const next = r.queue[0];
-  out.push(h('div', { class: 'kv' }, 'Next for agents: ', next ? [link(next.html_url, '#' + next.number + ' ' + next.title), r.queue.length > 1 ? ' (+' + (r.queue.length - 1) + ' more)' : ''] : h('span', { class: 'meta' }, r.paused ? 'paused' : 'queue empty — add a task')));
+  out.push(h('div', { class: 'kv' }, 'Next for agents: ', next ? [link(next.html_url, '#' + next.number + ' ' + next.title), r.queue.length > 1 ? ' (+' + (r.queue.length - 1) + ' more)' : ''] : h('span', null, r.paused ? 'paused' : 'queue empty, add a task')));
   if (r.working.length) out.push(h('div', { class: 'kv' }, 'Working now: ', r.working.map((i, k) => [k ? ', ' : '', link(i.html_url, '#' + i.number), ' ', h('span', { class: 'meta' }, ago(i.updated_at))])));
   const list = h('div', { class: 'list' });
   if (r.prs.length) for (const p of r.prs) list.append(renderPR(p));
@@ -1336,111 +1562,61 @@ function renderRepoBody(r) {
   } else ciBits.push(h('span', null, 'CI: no runs'));
   if (r.lastCommit) ciBits.push(h('span', null, ' · last commit '), link(r.lastCommit.html_url, firstLine(r.lastCommit.commit && r.lastCommit.commit.message, 60)), h('span', { class: 'meta' }, ' ' + ago(r.lastCommit.commit && r.lastCommit.commit.committer && r.lastCommit.commit.committer.date)));
   out.push(h('div', { class: 'kv st' }, ciBits));
-  const beat = r.lastBeat;
-  out.push(h('div', { class: 'kv' }, 'Agents: ', beat ? [h('b', null, beat.agent), ' ' + beat.what + ' ', link(beat.url, ago(beat.at))] : h('span', { class: 'meta' }, 'no agent activity in recent history'), r.merged7d.length ? h('span', { class: 'meta' }, ' · ' + r.merged7d.length + ' merged this week') : null));
   for (const e of r.errors) if (e.what !== 'runs' && e.what !== 'checks') out.push(h('div', { class: 'err' }, 'Partial data: ' + e.what + ' — ' + explain(e.err)));
-  out.push(h('div', { class: 'foot' },
-    h('button', { class: 'btn sm', type: 'button', onclick: () => openTaskDialog(r) }, '+ Task'),
-    r.paused ? armedButton('Resume', () => resumeRepo(r)) : armedButton('Pause agents', () => pauseRepo(r), 'danger')));
   return out;
 }
 
-function renderTaskRow(t, k) {
-  const nowMs = now(), tz = zoneOf(t.tz), days = taskDays(t);
-  const when = days.length ? days.map(d => d[0].toUpperCase() + d.slice(1)).join(', ') : 'every day';
+/* A details panel that opens in place and remembers being open (per browser). */
+function detailsToggle(key, body) {
+  const open = openState.has(key);
+  const panel = h('div', { class: 'pc-body' + (open ? '' : ' hid') }, body);
+  const btn = h('button', { class: 'btn', type: 'button', 'aria-expanded': String(open) }, open ? 'Hide details' : 'Details');
+  btn.addEventListener('click', () => {
+    const now1 = panel.classList.toggle('hid') === false;
+    btn.setAttribute('aria-expanded', String(now1)); btn.textContent = now1 ? 'Hide details' : 'Details';
+    if (now1) openState.add(key); else openState.delete(key);
+    saveJSON(LS.open, [...openState]);
+  });
+  return { btn, panel };
+}
+function legendItem(cls, label, n) { return h('span', null, h('i', { class: cls }), label + ' ', h('b', null, String(n))); }
+function renderRepoCard(r, noshowRepos, dl) {
+  const hl = repoHealth(r, noshowRepos);
+  const head = h('div', { class: 'pc-head' }, h('span', { class: 'hdot ' + hl.level, title: hl.text }), h('h2', null, r.nick),
+    h('span', { class: 'tag' }, r.home && r.home.length ? 'fenced to ' + r.home.join(', ') : 'code'), h('div', { class: 'grow' }), dl ? cdNode(dl) : null);
+  const det = detailsToggle('p:' + r.name, renderRepoBody(r));
+  if (r.fatal) return h('article', { class: 'pcard' }, head, h('p', { class: 'err' }, hl.text), h('div', { class: 'pc-act' }, det.btn), det.panel);
+  const ready = r.queue.length, working = r.working.length, review = r.prs.length;
+  const bar = h('div', { class: 'flow', 'aria-hidden': 'true' },
+    h('span', { class: 'f-ready', style: 'flex-grow:' + ready }), h('span', { class: 'f-work', style: 'flex-grow:' + working }),
+    h('span', { class: 'f-review', style: 'flex-grow:' + review }), h('span', { class: 'f-blocked', style: 'flex-grow:' + r.blocked.length }));
+  const legend = h('div', { class: 'legend' }, legendItem('f-ready', 'Ready', ready), legendItem('f-work', 'Working', working), legendItem('f-review', 'Open PRs', review),
+    r.blocked.length ? legendItem('f-blocked', 'Blocked', r.blocked.length) : null, r.plans.length ? legendItem('f-plan', 'To plan', r.plans.length) : null);
+  const beat = r.lastBeat;
+  const note = h('p', { class: 'meta' }, beat ? [h('b', null, beat.agent), ' ' + beat.what + ' · ', link(beat.url, ago(beat.at))] : 'No agent activity in recent history', r.merged7d.length ? ' · ' + r.merged7d.length + ' merged this week' : '');
+  const acts = h('div', { class: 'pc-act' }, det.btn,
+    h('button', { class: 'btn', type: 'button', onclick: () => openTaskDialog(r) }, icon('plus', 16), 'Task'),
+    r.paused ? armedButton('Resume', () => resumeRepo(r)) : armedButton('Pause agents', () => pauseRepo(r), 'danger'));
+  return h('article', { class: 'pcard' + (r.paused ? ' paused' : '') }, head, h('p', { class: 'pc-state' }, hl.text), bar, legend, note, acts, det.panel);
+}
+function renderTaskCard(t, k) {
+  const nowMs = now();
   const times = t.times.filter(x => HHMM.test(String(x).trim()));
   const next = h('span', { 'data-nr': String(k) }); paintNext(next, nowMs);
-  const upcoming = nextRuns(t, nowMs, 3);
   const links = (Array.isArray(t.links) ? t.links : []).filter(l => l && l.text && /^https:\/\//.test(l.url || ''));
-  const el = h('details', { class: 'prow' },
-    h('summary', null,
-      h('span', { class: 'hdot sched', title: 'scheduled task' }),
-      h('span', { class: 'pname' }, t.name),
-      h('span', { class: 'pstate' }, t.alias ? t.alias + ' · ' : '', next),
-      h('span', { class: 'pnums' }, h('span', { class: 'pnum' }, h('b', null, times.length + '×'), days.length ? ' ' + when : ' a day'))),
-    h('div', { class: 'pbody' },
-      t.what ? h('div', { class: 'kv' }, t.what) : null,
-      h('div', { class: 'kv' }, 'Schedule: ', h('b', null, when + ' ' + times.join(' · ')), ' (' + tz + ')'),
-      upcoming.length ? h('div', { class: 'kv' }, 'Next runs: ', upcoming.map(fmtDay).join(' · ')) : null,
-      links.length ? h('div', { class: 'repo-links' }, links.map((l, i) => [i ? ' · ' : '', link(l.url, l.text)])) : null,
-      h('div', { class: 'meta' }, 'A Claude scheduled task, not a repo: its results come as a push notification. This row lives in dispatch/config.json.')));
-  return keepOpen('t:' + t.name, el);
+  const upcoming = nextRuns(t, nowMs, 3);
+  const det = detailsToggle('t:' + t.name, [
+    h('div', { class: 'kv' }, 'Schedule: ', h('b', null, schedText(t))),
+    upcoming.length ? h('div', { class: 'kv' }, 'Next runs: ', upcoming.map(fmtDay).join(' · ')) : null,
+    h('div', { class: 'kv' }, 'A Claude scheduled task, not a repo: its results come as a push notification. Its row lives in dispatch/config.json.')]);
+  return h('article', { class: 'pcard' },
+    h('div', { class: 'pc-head' }, h('span', { class: 'hdot sched' }), h('h2', null, t.name), h('span', { class: 'tag auto' }, 'automation' + (t.alias ? ' · ' + t.alias : ''))),
+    h('p', { class: 'pc-state' }, next),
+    h('div', { class: 'times' }, times.map(x => h('span', { class: 'time' }, x))),
+    t.what ? h('p', { class: 'meta' }, t.what) : null,
+    h('div', { class: 'pc-act' }, det.btn, links.map(l => extLink(l.url, l.text))),
+    det.panel);
 }
-
-function renderProjects(m) {
-  const live = m.repos.filter(r => !r.fatal);
-  const noshowRepos = new Set(m.team.rows.filter(a => a.noshow).map(a => a.noshow.repo.name));
-  const t = m.totals;
-  const nd = nextDeadline(m);
-  const week = h('div', { class: 'weekline' }, 'This week: ', h('b', null, String(t.merged)), ' merged · ', h('b', null, String(t.queue)), ' ready', t.plans ? [' · ', h('b', null, String(t.plans)), ' to plan'] : null, ' · ', h('b', null, String(t.working)), ' in progress · ', h('b', null, String(t.prs)), ' open PRs · ', h('b', null, String(t.blocked)), ' blocked', nd ? [' · next deadline ', h('b', null, dlTitle(nd)), ' ', dlWhen(nd)] : null);
-  const rows = m.repos.map(r => {
-    const hl = repoHealth(r, noshowRepos);
-    const nums = r.fatal ? [] : [
-      h('span', { class: 'pnum' }, 'ready ', h('b', null, String(r.queue.length))),
-      r.prs.length ? h('span', { class: 'pnum' }, 'PRs ', h('b', null, String(r.prs.length))) : null,
-      r.blocked.length ? h('span', { class: 'pnum bad' }, 'blocked ', h('b', null, String(r.blocked.length))) : null,
-      h('span', { class: 'pnum' + (r.merged7d.length ? ' ok' : '') }, 'merged 7d ', h('b', null, String(r.merged7d.length))),
-      r.mainRun ? h('span', { class: 'pnum' + (r.mainFailing ? ' bad' : '') }, 'CI ', h('b', null, r.mainRun.status !== 'completed' ? '◐' : r.mainFailing ? '✗' : r.mainRun.conclusion === 'success' ? '✓' : '·')) : null,
-    ];
-    const el = h('details', { class: 'prow' + (r.paused ? ' paused' : '') },
-      h('summary', null, h('span', { class: 'hdot ' + hl.level, title: hl.text }), h('span', { class: 'pname' }, r.nick), h('span', { class: 'pstate' }, hl.text), h('span', { class: 'pnums' }, nums)),
-      h('div', { class: 'pbody' }, renderRepoBody(r)));
-    return keepOpen('p:' + r.name, el);
-  });
-  const pausedAll = live.length > 0 && live.every(r => r.paused);
-  const toolbar = h('div', { class: 'toolbar' },
-    h('span', { class: 'meta' }, pausedAll ? 'All repos are paused.' : (t.paused ? t.paused + ' of ' + live.length + ' repos paused.' : 'All agents allowed to run.')),
-    live.some(r => !r.paused) ? armedButton('Pause all repos', async () => { for (const r of live) if (!r.paused) await pauseRepo(r); }, 'danger') : null,
-    live.some(r => r.paused) ? armedButton('Resume all', async () => { for (const r of live) if (r.paused) await resumeRepo(r); }) : null);
-  const tasks = scheduledTasks();
-  const taskRows = tasks.map((t, k) => renderTaskRow(t, k));
-  return h('section', null, h('h2', null, 'Projects', h('span', { class: 'count' }, String(m.repos.length + tasks.length))), week, h('div', { class: 'plist' }, rows, taskRows), h('div', { style: 'margin-top:10px' }, toolbar));
-}
-
-function meter(n, cap) {
-  const f = cap ? Math.min(1, n / cap) : 0;
-  const cls = f >= 1 ? 'full' : f >= 0.7 ? 'high' : '';
-  return h('span', { class: 'meter ' + cls, title: n + ' of ' + cap }, h('span', { class: 'fill', style: 'width:' + Math.round(f * 100) + '%' }), h('span', { class: 'num' }, n + '/' + cap));
-}
-const STATE_LABEL = { working: 'working', starting: 'starting', sizing: 'sizing issues', misconfigured: 'not starting', noshow: 'skipped · usage?', capped: 'at cap', idle: 'idle' };
-function renderAgents(m) {
-  const t = m.team;
-  const rows = t.rows.map(r => {
-    const now1 = [h('span', { class: 'state ' + r.status }, STATE_LABEL[r.status] || r.status)];
-    if (r.doing) now1.push(' ', link(r.doing.url || r.doing.r.url, r.doing.r.nick + ' #' + r.doing.n));
-    return h('tr', null,
-      h('td', { class: 'c-name' }, h('b', null, r.name), h('span', { class: 'model m-' + String(r.model).toLowerCase() }, r.model), h('div', { class: 'meta' }, 'account ' + r.account + ' · ' + r.serves)),
-      h('td', { class: 'c-now' }, now1, r.why ? h('div', { class: 'cause' }, r.why) : null, r.noshow && r.status !== 'working' ? h('div', { class: 'cause' }, h('b', null, 'Fix: '), r.noshow.fix) : null),
-      h('td', { class: 'c-5h' }, meter(r.load5h, r.cap5h)),
-      h('td', { class: 'c-7d' }, meter(r.load7d, r.cap7d)),
-      h('td', { class: 'c-last meta' }, r.last ? 'last task ' + ago(r.last.at) : 'no tasks yet'));
-  });
-  rows.push(h('tr', null,
-    h('td', { class: 'c-name' }, h('b', null, 'codex'), h('span', { class: 'model m-gpt' }, (team.codex && team.codex.model) || 'GPT'), h('div', { class: 'meta' }, 'ChatGPT · reviews every PR')),
-    h('td', { class: 'c-now' }, h('span', { class: 'state' }, t.codexQueue ? t.codexQueue + ' queued' : 'on call'), h('div', { class: 'cause' }, t.codexLast ? t.codexLast.what + ' · ' + ago(t.codexLast.at) : 'no activity seen', t.codexQueue ? ' · start queued work at chatgpt.com/codex' : '')),
-    h('td', { class: 'c-5h meta' }, ''),
-    h('td', { class: 'c-7d meta' }, t.codexTakeovers + ' takeover' + (t.codexTakeovers === 1 ? '' : 's') + ' · 7d'),
-    h('td', { class: 'c-last meta' }, '')));
-  rows.push(h('tr', null,
-    h('td', { class: 'c-name' }, h('b', null, 'antigravity'), h('span', { class: 'model m-gemini' }, (team.antigravity && team.antigravity.model) || 'Gemini'), h('div', { class: 'meta' }, 'your Mac · ui tasks in non-fenced repos')),
-    h('td', { class: 'c-now' }, h('span', { class: 'state' + (t.agWorking ? ' working' : '') }, t.agWorking ? 'working on ' + t.agWorking : t.agQueue ? t.agQueue + ' waiting' : 'idle'), h('div', { class: 'cause' }, t.agQueue ? 'Runs only while Antigravity is open on the Mac.' : 'Nothing queued for it.')),
-    h('td', { class: 'c-5h meta' }, ''),
-    h('td', { class: 'c-7d meta' }, ''),
-    h('td', { class: 'c-last meta' }, t.agLast ? 'last seen ' + ago(t.agLast.at) : '')));
-  const accounts = Object.keys(team.accounts || {}).map(k => h('span', { class: 'chip' }, 'account ' + k + ' ', meter(t.acct[k] || 0, (team.accounts[k] || {}).cap5h || 0)));
-  const others = t.others.map(o => [h('b', null, o.agent === 'claude' ? 'claude (your own sessions)' : o.agent), ' ' + o.last.what + ' in ' + o.last.repo.nick + ' ', link(o.last.url, ago(o.last.at))]);
-  return h('section', null,
-    h('h2', null, 'Agents', h('span', { class: 'count' }, String(t.rows.length + 2))),
-    h('div', { class: 'card', style: 'overflow:auto' }, h('table', { class: 'team' },
-      h('thead', null, h('tr', null, h('th', null, 'Agent'), h('th', null, 'Now'), h('th', null, 'Tasks · 5h'), h('th', null, 'Tasks · 7d'), h('th', null, 'Last'))),
-      h('tbody', null, rows))),
-    h('div', { class: 'chips', style: 'margin-top:8px' },
-      accounts.length ? h('span', { class: 'meta', style: 'align-self:center' }, 'Accounts, all routines · 5h:') : null, accounts,
-      h('span', { class: 'chip' + (t.unassigned ? '' : ' zero') }, 'Waiting for dispatch ', h('b', null, String(t.unassigned)))),
-    others.length ? h('div', { class: 'meta', style: 'margin-top:6px' }, 'Also seen: ', others.map((o, i) => [i ? ' · ' : '', o])) : null,
-    h('div', { class: 'meta', style: 'margin-top:6px' }, 'The dispatcher wakes a routine only when it has a task for it: ', link('https://claude.ai/code/routines', 'routines'), ' · ', link('https://chatgpt.com/codex', 'Codex tasks')));
-}
-
 function renderUntracked(m) {
   const rows = m.untracked.map(({ r, i }) => {
     const ld = r.lastDispatchByIssue.get(i.number);
@@ -1450,45 +1626,96 @@ function renderUntracked(m) {
   for (const p of (systemPRs || [])) rows.push(h('div', { class: 'urow' }, h('span', { class: 'meta' }, 'mission-control · PR '), link(p.url, '#' + p.number + ' ' + p.title),
     h('div', { class: 'meta' }, (p.draft ? 'Draft · ' : '') + 'open ' + ago(p.at) + ' · this repo is outside the agents\' labels: review and merge, or close it.')));
   if (!rows.length) return null;
-  return h('section', { id: 'untracked' }, h('h2', null, 'Outside the labels', h('span', { class: 'count' }, String(rows.length))), h('div', { class: 'card' }, rows));
+  return h('section', { id: 'untracked', class: 'untracked', 'aria-labelledby': 'h-untracked' }, h('div', { class: 'sec-head' }, h('h2', { id: 'h-untracked' }, 'Outside the labels'), h('span', { class: 'count' }, String(rows.length))), h('div', { class: 'card' }, rows));
+}
+function renderProjects(m) {
+  const live = m.repos.filter(r => !r.fatal);
+  const noshowRepos = new Set(m.team.rows.filter(a => a.noshow).map(a => a.noshow.repo.name));
+  const t = m.totals, tasks = scheduledTasks();
+  if (projFilter === 'auto' && !tasks.length) projFilter = 'all';
+  const counts = { all: m.repos.length + tasks.length, code: m.repos.length, auto: tasks.length };
+  const chips = [['all', 'All'], ['code', 'Code'], ['auto', 'Automations']].filter(([k]) => k !== 'auto' || tasks.length).map(([k, label]) =>
+    h('button', { class: 'fchip', type: 'button', 'aria-pressed': String(projFilter === k), onclick: () => { projFilter = k; render(); } }, label + ' ' + counts[k]));
+  const nowMs = now(), dlByRepo = new Map();
+  for (const d of deadlineList(m, nowMs)) if (cdState(d, nowMs).sev <= 2 && !dlByRepo.has(d.spec.repo.name)) dlByRepo.set(d.spec.repo.name, d);
+  const cards = [];
+  if (projFilter !== 'auto') for (const r of m.repos) cards.push(renderRepoCard(r, noshowRepos, dlByRepo.get(r.name)));
+  if (projFilter !== 'code') tasks.forEach((tk, k) => cards.push(renderTaskCard(tk, k)));
+  const pausedAll = live.length > 0 && live.every(r => r.paused);
+  const retired = m.retired || [];
+  return h('section', { class: 'view', 'aria-labelledby': 'h-proj' },
+    h('div', { class: 'view-head' }, h('h1', { id: 'h-proj' }, 'Projects'), h('div', { class: 'grow' }), extLink('https://claude.ai/artifact/Jchh6A2dWfUQZKNxHEJsPT', 'Project form', 'btn only-narrow'), h('div', { class: 'fchips' }, chips)),
+    h('p', { class: 'weekline' }, 'This week: ', h('b', null, String(t.merged)), ' merged · ', h('b', null, String(t.queue)), ' ready', t.plans ? [' · ', h('b', null, String(t.plans)), ' to plan'] : null, ' · ', h('b', null, String(t.working)), ' in progress · ', h('b', null, String(t.prs)), ' open PRs · ', h('b', null, String(t.blocked)), ' blocked'),
+    h('div', { class: 'cards' }, cards),
+    h('div', { class: 'toolbar' },
+      h('span', { class: 'meta' }, pausedAll ? 'All repos are paused.' : (t.paused ? t.paused + ' of ' + live.length + ' repos paused.' : 'All agents allowed to run.')),
+      live.some(r => !r.paused) ? armedButton('Pause all repos', async () => { for (const r of live) if (!r.paused) await pauseRepo(r); }, 'danger') : null,
+      live.some(r => r.paused) ? armedButton('Resume all', async () => { for (const r of live) if (r.paused) await resumeRepo(r); }) : null),
+    retired.length ? h('p', { class: 'meta', style: 'margin:0' }, 'Retired and hidden: ' + retired.join(', ') + '. Delete a repo\'s ', h('code', null, 'retired'), ' label to bring it back.') : null,
+    renderUntracked(m));
 }
 
-function renderSystem(m, items) {
-  const d = dispatcher, every = (team.everyMinutes || 15) * MIN, b = m.billing;
-  const alert = items.some(i => !isSnoozed(i.key) && /^(disp|billing):/.test(i.key) && i.sev <= 2);
-  let dCard;
-  if (!d) dCard = h('div', { class: 'card' }, h('div', { class: 'meta' }, 'Dispatcher'), h('div', { class: 'big' }, '…'));
-  else if (d.none || d.error) dCard = h('div', { class: 'card' }, h('div', { class: 'meta' }, 'Dispatcher'), h('div', { class: 'big warn' }, 'not running yet'), link('https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/SETUP.md', 'setup ↗'));
-  else {
-    const slow = d.median && d.median > 4 * every;
-    const failed = d.status === 'completed' && d.conclusion && !['success', 'skipped', 'cancelled'].includes(d.conclusion);
-    dCard = h('div', { class: 'card' }, h('div', { class: 'meta' }, 'Dispatcher'),
-      h('div', { class: 'big ' + (failed ? 'bad' : slow ? 'warn' : 'ok') }, failed ? d.conclusion : d.status !== 'completed' ? 'running' : slow ? 'slow' : 'ok', h('span', { class: 'meta', style: 'font-size:13px;font-weight:400' }, ' · last run ' + ago(d.at))),
-      h('div', { class: 'kv' }, 'Last 24 hours: ', h('b', null, String(d.count24)), ' runs (expected ~' + Math.round(DAY / every) + ')', d.median ? [' · typical gap ', h('b', null, dur(d.median))] : null, d.failed24 ? [' · ', h('span', { class: 'bad' }, d.failed24 + ' failed')] : null),
-      h('div', { class: 'kv', style: 'margin-top:4px' }, link(d.listUrl, 'runs ↗'), ' · ', link('https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/SETUP.md', 'setup ↗')));
-  }
-  const over = b && b.included && b.used > b.included;
-  const bCard = h('div', { class: 'card' }, h('div', { class: 'meta' }, 'GitHub Actions minutes this month'),
-    b ? [h('div', { class: 'big ' + (over ? 'bad' : b.used / b.included >= 0.9 ? 'warn' : 'ok') }, fmtNum(b.used), h('span', { class: 'meta', style: 'font-size:13px;font-weight:400' }, ' of ' + fmtNum(b.included) + (b.net ? ' · $' + b.net.toFixed(2) : ''))),
-      h('div', { class: 'kv' }, b.projected ? ['Projected by month end: ', h('b', null, '~' + fmtNum(b.projected))] : null),
-      b.top && b.top.length ? h('div', { class: 'kv' }, 'Most: ', b.top.map(x => x.repo + ' ' + fmtNum(x.min)).join(', ')) : null,
-      h('div', { class: 'kv', style: 'margin-top:4px' }, link('https://github.com/settings/billing/usage', 'billing ↗'))]
-      : h('div', { class: 'kv' }, 'Add the account permission ', h('b', null, 'Plan: Read'), ' to the token to see this.'));
-  const rCard = h('div', { class: 'card' }, h('div', { class: 'meta' }, 'GitHub API (this token)'),
-    h('div', { class: 'big' }, rate ? fmtNum(rate.remaining) : '—', h('span', { class: 'meta', style: 'font-size:13px;font-weight:400' }, rate ? ' of ' + fmtNum(rate.limit) + ' left this hour' : '')),
-    h('div', { class: 'kv' }, 'Auto-refresh every ' + cfg.refreshMin + ' min while this tab is visible.'));
-  const el = h('details', { class: 'sec' }, h('summary', null, h('h2', null, 'System & cost')), h('div', { class: 'sys' }, dCard, bCard, rCard));
-  if (alert) el.open = true;
-  return h('section', null, keepOpen('sec:system', el));
+/* ---------- Agents ---------- */
+function meter(n, cap) {
+  const f = cap ? Math.min(1, n / cap) : 0;
+  const cls = f >= 1 ? 'full' : f >= 0.7 ? 'high' : '';
+  return h('span', { class: 'meter ' + cls, title: n + ' of ' + cap }, h('span', { class: 'fill', style: 'width:' + Math.round(f * 100) + '%' }), h('span', { class: 'num' }, n + '/' + cap));
+}
+const STATE_LABEL = { working: 'Working', starting: 'Starting', sizing: 'Sizing issues', misconfigured: 'Not starting', noshow: 'Skipped, out of usage?', capped: 'At its cap', idle: 'Idle' };
+const toneOf = (s) => ['working', 'starting', 'sizing'].includes(s) ? 'good' : s === 'misconfigured' ? 'bad' : ['noshow', 'capped'].includes(s) ? 'warn' : 'idle';
+function renderAgents(m) {
+  const t = m.team, rank = { bad: 0, warn: 1, good: 2, idle: 3 };
+  const rows = t.rows.slice().sort((a, b) => rank[toneOf(a.status)] - rank[toneOf(b.status)]);
+  const cards = rows.map(r => {
+    const tn = toneOf(r.status);
+    return h('article', { class: 'acard' + (tn === 'bad' || tn === 'warn' ? ' t-' + tn : '') },
+      h('div', { class: 'ac-head' }, h('span', { class: 'hdot ' + tn }), h('h2', null, r.name), h('span', { class: 'model m-' + String(r.model).toLowerCase() }, r.model), h('div', { class: 'grow' }), h('span', { class: 'meta' }, 'account ' + r.account)),
+      h('p', { class: 'ac-state t-' + tn }, STATE_LABEL[r.status] || r.status, r.doing ? [' · ', link(r.doing.url || r.doing.r.url, r.doing.r.nick + ' #' + r.doing.n)] : null),
+      r.why ? h('p', { class: 'meta' }, r.why) : null,
+      r.noshow && r.status !== 'working' ? h('p', { class: 'ac-fix' }, h('b', null, 'Fix: '), r.noshow.fix) : null,
+      h('div', { class: 'ac-meters' }, h('span', { class: 'mpair' }, h('span', { class: 'meta' }, '5 h'), meter(r.load5h, r.cap5h)), h('span', { class: 'mpair' }, h('span', { class: 'meta' }, '7 days'), meter(r.load7d, r.cap7d))),
+      h('p', { class: 'meta' }, (r.role || r.serves) + ' · ' + (r.last ? 'last task ' + ago(r.last.at) : 'no tasks yet')),
+      r.status === 'misconfigured' ? h('div', { class: 'pc-act' }, extLink('https://claude.ai/code/routines', 'Open routines', 'btn primary')) : null);
+  });
+  cards.push(h('article', { class: 'acard' },
+    h('div', { class: 'ac-head' }, h('span', { class: 'hdot ' + (t.codexQueue ? 'good' : 'idle') }), h('h2', null, 'codex'), h('span', { class: 'model m-gpt' }, (team.codex && team.codex.model) || 'GPT'), h('div', { class: 'grow' }), h('span', { class: 'meta' }, 'ChatGPT')),
+    h('p', { class: 'ac-state' }, t.codexQueue ? t.codexQueue + ' queued' : 'On call: reviews every PR'),
+    h('p', { class: 'meta' }, t.codexLast ? t.codexLast.what + ' · ' + ago(t.codexLast.at) : 'No activity seen yet', t.codexQueue ? ' · start queued work at chatgpt.com/codex' : ''),
+    h('p', { class: 'meta' }, t.codexTakeovers + ' takeover' + (t.codexTakeovers === 1 ? '' : 's') + ' in 7 days · ', link('https://chatgpt.com/codex', 'Codex tasks'))));
+  cards.push(h('article', { class: 'acard' },
+    h('div', { class: 'ac-head' }, h('span', { class: 'hdot ' + (t.agWorking ? 'good' : 'idle') }), h('h2', null, 'antigravity'), h('span', { class: 'model m-gemini' }, (team.antigravity && team.antigravity.model) || 'Gemini'), h('div', { class: 'grow' }), h('span', { class: 'meta' }, 'your Mac')),
+    h('p', { class: 'ac-state' + (t.agWorking ? ' t-good' : '') }, t.agWorking ? 'Working on ' + t.agWorking : t.agQueue ? t.agQueue + ' waiting' : 'Idle'),
+    h('p', { class: 'meta' }, t.agQueue ? 'Runs only while Antigravity is open on the Mac.' : 'ui tasks in non-fenced repos. Nothing queued for it.'),
+    h('p', { class: 'meta' }, t.agLast ? 'Last seen ' + ago(t.agLast.at) : 'Not seen yet')));
+  const stuck = t.rows.filter(r => r.noshow && r.status !== 'working').length;
+  const working = t.rows.filter(r => toneOf(r.status) === 'good').length;
+  const idle = t.rows.filter(r => r.status === 'idle').length;
+  const accounts = Object.keys(team.accounts || {}).map(k => h('span', { class: 'chip' }, 'account ' + k + ' ', meter(t.acct[k] || 0, (team.accounts[k] || {}).cap5h || 0)));
+  const others = t.others.map(o => [h('b', null, o.agent === 'claude' ? 'claude (your own sessions)' : o.agent), ' ' + o.last.what + ' in ' + o.last.repo.nick + ' ', link(o.last.url, ago(o.last.at))]);
+  return h('section', { class: 'view', 'aria-labelledby': 'h-agents' },
+    h('div', { class: 'view-head' }, h('h1', { id: 'h-agents' }, 'Agents'), h('span', { class: 'meta' }, [stuck ? stuck + ' not starting' : null, working + ' working', idle + ' idle'].filter(Boolean).join(' · '))),
+    h('div', { class: 'cards' }, cards),
+    h('div', { class: 'chips' },
+      accounts.length ? h('span', { class: 'meta', style: 'align-self:center' }, 'Tasks per account, last 5 h:') : null, accounts,
+      h('span', { class: 'chip' + (t.unassigned ? '' : ' zero') }, 'Waiting for dispatch ', h('b', null, String(t.unassigned)))),
+    others.length ? h('p', { class: 'meta', style: 'margin:0' }, 'Also seen: ', others.map((o, i) => [i ? ' · ' : '', o])) : null,
+    h('p', { class: 'meta', style: 'margin:0' }, 'The dispatcher wakes a routine only when it has a task for it: ', link('https://claude.ai/code/routines', 'routines'), ' · ', link('https://chatgpt.com/codex', 'Codex tasks')));
 }
 
+/* ---------- System ---------- */
+function barRow(label, frac, color, value, over) {
+  const w = Math.max(0, Math.min(1, frac));
+  return h('div', { class: 'barrow' }, h('span', null, label),
+    h('div', { class: 'track', 'aria-hidden': 'true' }, h('span', { style: 'width:' + Math.round(w * 100) + '%;background:' + color }), over ? h('span', { style: 'width:' + Math.round(Math.min(1, over) * 100) + '%;background:#8f1f1f' }) : null),
+    h('b', null, value));
+}
 const isException = (f) => (f.kind === 'ci' && f.status === 'completed' && !['success', 'skipped', 'neutral', 'cancelled'].includes(f.conclusion))
   || (f.kind === 'dispatch' && ['no-show', 'reclaimed', 'needs-you'].includes(f.mode))
   || (f.kind === 'dispatch' && /^codex$/i.test(f.who || '') && f.mode === 'fix-pr');
 function renderFeed(m) {
   const exceptions = m.feed.filter(isException);
-  const scopes = [['exceptions', 'Problems only (' + exceptions.length + ')'], ['all', 'All']].concat(m.repos.filter(r => !r.fatal).map(r => [r.name, r.nick]));
-  const bar = h('div', { class: 'chips', style: 'margin-bottom:8px' }, scopes.map(([k, label]) => h('button', { class: 'chip' + (feedScope === k ? '' : ' zero'), type: 'button', style: 'cursor:pointer', onclick: () => { feedScope = k; render(); } }, label)));
+  const scopes = [['exceptions', 'Problems only ' + exceptions.length], ['all', 'All']].concat(m.repos.filter(r => !r.fatal).map(r => [r.name, r.nick]));
+  const bar = h('div', { class: 'fchips' }, scopes.map(([k, label]) => h('button', { class: 'fchip', type: 'button', 'aria-pressed': String(feedScope === k), onclick: () => { feedScope = k; render(); } }, label)));
   const items = (feedScope === 'exceptions' ? exceptions : m.feed.filter(f => feedScope === 'all' || f.repo.name === feedScope)).slice(0, 40);
   const list = items.map(f => {
     const tag = f.kind === 'ci' ? 'CI' : f.kind === 'review' ? 'review' : f.kind === 'pr' ? 'PR' : f.kind === 'merged' ? 'merged' : f.kind === 'commit' ? 'commit' : f.kind === 'dispatch' ? 'dispatch' : 'comment';
@@ -1496,9 +1723,45 @@ function renderFeed(m) {
     return h('div', { class: 'ev' }, h('div', { class: 'when' }, ago(f.at)),
       h('div', { class: 'what' }, h('span', { class: 'tag' }, (feedScope === 'exceptions' || feedScope === 'all' ? f.repo.nick + ' · ' : '') + tag), h('span', { class: 'who ' + cls }, f.who || ''), ' ', link(f.url, f.text || '(no text)')));
   });
-  const el = h('details', { class: 'sec' }, h('summary', null, h('h2', null, 'Activity', h('span', { class: 'count' }, String(m.feed.length)))), bar,
+  return h('section', { class: 'feedsec', 'aria-labelledby': 'h-feed' },
+    h('div', { class: 'sec-head' }, h('h2', { id: 'h-feed' }, 'Activity'), h('span', { class: 'count' }, String(m.feed.length))), bar,
     h('div', { class: 'card feed' }, list.length ? list : h('div', { class: 'empty' }, feedScope === 'exceptions' ? 'No problems in the recent activity.' : 'Nothing yet.')));
-  return h('section', null, keepOpen('sec:feed', el));
+}
+function renderSystem(m) {
+  const d = dispatcher, every = (team.everyMinutes || 15) * MIN, b = m.billing;
+  const setup = 'https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/SETUP.md';
+  let dTile;
+  if (!d) dTile = h('article', { class: 'stile' }, h('h2', null, 'Dispatcher'), h('p', { class: 'bigval' }, '…'));
+  else if (d.none || d.error) dTile = h('article', { class: 'stile' }, h('div', { class: 'ac-head' }, h('span', { class: 'hdot warn' }), h('h2', null, 'Dispatcher')), h('p', { class: 'bigval warn' }, 'Not running yet'), h('div', { class: 'pc-act' }, extLink(setup, 'Set it up')));
+  else {
+    const slow = d.median && d.median > 4 * every;
+    const failed = d.status === 'completed' && d.conclusion && !['success', 'skipped', 'cancelled'].includes(d.conclusion);
+    const expected = Math.round(DAY / every);
+    const tone = failed ? 'bad' : slow ? 'warn' : 'ok';
+    dTile = h('article', { class: 'stile' },
+      h('div', { class: 'ac-head' }, h('span', { class: 'hdot ' + (tone === 'ok' ? 'good' : tone) }), h('h2', null, 'Dispatcher'), h('div', { class: 'grow' }), h('span', { class: 'meta' }, 'last run ' + ago(d.at))),
+      h('p', { class: 'bigval ' + tone }, failed ? 'Last run ' + d.conclusion : d.status !== 'completed' ? 'Running' : String(d.count24), failed || d.status !== 'completed' ? null : h('small', null, ' runs in 24 h')),
+      h('div', { class: 'bars' }, barRow('Expected', 1, 'color-mix(in srgb, var(--ink) 22%, transparent)', String(expected)), barRow('Actual', expected ? d.count24 / expected : 0, slow ? 'var(--warn)' : 'var(--good)', String(d.count24))),
+      h('p', { class: 'meta' }, d.median ? 'Typical gap ' + dur(d.median) + (slow ? '. GitHub runs scheduled workflows late; a backup trigger from outside keeps the ' + dur(every) + ' rhythm.' : '.') : '', d.failed24 ? [' ', h('span', { class: 'bad' }, d.failed24 + ' failed in 24 h.')] : null),
+      h('div', { class: 'pc-act' }, extLink(d.listUrl, 'Runs'), slow ? extLink(setup + '#optional-a-trigger-that-does-not-lag', 'Backup trigger') : extLink(setup, 'Setup')));
+  }
+  let bTile;
+  if (b && b.included) {
+    const over = b.used > b.included, near = b.used / b.included >= 0.9;
+    bTile = h('article', { class: 'stile' },
+      h('div', { class: 'ac-head' }, h('span', { class: 'hdot ' + (over ? 'bad' : near ? 'warn' : 'good') }), h('h2', null, 'Actions minutes'), h('div', { class: 'grow' }), h('span', { class: 'meta' }, 'this month')),
+      h('p', { class: 'bigval ' + (over ? 'bad' : near ? 'warn' : '') }, fmtNum(b.used), h('small', null, ' of ' + fmtNum(b.included) + ' included' + (b.net ? ' · $' + b.net.toFixed(2) : ''))),
+      h('div', { class: 'bars' }, over ? barRow('Used', b.included / b.used, 'var(--bad)', Math.round(b.used / b.included * 100) + '%', 1 - b.included / b.used) : barRow('Used', b.used / b.included, near ? 'var(--warn)' : 'var(--accent)', Math.round(b.used / b.included * 100) + '%')),
+      h('p', { class: 'meta' }, b.projected ? 'On track for ~' + fmtNum(b.projected) + ' by month end. ' : '', b.top && b.top.length ? 'Most used by ' + b.top.map(x => x.repo + ' (' + fmtNum(x.min) + ')').join(', ') + '.' : 'Private-repo workflows bill past the included minutes; public repos are free.'),
+      h('div', { class: 'pc-act' }, extLink('https://github.com/settings/billing/usage', 'Billing')));
+  } else bTile = h('article', { class: 'stile' }, h('h2', null, 'Actions minutes'), h('p', { class: 'meta' }, 'Add the account permission ', h('b', null, 'Plan: Read'), ' to the token to see this.'));
+  const rTile = h('article', { class: 'stile' }, h('div', { class: 'ac-head' }, h('span', { class: 'hdot ' + (rate && rate.remaining < 500 ? 'warn' : 'good') }), h('h2', null, 'GitHub API'), h('div', { class: 'grow' }), h('span', { class: 'meta' }, 'this token')),
+    h('p', { class: 'bigval' }, rate ? fmtNum(rate.remaining) : '—', h('small', null, rate ? ' of ' + fmtNum(rate.limit) + ' left this hour' : '')),
+    h('p', { class: 'meta' }, 'Refreshes by itself every ' + cfg.refreshMin + ' min while this tab is visible.'));
+  return h('section', { class: 'view', 'aria-labelledby': 'h-sys' },
+    h('div', { class: 'view-head' }, h('h1', { id: 'h-sys' }, 'System & cost')),
+    h('div', { class: 'cards' }, dTile, bTile, rTile),
+    renderFeed(m));
 }
 
 function render() {
@@ -1507,13 +1770,13 @@ function render() {
   app.replaceChildren();
   let items = [];
   if (!token) { renderStatus(items); app.append(renderSetup()); return; }
-  if (tokenBad) { renderStatus(items); app.append(h('section', null, h('div', { class: 'card err' }, 'GitHub rejected the token (401). Open Settings and paste a new one.')), renderSetup()); return; }
-  if (!model) { renderStatus(items); app.append(h('div', { class: 'empty' }, busy ? 'Loading your repos…' : 'Press Refresh to load.')); return; }
+  if (tokenBad) { renderStatus(items); app.append(h('section', { class: 'view' }, h('div', { class: 'card err' }, 'GitHub rejected the token (401). Open Settings and paste a new one.')), renderSetup()); return; }
+  if (!model) { renderStatus(items); app.append(h('div', { class: 'view' }, h('div', { class: 'empty' }, busy ? 'Loading your repos…' : 'Press Refresh to load.'))); return; }
   if (!model.repos.length) {
     renderStatus(items);
-    app.append(h('section', null, h('div', { class: 'card setup' },
+    app.append(h('section', { class: 'view' }, h('div', { class: 'card setup' },
       h('h2', null, 'No agent repos found yet'),
-      h('p', { style: 'margin:0 0 8px' }, 'Mission Control lists every repo of yours that has the agents\' ', h('code', null, 'ready'), ' label; each Claude routine creates it on its first run. Either the routines have not run yet, or the token cannot see those repos.'),
+      h('p', { style: 'margin:8px 0' }, 'Mission Control lists every repo of yours that has the agents\' ', h('code', null, 'ready'), ' label; each Claude routine creates it on its first run. Either the routines have not run yet, or the token cannot see those repos.'),
       h('div', { class: 'toolbar' },
         h('button', { class: 'btn primary', type: 'button', onclick: (ev) => runAction(async () => { const n = mergeRepos(await discoverRepos()); toast(n ? 'Added ' + n + ' repo' + (n > 1 ? 's' : '') : 'Still none found'); }, ev.currentTarget) }, 'Look again'),
         h('button', { class: 'btn', type: 'button', onclick: openSettings }, 'Add repos by name')))));
@@ -1521,13 +1784,12 @@ function render() {
   }
   items = buildInbox(model);
   renderStatus(items);
-  app.append(renderInbox(model, items));
-  const dl = renderDeadlines(model); if (dl) app.append(dl);
-  app.append(renderProjects(model), renderAgents(model));
-  const ut = renderUntracked(model); if (ut) app.append(ut);
-  app.append(renderSystem(model, items), renderFeed(model));
+  if (view === 'projects') app.append(renderProjects(model));
+  else if (view === 'agents') app.append(renderAgents(model));
+  else if (view === 'system') app.append(renderSystem(model));
+  else app.append(renderHero(model, items), h('div', { class: 'today' }, renderInbox(model, items), h('aside', { class: 'side-col', 'aria-label': 'Deadlines and automations' }, renderDeadlines(model), renderAutomations())));
   app.append(h('footer', null,
-    h('span', null, 'Labels: plan → the administrator splits it · ready → the dispatcher assigns it · size:S/M → Sonnet · size:L → Opus · ui → Antigravity · to:codex → Codex · claimed → agent on it · in-review → PR open · blocked → needs you · pause → everything stops'),
+    h('span', null, 'Labels: plan → the administrator splits it · ready → the dispatcher assigns it · size:S/M → Sonnet · size:L → Opus · ui → Antigravity · to:codex → Codex · claimed → agent on it · in-review → PR open · blocked → needs you · pause → everything stops · retired (on a repo) → hidden here'),
     h('span', null, 'Deadlines: add a "Window:" or "Due:" line to an issue (see Settings).'),
     h('span', null, 'Install: Share → Add to Home Screen (phone) or the install icon in the address bar.')));
 }
@@ -1574,6 +1836,8 @@ function applySettings() {
 
 /* ---------- wiring ---------- */
 $('#btnRefresh').addEventListener('click', () => refresh());
+for (const b of document.querySelectorAll('.views button')) b.addEventListener('click', () => setView(b.dataset.view));
+window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (VIEWS.includes(v) && v !== view) { view = v; saveJSON(LS.view, v); render(); } else if (v === 'untracked') goTo('#untracked'); });
 $('#btnTask').addEventListener('click', () => openTaskDialog());
 $('#btnSettings').addEventListener('click', openSettings);
 $('#btnCancel').addEventListener('click', () => $('#settings').close());
