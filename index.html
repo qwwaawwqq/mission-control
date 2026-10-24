@@ -122,6 +122,7 @@ details.prow[open] > summary { border-bottom: 1px solid var(--line); border-radi
 details.prow .pbody { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 10px; }
 .hdot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
 .hdot.good { background: var(--good); } .hdot.warn { background: var(--warn); } .hdot.bad { background: var(--bad); } .hdot.idle { background: transparent; border: 1.5px solid var(--muted); }
+.hdot.sched { background: transparent; border: 2px solid var(--accent); }
 .pname { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pstate { font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pnums { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
@@ -522,7 +523,7 @@ function cdNode(d) {
   paintCd(el, now());
   return el;
 }
-function tickCountdowns() { const t = now(); document.querySelectorAll('[data-cd]').forEach(el => paintCd(el, t)); }
+function tickCountdowns() { const t = now(); document.querySelectorAll('[data-cd]').forEach(el => paintCd(el, t)); document.querySelectorAll('[data-nr]').forEach(el => paintNext(el, t)); }
 const dlWhen = (d) => d.kind === 'window' ? fmtRange(d.start, d.end) : fmtDay(d.at);
 const dlTitle = (d) => d.label || ('#' + d.spec.issue.number + ' ' + firstLine(d.spec.issue.title, 60));
 function deadlineList(m, nowMs) {
@@ -531,6 +532,34 @@ function deadlineList(m, nowMs) {
   const st = (d) => cdState(d, nowMs);
   out.sort((a, b) => (st(b).open ? 1 : 0) - (st(a).open ? 1 : 0) || dlTime(a) - dlTime(b));
   return out;
+}
+
+/* ---------- scheduled tasks: Claude routines that are not repos ---------- */
+/* Listed in dispatch/config.json under "scheduledTasks": { name, alias, what, times: ["HH:MM"], tz,
+   days: ["sat"] (optional, default every day), links: [{ text, url }] }. They show as rows in Projects. */
+const HHMM = /^(\d{1,2}):(\d{2})$/;
+function scheduledTasks() {
+  return (Array.isArray(team.scheduledTasks) ? team.scheduledTasks : [])
+    .filter(t => t && t.name && Array.isArray(t.times) && t.times.some(x => HHMM.test(String(x).trim())));
+}
+function taskDays(t) { return Array.isArray(t.days) && t.days.length ? t.days.map(d => String(d).slice(0, 3).toLowerCase()).filter(d => d in DOW) : []; }
+function nextRuns(t, nowMs, count) {
+  const tz = zoneOf(t.tz), p = partsIn(nowMs, tz), days = taskDays(t).map(d => DOW[d]), out = [];
+  const hm = t.times.map(x => HHMM.exec(String(x).trim())).filter(Boolean).map(m => [+m[1], +m[2]]).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  for (let k = 0; k <= 8 && out.length < count; k++) {
+    const day = new Date(Date.UTC(p.y, p.m - 1, p.d + k));
+    if (days.length && !days.includes(day.getUTCDay())) continue;
+    for (const [hh, mi] of hm) {
+      const at = zonedToUtc(day.getUTCFullYear(), day.getUTCMonth() + 1, day.getUTCDate(), hh, mi, tz);
+      if (at > nowMs && out.length < count) out.push(at);
+    }
+  }
+  return out;
+}
+function paintNext(el, nowMs) {
+  const t = scheduledTasks()[+el.dataset.nr];
+  const at = t ? nextRuns(t, nowMs, 1)[0] : null;
+  el.textContent = at ? 'next run ' + (at - nowMs < 20 * HOUR ? fmtClock(at) : fmtDay(at)) + ' · in ' + dur(at - nowMs) : 'no run scheduled';
 }
 
 /* ---------- GitHub API ---------- */
@@ -630,6 +659,8 @@ async function loadRepo(r, signal) {
   for (const c of comments) { const n = issueNum(c.issue_url); if (n != null && !lastCommentByIssue.has(n)) lastCommentByIssue.set(n, c); }
   out.lastCommentByIssue = lastCommentByIssue;
   out.home = (got.labels || []).map(l => l.name).filter(n => n.startsWith('home:')).map(n => n.slice(5).toLowerCase());
+  /* The repo label `retired` takes a repo off the page (and out of the dispatcher) on every device. */
+  out.retired = (got.labels || []).some(l => l.name === 'retired');
   out.commentsByIssue = new Map();
   out.dispatches = [];
   out.lastDispatchByIssue = new Map();
@@ -860,7 +891,7 @@ async function refresh() {
     ]);
     if (ctrl.signal.aborted) return;
     dispatcher = disp; systemPRs = sysPRs;
-    model = buildModel(repos, withProjection(billing));
+    model = buildModel(repos.filter(r => !r.retired), withProjection(billing));
     tokenBad = repos.length > 0 && repos.every(r => r.fatal && r.fatal.status === 401);
     lastRefresh = now();
   } catch (e) {
@@ -1314,6 +1345,28 @@ function renderRepoBody(r) {
   return out;
 }
 
+function renderTaskRow(t, k) {
+  const nowMs = now(), tz = zoneOf(t.tz), days = taskDays(t);
+  const when = days.length ? days.map(d => d[0].toUpperCase() + d.slice(1)).join(', ') : 'every day';
+  const times = t.times.filter(x => HHMM.test(String(x).trim()));
+  const next = h('span', { 'data-nr': String(k) }); paintNext(next, nowMs);
+  const upcoming = nextRuns(t, nowMs, 3);
+  const links = (Array.isArray(t.links) ? t.links : []).filter(l => l && l.text && /^https:\/\//.test(l.url || ''));
+  const el = h('details', { class: 'prow' },
+    h('summary', null,
+      h('span', { class: 'hdot sched', title: 'scheduled task' }),
+      h('span', { class: 'pname' }, t.name),
+      h('span', { class: 'pstate' }, t.alias ? t.alias + ' · ' : '', next),
+      h('span', { class: 'pnums' }, h('span', { class: 'pnum' }, h('b', null, times.length + '×'), days.length ? ' ' + when : ' a day'))),
+    h('div', { class: 'pbody' },
+      t.what ? h('div', { class: 'kv' }, t.what) : null,
+      h('div', { class: 'kv' }, 'Schedule: ', h('b', null, when + ' ' + times.join(' · ')), ' (' + tz + ')'),
+      upcoming.length ? h('div', { class: 'kv' }, 'Next runs: ', upcoming.map(fmtDay).join(' · ')) : null,
+      links.length ? h('div', { class: 'repo-links' }, links.map((l, i) => [i ? ' · ' : '', link(l.url, l.text)])) : null,
+      h('div', { class: 'meta' }, 'A Claude scheduled task, not a repo: its results come as a push notification. This row lives in dispatch/config.json.')));
+  return keepOpen('t:' + t.name, el);
+}
+
 function renderProjects(m) {
   const live = m.repos.filter(r => !r.fatal);
   const noshowRepos = new Set(m.team.rows.filter(a => a.noshow).map(a => a.noshow.repo.name));
@@ -1339,7 +1392,9 @@ function renderProjects(m) {
     h('span', { class: 'meta' }, pausedAll ? 'All repos are paused.' : (t.paused ? t.paused + ' of ' + live.length + ' repos paused.' : 'All agents allowed to run.')),
     live.some(r => !r.paused) ? armedButton('Pause all repos', async () => { for (const r of live) if (!r.paused) await pauseRepo(r); }, 'danger') : null,
     live.some(r => r.paused) ? armedButton('Resume all', async () => { for (const r of live) if (r.paused) await resumeRepo(r); }) : null);
-  return h('section', null, h('h2', null, 'Projects', h('span', { class: 'count' }, String(m.repos.length))), week, h('div', { class: 'plist' }, rows), h('div', { style: 'margin-top:10px' }, toolbar));
+  const tasks = scheduledTasks();
+  const taskRows = tasks.map((t, k) => renderTaskRow(t, k));
+  return h('section', null, h('h2', null, 'Projects', h('span', { class: 'count' }, String(m.repos.length + tasks.length))), week, h('div', { class: 'plist' }, rows, taskRows), h('div', { style: 'margin-top:10px' }, toolbar));
 }
 
 function meter(n, cap) {

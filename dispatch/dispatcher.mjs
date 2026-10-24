@@ -4,7 +4,7 @@
  * GitHub Actions runs it every 15 minutes (public repo, so the minutes are free).
  *
  * Each run it:
- *   1. finds the owner's agent repos (repos that carry the `ready` label);
+ *   1. finds the owner's agent repos (repos that carry the `ready` label and not `retired`);
  *   2. frees claims that produced no PR for `staleClaimHours`;
  *   3. sends agent PRs with failing checks or open review findings back to their agent once,
  *      then to Codex (`@codex fix`), then to you (`blocked`);
@@ -132,7 +132,10 @@ export async function run({ config, env = {}, now = Date.now(), fetchImpl = fetc
   const cands = all.filter((r) => r && !r.archived && r.owner && r.owner.login.toLowerCase() === owner.toLowerCase());
   const repos = [];
   for (const r of cands) {
-    try { await gh(`/repos/${owner}/${r.name}/labels/ready`); repos.push(r.name); } catch { /* not an agent repo */ }
+    try { await gh(`/repos/${owner}/${r.name}/labels/ready`); } catch { continue; /* not an agent repo */ }
+    /* A repo that carries the `retired` label is left alone (Mission Control hides it too). */
+    try { await gh(`/repos/${owner}/${r.name}/labels/retired`); continue; } catch { /* not retired */ }
+    repos.push(r.name);
   }
   stats.repos = repos.length;
 

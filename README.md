@@ -17,7 +17,7 @@ The page is built around one question — *what do I need to do?* — so it open
 | **Status line** (top, always visible) | One sentence: how many items need you (and how many are urgent), the next owner deadline with a live countdown, and whether any agent is failing to start. The tab title and icon carry the same count and colour. |
 | **Needs you** | One ranked list. Every row says what happened, what to do next, and by when: deadlines that are open now, `blocked` issues, pull requests waiting for you (ready to merge, conflicts, checks failing past the agents' retry window), dead claims (one tap to unclaim), **agents that were woken but never started, with the likely cause** (routine missing the repo vs. out of usage), a dispatcher that runs late or failed, CI failing on a default branch, idle agents with nothing queued, items outside the labels, and Actions minutes. **Snooze** hides a row for a day (kept in this browser). |
 | **Deadlines** | Owner-only windows and due dates written into issues (see below), with countdowns, for the next 7 days. |
-| **Projects** | One compact row per repo: health dot and a one-line state (moving, stalled, blocked, idle…), ready / PR / blocked / merged-this-week counts and CI. Tap a row for the details: label counts, the next issue an agent will take, every open PR with checks, Codex notes and a verdict, CI, last commit, **+ Task** and **Pause agents**. A "This week" line sums it all up. |
+| **Projects** | One compact row per repo: health dot and a one-line state (moving, stalled, blocked, idle…), ready / PR / blocked / merged-this-week counts and CI. Tap a row for the details: label counts, the next issue an agent will take, every open PR with checks, Codex notes and a verdict, CI, last commit, **+ Task** and **Pause agents**. A "This week" line sums it all up. Claude scheduled tasks that aren't repos (e.g. email triage) get a row too, with their schedule and a countdown to the next run (see below). |
 | **Agents** | Every lane (the Fable administrator, the Claude agents, Codex, Antigravity) with its state and the reason for it — working, idle with nothing to do, at its cap (and when a slot frees up), or *not starting* with the fix — plus tasks against the 5-hour and 7-day caps and per-account load. |
 | **Outside the labels** | Open issues without a workflow label (no agent will ever pick them up, e.g. after a reclaim) and this repo's own open pull requests. |
 | **System & cost** | The dispatcher's real cadence (runs in the last 24 hours and the typical gap, not just the last run), Actions minutes with a month-end projection and the repos using the most, and the API budget. Opens by itself when something is wrong. |
@@ -61,7 +61,14 @@ claim after*, *agent retry window* (hours a failing agent PR is left to its agen
 `plan` → the administrator splits it into `ready` issues · `ready` → the dispatcher gives it to an agent ·
 `size:S` / `size:M` → Sonnet · `size:L` → Opus · `ui` → Antigravity · `to:codex` → Codex · `to:<agent>` → assigned ·
 `claimed` → an agent is on it · `in-review` → PR open · `blocked` → needs you · `pause` → every agent in that repo stops ·
-`home:<agent>` on a repo → only that agent works there.
+`home:<agent>` on a repo → only that agent works there · `retired` on a repo → Mission Control hides it on every device and the dispatcher skips it (delete the label to bring it back).
+
+## Scheduled tasks that aren't repos
+
+Claude scheduled tasks such as email triage (信件分流) are listed in `dispatch/config.json` under `scheduledTasks`
+and show as rows under **Projects**: name, what it does, schedule, a countdown to the next run and links. Each entry:
+`{ "name", "alias", "what", "times": ["06:55", "11:55"], "tz": "Asia/Taipei", "days": ["sat"] (optional, default every day), "links": [{ "text", "url" }] }`.
+The page only knows the schedule; each task reports its results through its own push notification.
 
 ## Dispatcher
 
