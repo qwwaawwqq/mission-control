@@ -265,8 +265,29 @@ h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: v
 .taskform { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px dashed var(--border); border-radius: 8px; }
 input[type=text], input[type=password], input[type=number], textarea, select { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--border-strong); border-radius: 8px; padding: 9px 10px; width: 100%; min-height: 44px; }
 textarea { min-height: 72px; resize: vertical; }
-label.f { display: block; font-size: 13px; color: var(--ink-2); margin-top: 8px; }
-label.f > span { display: block; margin-bottom: 4px; }
+label.f, div.f { display: block; font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+label.f > span, div.f > span { display: block; margin-bottom: 4px; }
+/* new task: modules */
+.tm-sec { margin-top: 12px; }
+.tm-sec h4 { margin: 0 0 6px; font-size: 13px; font-weight: 650; color: var(--ink-2); }
+.tm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 6px; }
+.tmod { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 58px; padding: 9px 10px; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.tmod:hover { border-color: var(--accent); }
+.tmod:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tm-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; }
+.tm-top b { font-size: 14px; font-weight: 650; }
+.tm-hint { font-size: 12.5px; line-height: 1.3; color: var(--ink-2); }
+.tm-setup { padding: 10px; border: 1px dashed var(--border-strong); border-radius: 10px; }
+.tm-setup .meta { margin: 0 0 8px; }
+.tm-head { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.tm-head b { font-size: 15px; }
+.tm-sub { margin: 6px 0 0; }
+.tm-prev { display: flex; flex-direction: column; gap: 3px; margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--chip); }
+.tm-prev .meta { margin: 0; }
+.tm-ptitle { font-size: 14px; overflow-wrap: anywhere; }
+.tm-prev summary { margin-top: 4px; font-size: 13px; color: var(--accent-text); cursor: pointer; }
+.tm-body { max-height: 240px; margin: 6px 0 0; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink); }
+@media (max-width: 640px) { .tm-grid { grid-template-columns: 1fr 1fr; } }
 .setup ol { padding-left: 20px; margin: 8px 0; }
 .setup li { margin: 4px 0; }
 dialog { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--ink); padding: 18px 18px 14px; width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; }
@@ -427,7 +448,7 @@ footer { color: var(--ink-2); font-size: 13px; margin-top: 40px; display: flex; 
 </dialog>
 
 <dialog id="taskDlg">
-  <h3>New task for the agents</h3>
+  <h3>New task</h3>
   <label class="f"><span>Project</span><select id="tRepo"></select></label>
   <div id="tHost" style="margin-top:8px"></div>
 </dialog>
@@ -1628,7 +1649,271 @@ function renderPR(p) {
     h('div', { class: 'st' }, st));
 }
 
-function taskForm(r, host, onDone) {
+/* ---------- new task: modules ---------- */
+/* A module turns two or three answers into a full spec (problem, acceptance criteria, files, out of scope,
+   how to check), so every task reaches the agents in the same shape. The "Any project" modules live here;
+   a project's own modules come from .github/task-menu.json in its repo (schema: dispatch/TASK_MENU.md). */
+const MENU_PATH = '.github/task-menu.json';
+const SETUP_TITLE = 'Write this project\'s task menu for Mission Control';
+const SIZE_TEXT = { S: 'S · small', M: 'M · normal', L: 'L · hard' };
+const GENERIC_MODULES = [
+  { id: 'bug', name: 'Fix a bug', hint: 'Something is broken', size: 'M',
+    fields: [{ id: 'what', label: 'What goes wrong', type: 'long', required: true }, { id: 'where', label: 'Where (page, screen or file)' }, { id: 'expected', label: 'What should happen instead' }],
+    title: 'Fix: {what}', problem: '{what}[[ (in {where})]]',
+    criteria: ['The problem no longer happens[[: {expected}]]', 'A test reproduces the bug and passes after the fix', 'Nothing else changes'],
+    check: 'Reproduce it[[ in {where}]] before and after the fix; run the tests', outOfScope: 'Refactors and other fixes' },
+  { id: 'change', name: 'Small change', hint: 'Wording, a setting, one screen', size: 'S',
+    fields: [{ id: 'what', label: 'What to change', type: 'long', required: true }, { id: 'where', label: 'Where' }],
+    title: '{what}', problem: 'Change requested: {what}[[ (in {where})]]',
+    criteria: ['{what}', 'Nothing else changes', 'The tests pass'],
+    check: 'Look at the changed place[[ ({where})]]; run the tests', outOfScope: 'Anything else' },
+  { id: 'feature', name: 'New feature', hint: 'Something it can\'t do yet', size: 'M',
+    fields: [{ id: 'what', label: 'What it should do', type: 'long', required: true }, { id: 'who', label: 'Who uses it, and when' }, { id: 'done', label: 'Done when… (one per line)', type: 'long' }],
+    title: 'Add: {what}', problem: 'It can\'t yet: {what}[[ (for {who})]]',
+    criteria: ['It does what the problem describes', '{done}', 'Tests cover the new behaviour'],
+    check: 'Use it as described; run the tests', outOfScope: 'Anything not described here (ask in a comment first)' },
+  { id: 'speed', name: 'Make it faster', hint: 'A slow page, job or start-up', size: 'M',
+    fields: [{ id: 'what', label: 'What is slow', required: true }, { id: 'target', label: 'Target', placeholder: 'e.g. opens in under 2 s' }],
+    title: 'Faster: {what}', problem: '{what} is too slow.',
+    criteria: ['[[Meets the target: {target}]]', 'Measured before and after, with the numbers in the PR', 'Same results as before; the tests pass'],
+    check: 'Measure {what} before and after the change', outOfScope: 'New features and redesigns' },
+  { id: 'tests', name: 'Add tests', hint: 'Cover something that has none', size: 'S',
+    fields: [{ id: 'what', label: 'What to cover', required: true }],
+    title: 'Tests: {what}', problem: '{what} has no tests, so a change could break it unnoticed.',
+    criteria: ['Tests cover {what}', 'They fail when that behaviour breaks', 'The whole suite passes'],
+    check: 'Run the tests; break the behaviour on purpose and see them fail', outOfScope: 'Changing the code under test (open an issue if it has a bug)' },
+  { id: 'docs', name: 'Write docs', hint: 'Explain how something works', size: 'S',
+    fields: [{ id: 'what', label: 'What to explain', required: true }, { id: 'who', label: 'For whom' }],
+    title: 'Docs: {what}', problem: '{what} is not written down[[ for {who}]].',
+    criteria: ['A short section explains {what}[[ for {who}]]', 'Every command and step in it works as written'],
+    check: 'Follow the docs from a fresh checkout', outOfScope: 'Code changes' },
+  { id: 'review', name: 'Fix review findings', hint: 'Open comments on a pull request', size: 'M',
+    fields: [{ id: 'pr', label: 'Pull request number', type: 'number', required: true }, { id: 'which', label: 'Which findings', placeholder: 'every open one' }],
+    title: 'Fix the review findings on #{pr}', problem: 'Review comments on #{pr} found problems that are still open[[: {which}]].',
+    criteria: ['Each finding is fixed, or answered on #{pr} with the reason it stays', 'A test covers each fix', 'The tests pass'],
+    files: 'The files the findings point to', check: 'Re-read each finding on #{pr} against the change; run the tests', outOfScope: 'Anything the findings don\'t mention' },
+  { id: 'polish', name: 'Visual polish', hint: 'Checked in a browser', size: 'M', route: 'ui',
+    fields: [{ id: 'page', label: 'Which page or screen', required: true }, { id: 'what', label: 'What looks wrong, or what you want', type: 'long', required: true }],
+    title: '{page}: {what}', problem: 'On {page}: {what}',
+    criteria: ['{page} looks as described', 'Works at phone width (390 px) and on a computer', 'Nothing else changes'],
+    check: 'Open {page} on a phone and on a computer; screenshots in the PR', outOfScope: 'Other pages' },
+  { id: 'goal', name: 'Big goal', hint: 'The administrator splits it into tasks', route: 'plan',
+    fields: [{ id: 'goal', label: 'The goal', type: 'long', required: true }, { id: 'must', label: 'Must include (one per line)', type: 'long' }, { id: 'not', label: 'Not now' }],
+    title: '{goal}', problem: 'Goal: {goal}',
+    criteria: ['{must}', 'Split into small ready issues, each with acceptance criteria and a way to check'],
+    check: 'The new issues together cover the goal', outOfScope: '[[{not}]]' },
+];
+const FREE_MODULE = { id: 'free', name: 'Something else', hint: 'Write the task yourself', free: true };
+const menus = new Map();         /* repo name → { modules, missing, error, url, at } */
+const setKids = (el, ...kids) => el.replaceChildren(...kids.flat(Infinity).filter(k => k != null && k !== false));
+const askedMenus = new Set();    /* repos asked for a menu in this page session */
+
+/* "{id}" becomes that field's answer; "[[ … ]]" is kept only when every field inside it was answered.
+   With dropIfMissing, a template that still names an unanswered field becomes empty. */
+const TPL_KEY = /\{([a-z0-9_-]+)\}/gi;
+const tplKeys = (s) => [...String(s).matchAll(TPL_KEY)].map(x => x[1]);
+function fillTpl(tpl, vals, dropIfMissing) {
+  const answered = (k) => String(vals[k] == null ? '' : vals[k]).trim() !== '';
+  const s = String(tpl || '').replace(/\[\[([\s\S]*?)\]\]/g, (m, inner) => tplKeys(inner).every(answered) ? inner : '');
+  if (dropIfMissing && !tplKeys(s).every(answered)) return '';
+  return s.replace(TPL_KEY, (m, k) => answered(k) ? String(vals[k]).trim() : '').replace(/[ \t]{2,}/g, ' ').trim();
+}
+const oneLine = (s) => String(s || '').replace(/\s*\n+\s*/g, '; ').trim();
+function buildSpec(r, m, vals, size) {
+  const flat = {}; for (const k of Object.keys(vals)) flat[k] = oneLine(vals[k]);
+  let title = fillTpl(m.title, flat);
+  if (title.length > 90) title = title.slice(0, 89).trimEnd() + '…';
+  const crit = [];
+  for (const line of m.criteria || []) {
+    for (const c of fillTpl(line, vals, true).split('\n')) {
+      const t = c.replace(/^\s*(?:[-*•]|\d+[.)])\s+/, '').trim();
+      if (t) crit.push(t);
+    }
+  }
+  const details = (m.fields || []).filter(f => String(vals[f.id] || '').trim()).map(f => '- ' + f.label + ': ' + String(vals[f.id]).trim().replace(/\n/g, '\n  '));
+  const route = m.route || 'build';
+  const lines = ['Problem: ' + (fillTpl(m.problem, flat) || title), ''];
+  if (details.length) lines.push('Details from the owner:', ...details, '');
+  lines.push('Acceptance criteria:', ...(crit.length ? crit : ['It does what the problem describes']).map(c => '- [ ] ' + c), '',
+    'Files: ' + (fillTpl(m.files, flat) || 'find the right ones and list them in the PR'),
+    'Out of scope: ' + (fillTpl(m.outOfScope, flat) || 'anything the criteria don\'t ask for'),
+    'How to check: ' + (fillTpl(m.check, flat) || 'run the tests and say what you checked'),
+    'Owner decisions needed: none', '',
+    '_Created with the "' + m.name + '" task module in Mission Control._');
+  const labels = route === 'plan' ? ['plan'] : route === 'codex' ? ['ready', 'to:codex'] : route === 'ui' ? ['ready', 'ui', 'size:' + size] : ['ready', 'size:' + size];
+  return { title, body: lines.join('\n'), labels };
+}
+function goesTo(r, route, size) {
+  const home = r.home && r.home.length ? r.home.join(', ') : '';
+  if (route === 'plan') return 'the administrator splits it into tasks';
+  if (route === 'codex') return 'Codex: start it from chatgpt.com/codex';
+  if (home) return home + ', the only agent in this repo';
+  if (route === 'ui') return 'Antigravity on your Mac';
+  return size === 'L' ? 'an Opus agent' : 'a Sonnet agent (Opus if none is free)';
+}
+
+/* A project's own modules: .github/task-menu.json, checked so a bad file can't break the dialog. */
+const strOr = (v, max) => typeof v === 'string' ? v.trim().slice(0, max || 400) : '';
+function normModule(m, i) {
+  if (!m || typeof m !== 'object') return null;
+  const name = strOr(m.name, 48), title = strOr(m.title, 200);
+  if (!name || !title) return null;
+  const fields = (Array.isArray(m.fields) ? m.fields : [])
+    .filter(f => f && typeof f.id === 'string' && /^[a-z0-9_-]{1,30}$/i.test(f.id) && strOr(f.label))
+    .slice(0, 6)
+    .map(f => {
+      const options = Array.isArray(f.options) ? f.options.filter(o => typeof o === 'string' && o.trim()).map(o => o.trim().slice(0, 80)).slice(0, 60) : [];
+      let type = ['text', 'long', 'number', 'select'].includes(f.type) ? f.type : 'text';
+      if (type === 'select' && !options.length) type = 'text';
+      return { id: f.id, label: strOr(f.label, 80), type, required: f.required === true, options, default: f.default != null ? String(f.default).slice(0, 200) : '', placeholder: strOr(f.placeholder, 80) };
+    });
+  return {
+    id: typeof m.id === 'string' && /^[a-z0-9-]{1,40}$/.test(m.id) ? m.id : 'm' + i, name, title, fields,
+    hint: strOr(m.hint, 80), size: ['S', 'M', 'L'].includes(m.size) ? m.size : 'M',
+    route: ['build', 'plan', 'ui', 'codex'].includes(m.route) ? m.route : 'build',
+    problem: strOr(m.problem), files: strOr(m.files), outOfScope: strOr(m.outOfScope), check: strOr(m.check),
+    criteria: (Array.isArray(m.criteria) ? m.criteria : []).filter(c => typeof c === 'string' && c.trim()).map(c => c.trim().slice(0, 300)).slice(0, 10),
+  };
+}
+async function loadMenu(r) {
+  const hit = menus.get(r.name);
+  if (hit && now() - hit.at < 5 * MIN) return hit;
+  let out;
+  try {
+    const f = await gh('/repos/' + cfg.owner + '/' + r.name + '/contents/' + MENU_PATH);
+    const j = JSON.parse(b64ToText(f && f.content));
+    const seen = new Set();
+    const modules = (Array.isArray(j && j.modules) ? j.modules : []).map(normModule).filter(m => m && !seen.has(m.id) && seen.add(m.id)).slice(0, 12);
+    out = { modules, url: f && f.html_url, error: modules.length ? null : 'it lists no usable modules' };
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 404) out = { modules: [], missing: true };
+    else out = { modules: [], error: e instanceof SyntaxError ? 'it is not valid JSON' : e instanceof ApiError && e.status === 403 ? 'the token can\'t read files in this repo (needs Contents: Read)' : explain(e) };
+  }
+  out.at = now();
+  menus.set(r.name, out);
+  return out;
+}
+
+function setupBody() {
+  const schema = 'https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/TASK_MENU.md';
+  return [
+    'Problem: Mission Control\'s New task dialog offers each project its own task modules, read from `' + MENU_PATH + '`, so the owner picks a task and answers two or three questions instead of writing a free-form request. This repository has no task menu yet.',
+    '',
+    'Acceptance criteria:',
+    '- [ ] `' + MENU_PATH + '` exists and follows the schema in ' + schema,
+    '- [ ] 4–8 modules for the tasks this repository gets most often; read AGENTS.md, the README, the plan documents and the last 30 closed issues and pull requests first',
+    '- [ ] Each module\'s criteria, files and "How to check" are specific to this repository (real paths, the real test command), and its fields ask only what the owner must decide',
+    '- [ ] Valid JSON: `python3 -m json.tool ' + MENU_PATH + '` succeeds',
+    '',
+    'Files: `' + MENU_PATH + '` (new; a data file, not a workflow)',
+    'Out of scope: every other file',
+    'How to check: `python3 -m json.tool ' + MENU_PATH + '`; then Mission Control → New task → this project lists the modules',
+    'Owner decisions needed: none',
+  ].join('\n');
+}
+const menuAsked = (r) => askedMenus.has(r.name) || (r.issues || []).some(i => i.title === SETUP_TITLE);
+async function askForMenu(r) {
+  const i = await createIssue(r, SETUP_TITLE, setupBody(), ['ready', 'size:S']);
+  askedMenus.add(r.name); menus.delete(r.name);
+  return i;
+}
+async function askForAllMenus() {
+  let n = 0;
+  for (const r of (model ? model.repos.filter(x => !x.fatal && !x.paused) : [])) {
+    if (menuAsked(r)) continue;
+    const menu = await loadMenu(r);
+    if (!menu.missing) continue;
+    await askForMenu(r); n++;
+  }
+  return n;
+}
+
+function modTag(m) {
+  if (m.free) return null;
+  return h('span', { class: 'tag' }, m.route === 'plan' ? 'plan' : m.route === 'ui' ? 'UI' : m.route === 'codex' ? 'Codex' : (m.size || 'M'));
+}
+function modButton(r, m) {
+  return h('button', { class: 'tmod', type: 'button', onclick: () => drawModule(r, m) },
+    h('span', { class: 'tm-top' }, h('b', null, m.name), modTag(m)), m.hint ? h('span', { class: 'tm-hint' }, m.hint) : null);
+}
+function setupBox(r, redraw) {
+  if (menuAsked(r)) {
+    const open = (r.issues || []).find(i => i.title === SETUP_TITLE);
+    return h('p', { class: 'meta' }, 'An agent is writing this project\'s modules', open ? [' (', link(open.html_url, '#' + open.number), ')'] : '', '. Until you merge its pull request, use the modules below.');
+  }
+  return h('div', { class: 'tm-setup' },
+    h('p', { class: 'meta' }, 'No modules of its own yet. An agent can write them from this project\'s docs and past issues, and you merge its pull request.'),
+    h('div', { class: 'pc-act' },
+      h('button', { class: 'btn sm primary', type: 'button', onclick: (ev) => runAction(async () => { const i = await askForMenu(r); toast('Asked for ' + r.nick + '\'s modules (#' + i.number + ')'); redraw(); }, ev.currentTarget) }, 'Ask an agent to write them'),
+      h('button', { class: 'btn sm', type: 'button', onclick: (ev) => runAction(async () => { const n = await askForAllMenus(); toast(n ? 'Asked for modules in ' + plural(n, 'project') : 'Every project already has modules, or an agent is writing them'); redraw(); }, ev.currentTarget) }, 'Ask for every project')));
+}
+function drawPicker(r) {
+  const host = $('#tHost');
+  const own = h('section', { class: 'tm-sec' }, h('h4', null, 'For ' + r.nick), h('p', { class: 'meta' }, 'Looking for this project\'s modules…'));
+  setKids(host, own,
+    h('section', { class: 'tm-sec' }, h('h4', null, 'Any project'), h('div', { class: 'tm-grid' }, GENERIC_MODULES.map(m => modButton(r, m)), modButton(r, FREE_MODULE))),
+    r.home && r.home.length ? h('p', { class: 'meta' }, 'Fenced repo: only ' + r.home.join(', ') + ' builds here.') : null,
+    h('div', { class: 'dlg-actions' }, h('button', { class: 'btn', type: 'button', onclick: () => $('#taskDlg').close() }, 'Cancel')));
+  loadMenu(r).then(menu => {
+    if (!own.isConnected) return;
+    setKids(own, h('h4', null, 'For ' + r.nick),
+      menu.modules.length ? h('div', { class: 'tm-grid' }, menu.modules.map(m => modButton(r, m)))
+        : menu.missing ? setupBox(r, () => { if (own.isConnected) drawPicker(r); })
+        : h('p', { class: 'err' }, 'This project\'s task menu can\'t be used: ' + menu.error + '. ', link(menu.url || (r.url + '/blob/' + (r.defaultBranch || 'main') + '/' + MENU_PATH), 'Open it')));
+  });
+}
+function drawModule(r, m) {
+  const host = $('#tHost');
+  const back = () => drawPicker(r);
+  if (m.free) { host.replaceChildren(); taskForm(r, host, () => $('#taskDlg').close(), back); return; }
+  const route = m.route || 'build';
+  let size = m.size || 'M';
+  const ctrls = (m.fields || []).map(f => {
+    let el;
+    if (f.type === 'long') el = h('textarea', { rows: 3, placeholder: f.placeholder || null }, f.default || '');
+    else if (f.type === 'select') {
+      el = h('select', null, h('option', { value: '' }, f.required ? 'Choose…' : '—'), f.options.map(o => h('option', { value: o }, o)));
+      if (f.default && f.options.includes(f.default)) el.value = f.default;
+    } else el = h('input', { type: f.type === 'number' ? 'number' : 'text', placeholder: f.placeholder || null, value: f.default || null, inputmode: f.type === 'number' ? 'numeric' : null });
+    el.addEventListener('input', update); el.addEventListener('change', update);
+    return { f, el };
+  });
+  const sizeRow = route === 'plan' || route === 'codex' ? null : h('div', { class: 'f' }, h('span', null, 'Size'),
+    h('div', { class: 'seg', role: 'group', 'aria-label': 'Size' }, ['S', 'M', 'L'].map(s => h('button', { class: 'segb', type: 'button', 'data-size': s, 'aria-pressed': String(s === size),
+      onclick: (ev) => { size = s; for (const b of ev.currentTarget.parentNode.children) b.setAttribute('aria-pressed', String(b.dataset.size === s)); update(); } }, SIZE_TEXT[s]))));
+  const pvTitle = h('b', { class: 'tm-ptitle' }), pvMeta = h('p', { class: 'meta' }), pvBody = h('pre', { class: 'tm-body' });
+  setKids(host,
+    h('div', { class: 'tm-head' }, h('button', { class: 'btn sm', type: 'button', onclick: back }, '← Modules'), h('b', null, m.name), modTag(m)),
+    m.hint ? h('p', { class: 'meta tm-sub' }, m.hint) : null,
+    ctrls.map(c => h('label', { class: 'f' }, h('span', null, c.f.label + (c.f.required ? '' : ' (optional)')), c.el)),
+    sizeRow,
+    h('div', { class: 'tm-prev' }, h('span', { class: 'meta' }, 'Will create'), pvTitle, pvMeta, h('details', null, h('summary', null, 'Full spec'), pvBody)),
+    h('div', { class: 'dlg-actions' }, h('button', { class: 'btn', type: 'button', onclick: () => $('#taskDlg').close() }, 'Cancel'),
+      h('button', { class: 'btn primary', type: 'button', onclick: create }, 'Create task')));
+  function values() { const v = {}; for (const c of ctrls) v[c.f.id] = c.el.value; return v; }
+  function update() {
+    const spec = buildSpec(r, m, values(), size);
+    pvTitle.textContent = spec.title || '(answer the first question)';
+    pvMeta.textContent = spec.labels.join(' · ') + ' → ' + goesTo(r, route, size);
+    pvBody.textContent = spec.body;
+  }
+  function create(ev) {
+    const missing = ctrls.find(c => c.f.required && !String(c.el.value).trim());
+    if (missing) { toast('Fill in: ' + missing.f.label, true); missing.el.focus(); return; }
+    const spec = buildSpec(r, m, values(), size);
+    if (!spec.title) { toast('The task needs a title: answer the first question', true); return; }
+    runAction(async () => {
+      const i = await createIssue(r, spec.title, spec.body, spec.labels);
+      toast('Created #' + i.number + ' in ' + r.nick + ' (' + spec.labels.join(', ') + ')');
+      $('#taskDlg').close();
+    }, ev.currentTarget);
+  }
+  update();
+  if (ctrls[0]) ctrls[0].el.focus();
+}
+
+/* "Something else": the free-form task, for anything no module fits. */
+function taskForm(r, host, onDone, onBack) {
   const title = h('input', { type: 'text', placeholder: 'Task title (one sentence of what to build)', 'aria-label': 'Task title' });
   const body = h('textarea', { placeholder: 'Details / acceptance criteria (optional)', rows: 3, 'aria-label': 'Details' });
   const sel = h('select', { 'aria-label': 'How to start' }, h('option', { value: 'ready' }, 'Build it: the dispatcher picks the agent'), h('option', { value: 'plan' }, 'Big goal: the administrator splits it into tasks'));
@@ -1641,7 +1926,9 @@ function taskForm(r, host, onDone) {
     h('option', { value: 'to:codex' }, 'Give it to Codex'));
   sel.addEventListener('change', () => { size.disabled = sel.value === 'plan'; });
   const close = () => { if (onDone) onDone(); else form.remove(); };
-  const form = h('div', { class: 'taskform' }, title, body, sel, size,
+  const form = h('div', { class: 'taskform' },
+    onBack ? h('div', { class: 'tm-head' }, h('button', { class: 'btn sm', type: 'button', onclick: onBack }, '← Modules'), h('b', null, 'Something else')) : null,
+    title, body, sel, size,
     r.home && r.home.length ? h('div', { class: 'meta' }, 'Fenced repo: only ' + r.home.join(', ') + ' builds here.') : null,
     h('div', { style: 'display:flex;gap:8px;justify-content:flex-end' },
       h('button', { class: 'btn', type: 'button', onclick: close }, 'Cancel'),
@@ -1659,10 +1946,9 @@ function openTaskDialog(pre) {
   sel.replaceChildren(...live.map(r => h('option', { value: r.name }, r.nick + (r.home.length ? ' — fenced (' + r.home.join(', ') + ')' : '') + (r.queue.length ? ' · ' + r.queue.length + ' ready' : ' · queue empty'))));
   if (pre) sel.value = pre.name;
   else { const empty = live.find(r => !r.home.length && !r.queue.length); if (empty) sel.value = empty.name; }
-  const draw = () => { const host = $('#tHost'); host.replaceChildren(); taskForm(live.find(x => x.name === sel.value), host, () => $('#taskDlg').close()); };
-  sel.onchange = draw;
+  sel.onchange = () => drawPicker(live.find(x => x.name === sel.value));
   $('#taskDlg').showModal();
-  draw();
+  drawPicker(live.find(x => x.name === sel.value));
 }
 
 function repoHealth(r, noshowRepos) {

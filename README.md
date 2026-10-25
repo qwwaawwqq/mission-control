@@ -16,9 +16,22 @@ The page is built around one question — *what do I need to do?* — so it open
 |---|---|
 | **Today** | One sentence saying how many things need you and the most urgent one, then four tiles: needs you, the next deadline (live countdown), agents stuck or idle, pull requests merged in 7 days. Below, **Needs you** groups every item into *Now*, *Today* and *This week*, with filters (urgent, deadlines, decisions & blocked, pull requests, portfolio, agents & system). Each item says what happened, what to do next and by when, with one main button: deadlines open now, **decision briefs** (one tap approves the recommendation), specs an agent could not build from (`needs-spec`), `blocked` issues, pull requests waiting for you, builds held back because too many agent PRs wait for review, portfolio rows due for a check, the weekly review, dead claims (unclaim), **agents woken but never started, with the likely cause** (routine missing the repo vs. out of usage), a late or failing dispatcher, CI failing on a default branch, idle agents, items outside the labels and Actions minutes. **Snooze** hides an item for a day (kept in this browser) and the toast offers **Undo**. On the side: **Deadlines** for the next 7 days and **Automations**, the Claude scheduled tasks in order of their next run. |
 | **Portfolio** | Every project, not only code: one row per paper, app, course, quant stream and admin duty, read from `portfolio.json` in a private repo of yours. Each row has a state (Active, Waiting, Parked, Done, Killed), a stage, the next action, who you are waiting on and since when, the next check date, deadlines, and a resume note. Filters: **Today** (check due or a deadline within 7 days), Active, Waiting (grouped by who has it), Parked, **Board** (by stage) and All. **Checked** moves a row's next check a week out (5 days for a wait) in one tap; **Edit** changes everything else. The header counts Active against your limit (3 by default; ongoing areas don't count), and on Sundays a **weekly review** card walks through the 25-minute checklist. |
-| **Projects** | One card per repo: health, a one-line state, a bar of ready / working / open-PR / blocked work, the latest agent activity, **Details** (label counts, the next issue, every open PR with checks, Codex notes and a verdict, CI, last commit), **+ Task** and **Pause agents** (two taps). Automations get cards too. Below: **Outside the labels** (issues no agent will pick up, and this repo's own open pull requests) and the repos hidden by the `retired` label. |
+| **Projects** | One card per repo: health, a one-line state, a bar of ready / working / open-PR / blocked work, the latest agent activity, **Details** (label counts, the next issue, every open PR with checks, Codex notes and a verdict, CI, last commit), **+ Task** (task modules, below) and **Pause agents** (two taps). Automations get cards too. Below: **Outside the labels** (issues no agent will pick up, and this repo's own open pull requests) and the repos hidden by the `retired` label. |
 | **Agents** | One card per lane (the Fable administrator, the Claude agents, Codex, Antigravity), problems first: its state and the reason — working, idle with nothing to do, at its cap (and when a slot frees up), or *not starting* with the fix — plus tasks against the 5-hour and 7-day caps and per-account load. |
 | **System** | The dispatcher's real cadence (runs in 24 hours against the expected number, and the typical gap), Actions minutes with a month-end projection and the repos using the most, the API budget, and **Activity** (problems only by default, with All and per-repo filters). |
+
+## New task: pick a module
+
+**New task** (top bar) and **+ Task** (on a project card) open a list of task modules for the chosen project:
+its own modules first, then ones that fit any project (fix a bug, small change, new feature, make it faster,
+add tests, write docs, fix review findings, visual polish, big goal) and **Something else** for free text.
+Pick one, answer its two or three questions, choose S / M / L, and the preview shows the issue it will create:
+problem, acceptance criteria, files, out of scope and how to check, with `ready` and the size label set, so the
+dispatcher builds it on its next run without a sizing pass.
+
+A project's own modules live in `.github/task-menu.json` in that repo (format: `dispatch/TASK_MENU.md`).
+For a project without one, **Ask an agent to write them** opens a `ready` task for it (or for every project at
+once); you merge the agent's pull request as usual.
 
 ## Deadlines for owner-only work
 
