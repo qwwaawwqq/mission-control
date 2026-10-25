@@ -162,7 +162,15 @@ export async function run({ config, env = {}, now = Date.now(), fetchImpl = fetc
     labelCheck.set(key, ok);
     return ok;
   }
-  const strangerSpoke = (d, n) => (d.byNum.get(n) || []).some((c) => c.user && !teamLogin(c.user.login));
+  /* A stranger's comment holds the issue until you post a comment starting "Owner: go ahead" after it
+     (Mission Control's Go ahead button does that). */
+  const strangerSpoke = (d, n) => {
+    const cs = (d.byNum.get(n) || []).filter((c) => c.user);
+    const lastStranger = Math.max(0, ...cs.filter((c) => !teamLogin(c.user.login)).map((c) => ts(c.created_at)));
+    if (!lastStranger) return false;
+    const lastOk = Math.max(0, ...cs.filter((c) => trustedLogin(c.user.login) && /^\s*Owner:\s*go ahead/i.test(c.body || '')).map((c) => ts(c.created_at)));
+    return lastOk < lastStranger;
+  };
   async function mayStart(d, i) {
     if (strangerSpoke(d, i.number) || !(await startedByOwner(d, i))) { stats.untrusted++; return false; }
     return true;

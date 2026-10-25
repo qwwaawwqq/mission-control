@@ -77,7 +77,7 @@ issues and comments. So the dispatcher:
   and PR fixes still run;
 - starts work only from `ready` or `plan` labels that you applied (agents act on GitHub as you, so the
   administrator's issues count); add other logins to `trusted` in `config.json` if you add a
-  collaborator. An issue with a comment from anyone else in the last 7 days waits until you look;
+  collaborator. An issue with a comment from anyone else in the last 7 days waits until you look and post a comment starting `Owner: go ahead` (the Go ahead button in Mission Control);
 - counts a "changes requested" review only when it is yours;
 - sends an issue that was claimed twice without a pull request back to you as `needs-spec`
   (`escalateAfterReclaims`).
