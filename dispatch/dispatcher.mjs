@@ -14,6 +14,14 @@
  *      its task moves to another agent;
  *   5. wakes only the chosen Claude routine, through its API trigger, with the task in the run text.
  *
+ * Guards (what keeps your review queue and your repos safe):
+ *   - `needs-spec` and `decision` issues are never dispatched: they wait for you;
+ *   - only labels applied by you (or a login in `trusted`) start work, and an issue with a recent
+ *     comment from anyone else waits until you look at it, so a stranger cannot steer an agent;
+ *   - no new builds in a repo once `maxOpenAgentPRs` agent PRs (open or being written) wait there,
+ *     or `maxOpenAgentPRsTotal` across all repos: your review time sets the pace;
+ *   - an issue reclaimed `escalateAfterReclaims` times without a PR goes to you as `needs-spec`.
+ *
  * State lives in GitHub: labels (`to:<agent>`, `size:*`, `ui`) and one-line "Dispatch:" comments.
  * This repo is public, so the log prints counts and agent names only, never repo names or titles.
  */
@@ -23,7 +31,7 @@ import { pathToFileURL } from 'node:url';
 const MIN = 6e4;
 const HOUR = 36e5;
 const DAY = 24 * HOUR;
-const BLOCKING = ['claimed', 'blocked', 'in-review', 'jules', 'pause'];
+const BLOCKING = ['claimed', 'blocked', 'in-review', 'jules', 'pause', 'needs-spec', 'decision'];
 const LANE_LABELS = {
   'size:S': ['c2e0c6', 'Small: docs, config, one-file change'],
   'size:M': ['fef2c0', 'Normal task'],
@@ -31,7 +39,11 @@ const LANE_LABELS = {
   'ui': ['bfdadc', 'Needs a browser to check: goes to Antigravity'],
   'to:codex': ['10a37f', 'Assigned to Codex'],
   'to:antigravity': ['4285f4', 'Assigned to Antigravity (runs on the Mac)'],
+  'needs-spec': ['d4c5f9', 'Spec incomplete: answer the questions, then remove this label'],
+  'decision': ['e99695', 'Decision brief for the owner: never given to an agent'],
 };
+/* Accounts whose comments belong to the team (Codex reviews, GitHub's own bots). */
+const TEAM_BOTS = /^(chatgpt-codex-connector|github-actions|google-labs-jules|dependabot)(\[bot\])?$/i;
 export const DISPATCH_RE = /^Dispatch:\s*([\w.-]+)\s*·\s*([^·\n]*?)\s*·\s*([\w-]+)(?:\s*·\s*sha=([0-9a-f]{7,40}))?/m;
 
 const labelsOf = (i) => (i.labels || []).map((l) => (typeof l === 'string' ? l : l.name));
@@ -60,7 +72,7 @@ export async function run({ config, env = {}, now = Date.now(), fetchImpl = fetc
   const DRY = env.DRY_RUN === '1' || !TOKEN;
   const NOW = now;
   const detail = [];
-  const stats = { repos: 0, fired: 0, plans: 0, fixes: 0, codex: 0, human: 0, reclaimed: 0, reassigned: 0, antigravity: 0, waiting: 0, noAgent: 0, errors: 0 };
+  const stats = { repos: 0, fired: 0, plans: 0, fixes: 0, codex: 0, human: 0, reclaimed: 0, reassigned: 0, antigravity: 0, waiting: 0, noAgent: 0, prCapped: 0, untrusted: 0, escalated: 0, errors: 0 };
 
   async function gh(path, { method = 'GET', body } = {}) {
     const headers = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'mission-control-dispatcher' };
@@ -128,6 +140,41 @@ export async function run({ config, env = {}, now = Date.now(), fetchImpl = fetc
   /* ---------- discovery ---------- */
   const owner = cfg.owner || (TOKEN ? (await gh('/user')).login : '');
   if (!owner) return { stats, detail, note: 'no token: add the DISPATCH_GH_TOKEN secret' };
+
+  /* ---------- who may start work ---------- */
+  /* Agents act on GitHub as the owner, so "the owner applied the label" covers your own tasks and the
+     administrator's. A label from anyone else (a collaborator, an app) or a recent comment from a
+     stranger holds the issue until you look at it. */
+  const trustedSet = new Set([owner, ...(Array.isArray(cfg.trusted) ? cfg.trusted : [])].map((s) => String(s).toLowerCase()));
+  const trustedLogin = (login) => !!login && trustedSet.has(String(login).toLowerCase());
+  const teamLogin = (login) => trustedLogin(login) || TEAM_BOTS.test(login || '');
+  const labelCheck = new Map();
+  async function startedByOwner(d, i) {
+    const key = `${d.repo}#${i.number}`;
+    if (labelCheck.has(key)) return labelCheck.get(key);
+    let ok = false;
+    try {
+      const evs = await ghAll(`${d.base}/issues/${i.number}/events`, 3);
+      const hits = evs.filter((e) => e.event === 'labeled' && e.label && ['ready', 'plan'].includes(e.label.name) && labelsOf(i).includes(e.label.name));
+      const last = hits.sort((x, y) => ts(y.created_at) - ts(x.created_at))[0];
+      ok = !!last && trustedLogin(last.actor && last.actor.login);
+    } catch (e) { stats.errors++; ok = false; /* fail closed: try again next run */ }
+    labelCheck.set(key, ok);
+    return ok;
+  }
+  /* A stranger's comment holds the issue until you post a comment starting "Owner: go ahead" after it
+     (Mission Control's Go ahead button does that). */
+  const strangerSpoke = (d, n) => {
+    const cs = (d.byNum.get(n) || []).filter((c) => c.user);
+    const lastStranger = Math.max(0, ...cs.filter((c) => !teamLogin(c.user.login)).map((c) => ts(c.created_at)));
+    if (!lastStranger) return false;
+    const lastOk = Math.max(0, ...cs.filter((c) => trustedLogin(c.user.login) && /^\s*Owner:\s*go ahead/i.test(c.body || '')).map((c) => ts(c.created_at)));
+    return lastOk < lastStranger;
+  };
+  async function mayStart(d, i) {
+    if (strangerSpoke(d, i.number) || !(await startedByOwner(d, i))) { stats.untrusted++; return false; }
+    return true;
+  }
   const all = await ghAll('/user/repos?affiliation=owner&sort=pushed', 2);
   const cands = all.filter((r) => r && !r.archived && r.owner && r.owner.login.toLowerCase() === owner.toLowerCase());
   const repos = [];
@@ -190,13 +237,17 @@ export async function run({ config, env = {}, now = Date.now(), fetchImpl = fetc
           number: p.number, agent, sha, headAt, pending,
           failing: failed.length > 0,
           failedAt: Math.max(0, ...failed.map((w) => ts(w.updated_at))),
-          changes: (reviews || []).some((r) => r.state === 'CHANGES_REQUESTED' && ts(r.submitted_at) > headAt),
+          /* only your own change requests count: on a public repo anyone can post a review */
+          changes: (reviews || []).some((r) => r.state === 'CHANGES_REQUESTED' && ts(r.submitted_at) > headAt && trustedLogin(r.user && r.user.login)),
           codexP1: (rcomments || []).some((c) => isCodex(c.user && c.user.login) && ts(c.created_at) > headAt && /\bP[01]\b/.test(c.body || '')),
           failedNames: failed.map((w) => w.name),
         });
       } catch (e) { stats.errors++; }
     }
-    return { repo, base, home, issues, openPRs, prs, byNum, dispatches, codexLimitAt, labelNames, paused: issues.some((i) => has(i, 'pause')) };
+    /* PRs from agents that wait for your review, plus claimed issues whose PR is being written */
+    const agentPRs = openPRs.filter((p) => agentOfBody(p.body)).length;
+    const writing = issues.filter((i) => has(i, 'claimed') && !has(i, 'in-review') && !has(i, 'blocked')).length;
+    return { repo, base, home, issues, openPRs, prs, byNum, dispatches, codexLimitAt, labelNames, agentPRs, writing, firedBuilds: 0, paused: issues.some((i) => has(i, 'pause')) };
   }
   const data = [];
   for (const repo of repos) {
@@ -248,6 +299,10 @@ export async function run({ config, env = {}, now = Date.now(), fetchImpl = fetc
   /* ---------- actions ---------- */
   let fires = 0;
   const canFire = () => fires < cfg.maxFiresPerRun;
+  /* Your review time is the bottleneck: count agent PRs waiting for you, and PRs being written. */
+  const capRepo = cfg.maxOpenAgentPRs ?? 3;
+  const capAll = cfg.maxOpenAgentPRsTotal ?? 8;
+  const inFlight = () => data.reduce((s, d) => s + d.agentPRs + d.writing + d.firedBuilds, 0);
   async function comment(d, n, body) { await act(`comment ${d.repo}#${n}: ${body.split('\n')[0]}`, `${d.base}/issues/${n}/comments`, { method: 'POST', body: { body } }); }
   async function addLabel(d, n, label) { await act(`label ${d.repo}#${n} +${label}`, `${d.base}/issues/${n}/labels`, { method: 'POST', body: { labels: [label] } }); }
   async function removeLabel(d, n, label) {
@@ -288,8 +343,11 @@ export async function run({ config, env = {}, now = Date.now(), fetchImpl = fetc
       }
     }
     const lastTriage = Math.max(0, ...data.flatMap((d) => d.dispatches.filter((x) => x.who === admin.name && x.mode === 'triage').map((x) => x.at)));
+    const list = [];
     if (untriaged.length && NOW - lastTriage >= cfg.triageEveryHours * HOUR && available(admin) && canFire()) {
-      const list = untriaged.slice(0, 25);
+      for (const u of untriaged) { if (list.length >= 25) break; if (await mayStart(u.d, u.i)) list.push(u); }
+    }
+    if (list.length) {
       const text = [`Dispatch: triage ${owner}`, `You are ${admin.name} (${admin.model}).`, 'Size and sort these new issues:',
         ...list.map(({ d, i }) => `- ${owner}/${d.repo}#${i.number}`), 'Follow your routine instructions for mode "triage". Then stop.'].join('\n');
       const res = await fire(admin, text);
@@ -327,9 +385,21 @@ export async function run({ config, env = {}, now = Date.now(), fetchImpl = fetc
         const who = claim ? claim[1].toLowerCase() : 'unknown';
         await removeLabel(d, i.number, 'claimed');
         for (const l of labelsOf(i).filter((x) => x.startsWith('to:') && byName[x.slice(3)])) await removeLabel(d, i.number, l);
-        await comment(d, i.number, `Dispatch: ${who} · — · reclaimed\n\nNo pull request ${cfg.staleClaimHours}h after the claim, so this issue is free again.`);
+        /* Claimed again and again with nothing to show: the spec is probably missing something. */
+        const lastYou = Math.max(0, ...d.dispatches.filter((x) => x.num === i.number && x.who === 'human').map((x) => x.at));
+        const before = d.dispatches.filter((x) => x.num === i.number && x.mode === 'reclaimed' && x.at > lastYou).length;
+        const escalate = before + 1 >= (cfg.escalateAfterReclaims ?? 2);
+        if (escalate) {
+          await addLabel(d, i.number, 'needs-spec');
+          await comment(d, i.number, `Dispatch: human · — · needs-you\n\nClaimed ${before + 1} times with no pull request (last by ${who}), so it is probably missing something: acceptance criteria, the files involved, or how to check the result. Add what is missing, then remove needs-spec.`);
+          stats.escalated++;
+        } else {
+          await comment(d, i.number, `Dispatch: ${who} · — · reclaimed\n\nNo pull request ${cfg.staleClaimHours}h after the claim, so this issue is free again.`);
+        }
         i.labels = (i.labels || []).filter((l) => { const nm = typeof l === 'string' ? l : l.name; return nm !== 'claimed' && !(nm.startsWith('to:') && byName[nm.slice(3)]); });
+        if (escalate) i.labels.push({ name: 'needs-spec' });
         d.byNum.set(i.number, [...(d.byNum.get(i.number) || []), { created_at: new Date(NOW).toISOString(), body: `Dispatch: ${who} · — · reclaimed` }]);
+        d.writing = Math.max(0, d.writing - 1);
         stats.reclaimed++;
       }
 
@@ -367,6 +437,8 @@ export async function run({ config, env = {}, now = Date.now(), fetchImpl = fetc
       for (const i of queue) {
         if (held.has(`${d.repo}#${i.number}`)) { stats.waiting++; continue; }
         const kind = has(i, 'plan') ? 'plan' : 'build';
+        if (kind === 'build' && (d.agentPRs + d.writing + d.firedBuilds >= capRepo || inFlight() >= capAll)) { stats.prCapped++; continue; }
+        if (!(await mayStart(d, i))) continue;
         const size = (['size:S', 'size:M', 'size:L'].find((l) => has(i, l)) || (kind === 'plan' ? 'size:L' : 'size:M')).slice(5);
         const mine = d.dispatches.filter((x) => x.num === i.number).sort((x, y) => y.at - x.at);
         const last = mine[0];
@@ -401,7 +473,7 @@ export async function run({ config, env = {}, now = Date.now(), fetchImpl = fetc
         if (!has(i, `to:${a.name}`)) await addLabel(d, i.number, `to:${a.name}`);
         const why = kind === 'plan' ? 'plan issue: split it into small ready issues' : `size ${size}`;
         if (await wake(d, a, kind, i.number, [`Task: ${why}; you were the best free ${a.model} agent.`])) {
-          if (kind === 'plan') stats.plans++; else stats.fired++;
+          if (kind === 'plan') stats.plans++; else { stats.fired++; d.firedBuilds++; }
         }
       }
     } catch (e) {

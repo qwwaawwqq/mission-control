@@ -8,6 +8,10 @@ on:
     # Every 15 minutes, off the quarter hours: GitHub delays or drops scheduled runs most at the
     # start of the hour, and on 20-21 Oct a '*/15' schedule here ran only every 2.5 to 5 hours.
     - cron: '4,19,34,49 * * * *'
+  # Also started from outside, so agents don't wait on GitHub's late schedule: the Apps Script
+  # backstop (every 15 min) or a repo's wake workflow (on a ready/plan label) calls
+  # POST /repos/OWNER/mission-control/actions/workflows/dispatch.yml/dispatches {"ref":"main"}
+  # with a token that has only Actions: Read and write on this repo. See dispatch/SETUP.md.
   workflow_dispatch: {}
 
 permissions:
@@ -22,7 +26,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v5
+      # pinned to the commit behind v5.1.0, so a moved tag cannot change what runs next to the secrets
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
       - name: Dispatch
         run: node dispatch/dispatcher.mjs
         env:

@@ -43,18 +43,48 @@ A repo with the label `home:claude-1` is served only by claude-1, which is how f
 
 Turn off any old hourly routines, then Actions → **dispatch** → **Run workflow** once. The log prints counts only, for example `{"repos":4,"fired":2,...}`, plus each agent's load.
 
-## Optional: a trigger that does not lag
+## Make it run every 15 minutes (recommended)
 
-GitHub runs scheduled workflows on a best-effort basis; a busy hour can delay or drop them. For a
-dispatcher that wakes every 15 minutes without fail, also start it from an outside cron service
-(for example cron-job.org, free):
+GitHub runs scheduled workflows on a best-effort basis: on 24 and 25 October this one ran about every
+two hours instead of every 15 minutes, so agents woke hours late. Start it from outside as well. Every
+option below uses the same small token, which can start workflows in this repo and do nothing else:
 
 1. GitHub → Settings → Developer settings → Fine-grained tokens → **Generate new token**: name
    `dispatch-trigger`, only this repository, permission **Actions: Read and write**, nothing else.
-2. In the cron service, add a job every 15 minutes: `POST https://api.github.com/repos/OWNER/mission-control/actions/workflows/dispatch.yml/dispatches`
-   with headers `Authorization: Bearer <that token>`, `Accept: application/vnd.github+json` and body `{"ref":"main"}`.
+2. A 15-minute sweep, either of:
+   - **Google Apps Script** (free): a script with a 15-minute time trigger that sends the request below.
+     The same script can copy owner deadlines to Google Calendar and alert your phone.
+   - **cron-job.org** (free): a job every 15 minutes with the same request.
 
-The workflow's `concurrency` group keeps the two triggers from running the dispatcher twice at once.
+   The request: `POST https://api.github.com/repos/OWNER/mission-control/actions/workflows/dispatch.yml/dispatches`,
+   headers `Authorization: Bearer <that token>` and `Accept: application/vnd.github+json`, body `{"ref":"main"}`.
+3. Optional, an instant start: copy `dispatch/wake-dispatcher.yml` into an agent repo as
+   `.github/workflows/wake-dispatcher.yml` and add the token there as the secret `MC_WAKE_TOKEN`.
+   Labelling an issue `ready` or `plan` then starts the dispatcher within seconds. In a private repo
+   each run bills one Actions minute.
+
+The workflow's `concurrency` group keeps the triggers from running the dispatcher twice at once.
+
+## Guards
+
+Your review time, not the agents' capacity, sets the pace, and on public repos strangers can write
+issues and comments. So the dispatcher:
+
+- never gives an agent an issue labelled `needs-spec` (the spec is missing something) or `decision`
+  (a decision brief only you can answer); Mission Control shows both in Today;
+- starts no new build in a repo while `maxOpenAgentPRs` (3) agent pull requests wait there, counting
+  claimed issues whose PR is being written, or `maxOpenAgentPRsTotal` (8) across all repos; planning
+  and PR fixes still run;
+- starts work only from `ready` or `plan` labels that you applied (agents act on GitHub as you, so the
+  administrator's issues count); add other logins to `trusted` in `config.json` if you add a
+  collaborator. An issue with a comment from anyone else in the last 7 days waits until you look and post a comment starting `Owner: go ahead` (the Go ahead button in Mission Control);
+- counts a "changes requested" review only when it is yours;
+- sends an issue that was claimed twice without a pull request back to you as `needs-spec`
+  (`escalateAfterReclaims`).
+
+The prompts ask for the same from the agents: specs with acceptance criteria and a way to check,
+verification output in every PR, a `blocked:` comment when they stop, decision briefs instead of
+guesses, and no attention to comments from accounts other than yours and Codex.
 
 ## How tasks are routed
 
@@ -67,11 +97,13 @@ The workflow's `concurrency` group keeps the two triggers from running the dispa
 | `ui` or `to:antigravity` | Antigravity on your Mac: queued, nobody is woken |
 | `to:codex` | queued for Codex: start it from chatgpt.com/codex |
 | agent PR with failing CI or review findings | its own agent once, then `@codex fix`, then you (`blocked`) |
+| `needs-spec` or `decision` | nobody: they wait for you (Mission Control lists them in Today) |
 
 Safeguards against draining usage:
 - Each agent has a 5-hour and a 7-day cap on tasks and gets at most one new task per hour; each account also has a 5-hour cap across all its routines (all in `config.json`).
 - An agent that does not claim its task within 45 minutes is skipped for 5 hours, and the task moves on. The usual causes are a routine that does not have that repo attached (check it whenever you add a `home:` label) or an account out of usage; Mission Control tells the two apart.
-- A claim with no PR after 3 hours is freed.
+- A claim with no PR after 3 hours is freed; the second time, the issue comes back to you as `needs-spec`.
+- No new builds while 3 agent PRs wait in a repo (8 across repos): see Guards.
 - An open issue labelled `pause` stops everything in that repo.
 
 ## Antigravity (optional)
