@@ -100,7 +100,7 @@ guesses, and no attention to comments from accounts other than yours and Codex.
 | `needs-spec` or `decision` | nobody: they wait for you (Mission Control lists them in Today) |
 
 Safeguards against draining usage:
-- Each agent has a 5-hour and a 7-day cap on tasks and gets at most one new task per hour; each account also has a 5-hour cap across all its routines (all in `config.json`).
+- Each agent has a 5-hour and a 7-day cap on tasks and a limit on new tasks per hour; each account also has a 5-hour cap across all its routines (all in `config.json`). They are set high (4 per hour, 30 per 5 hours) so agents keep working until their plan's usage runs out; lower them to save usage.
 - An agent that does not claim its task within 45 minutes is skipped for 5 hours, and the task moves on. The usual causes are a routine that does not have that repo attached (check it whenever you add a `home:` label) or an account out of usage; Mission Control tells the two apart.
 - A claim with no PR after 3 hours is freed; the second time, the issue comes back to you as `needs-spec`.
 - No new builds while 3 agent PRs wait in a repo (8 across repos): see Guards.

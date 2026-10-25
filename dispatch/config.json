@@ -1,5 +1,5 @@
 {
-  "_about": "Dispatcher settings. Edit on GitHub; the next run (every 15 min) picks them up. Each agent is one routine on one Claude account. pool 'admin' = planning and triage only (no code); 'home' agents only serve repos that carry the label home:<agent>; 'general' agents serve every other agent repo. Caps count tasks started (one build, plan, PR fix or triage pass each). Account caps add up every routine on that account. scheduledTasks are not used by the dispatcher: they are Claude scheduled tasks that Mission Control shows as rows under Projects (times are HH:MM in tz; add \"days\": [\"sat\"] for a weekly one). Guards: no new builds in a repo while maxOpenAgentPRs agent PRs (open or being written) wait there, or maxOpenAgentPRsTotal across repos; an issue reclaimed escalateAfterReclaims times goes to you as needs-spec; only labels you apply start work (add other logins to trusted), and needs-spec / decision issues are never dispatched.",
+  "_about": "Dispatcher settings. Edit on GitHub; the next run (every 15 min) picks them up. Each agent is one routine on one Claude account. pool 'admin' = planning and triage only (no code); 'home' agents only serve repos that carry the label home:<agent>; 'general' agents serve every other agent repo. Caps count tasks started (one build, plan, PR fix or triage pass each). Since 2026-10-25 they are set high on purpose so agents keep working until their plan's usage runs out; an agent that then fails to start a task within claimTimeoutMinutes is skipped for coolingHours and the task moves on. Account caps add up every routine on that account. scheduledTasks are not used by the dispatcher: they are Claude scheduled tasks that Mission Control shows as rows under Projects (times are HH:MM in tz; add \"days\": [\"sat\"] for a weekly one). Guards: no new builds in a repo while maxOpenAgentPRs agent PRs (open or being written) wait there, or maxOpenAgentPRsTotal across repos; an issue reclaimed escalateAfterReclaims times goes to you as needs-spec; only labels you apply start work (add other logins to trusted), and needs-spec / decision issues are never dispatched.",
   "owner": "",
   "everyMinutes": 15,
   "maxFiresPerRun": 4,
@@ -14,13 +14,13 @@
   "escalateAfterReclaims": 2,
   "trusted": [],
   "agents": [
-    { "name": "admin",    "account": 2, "model": "Fable",  "pool": "admin",   "cap5h": 4, "cap7d": 30, "perHour": 2, "secret": "ROUTINE_ADMIN",    "role": "Administrator: plans plan issues, sizes new issues; never writes code" },
-    { "name": "claude-1", "account": 1, "model": "Opus",   "pool": "home",    "cap5h": 5, "cap7d": 50, "perHour": 1, "secret": "ROUTINE_CLAUDE_1", "role": "Fenced repos (trading app): every build and fix there" },
-    { "name": "claude-2", "account": 2, "model": "Opus",   "pool": "general", "cap5h": 5, "cap7d": 50, "perHour": 1, "secret": "ROUTINE_CLAUDE_2", "role": "Hard tasks (size:L) and overflow" },
-    { "name": "claude-3", "account": 3, "model": "Sonnet", "pool": "general", "cap5h": 8, "cap7d": 80, "perHour": 1, "secret": "ROUTINE_CLAUDE_3", "role": "Normal tasks (size:S/M)" },
-    { "name": "claude-4", "account": 4, "model": "Sonnet", "pool": "general", "cap5h": 8, "cap7d": 80, "perHour": 1, "secret": "ROUTINE_CLAUDE_4", "role": "Normal tasks (size:S/M)" }
+    { "name": "admin",    "account": 2, "model": "Fable",  "pool": "admin",   "cap5h": 20, "cap7d": 200, "perHour": 4, "secret": "ROUTINE_ADMIN",    "role": "Administrator: plans plan issues, sizes new issues; never writes code" },
+    { "name": "claude-1", "account": 1, "model": "Opus",   "pool": "home",    "cap5h": 30, "cap7d": 300, "perHour": 4, "secret": "ROUTINE_CLAUDE_1", "role": "Fenced repos (trading app): every build and fix there" },
+    { "name": "claude-2", "account": 2, "model": "Opus",   "pool": "general", "cap5h": 30, "cap7d": 300, "perHour": 4, "secret": "ROUTINE_CLAUDE_2", "role": "Hard tasks (size:L) and overflow" },
+    { "name": "claude-3", "account": 3, "model": "Sonnet", "pool": "general", "cap5h": 30, "cap7d": 300, "perHour": 4, "secret": "ROUTINE_CLAUDE_3", "role": "Normal tasks (size:S/M)" },
+    { "name": "claude-4", "account": 4, "model": "Sonnet", "pool": "general", "cap5h": 30, "cap7d": 300, "perHour": 4, "secret": "ROUTINE_CLAUDE_4", "role": "Normal tasks (size:S/M)" }
   ],
-  "accounts": { "1": { "cap5h": 6 }, "2": { "cap5h": 8 }, "3": { "cap5h": 10 }, "4": { "cap5h": 10 } },
+  "accounts": { "1": { "cap5h": 50 }, "2": { "cap5h": 50 }, "3": { "cap5h": 50 }, "4": { "cap5h": 50 } },
   "codex": { "enabled": true, "model": "GPT", "cooldownHours": 24, "role": "Reviews every PR; takes over PRs an agent could not fix" },
   "antigravity": { "enabled": true, "model": "Gemini", "role": "ui / visual tasks, worked on your Mac" },
   "scheduledTasks": [
