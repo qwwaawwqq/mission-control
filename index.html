@@ -86,7 +86,7 @@ header.top .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 
 .btn.sm { min-height: 34px; padding: 0 10px; font-size: 13px; border-radius: 7px; }
 .btn.armed { background: var(--bad); color: #fff; border-color: transparent; }
 a.btn { color: var(--ink); } a.btn.primary { color: #fff; }
-.lnk-narrow, .only-narrow { display: none !important; }
+.lnk-narrow { display: none !important; }
 
 /* shared pieces */
 main.wrap { padding-top: 4px; }
@@ -284,8 +284,8 @@ footer { color: var(--ink-2); font-size: 13px; margin-top: 40px; display: flex; 
   .wrap { padding: 0 16px 112px; }
   header.top .bar { gap: 4px 8px; }
   header.top { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--bg); }
-  #lastRefresh, .lnk-wide, #lnkProjectForm { display: none; }
-  .lnk-narrow { display: inline !important; } .only-narrow { display: inline-flex !important; }
+  #lastRefresh, .lnk-wide { display: none; }
+  .lnk-narrow { display: inline !important; }
   .views { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; gap: 0; padding: 2px 6px calc(8px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--line); }
   .views button { flex: 1 1 0; flex-direction: column; justify-content: center; gap: 2px; min-height: 56px; padding: 0 4px; border-radius: 0; font-size: 12px; }
   .views button[aria-pressed="true"] { box-shadow: inset 0 2px 0 var(--accent); }
@@ -325,7 +325,6 @@ footer { color: var(--ink-2); font-size: 13px; margin-top: 40px; display: flex; 
       <span class="meta" id="lastRefresh"></span>
       <button class="btn icon" id="btnRefresh" type="button" aria-label="Refresh" title="Refresh"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></button>
       <button class="btn primary" id="btnTask" type="button" aria-label="New task" title="New task for the agents"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg><span class="lnk-wide">New task</span></button>
-      <a class="btn" id="lnkProjectForm" href="https://claude.ai/artifact/Jchh6A2dWfUQZKNxHEJsPT" target="_blank" rel="noopener" title="Project management form: every project, including ones that aren't GitHub repos (private claude.ai page)"><span class="lnk-wide">Project form</span><span class="lnk-narrow">Form</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg></a>
       <button class="btn icon ghost" id="btnSettings" type="button" aria-label="Settings" title="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg></button>
     </div>
   </div>
@@ -1644,7 +1643,7 @@ function renderProjects(m) {
   const pausedAll = live.length > 0 && live.every(r => r.paused);
   const retired = m.retired || [];
   return h('section', { class: 'view', 'aria-labelledby': 'h-proj' },
-    h('div', { class: 'view-head' }, h('h1', { id: 'h-proj' }, 'Projects'), h('div', { class: 'grow' }), extLink('https://claude.ai/artifact/Jchh6A2dWfUQZKNxHEJsPT', 'Project form', 'btn only-narrow'), h('div', { class: 'fchips' }, chips)),
+    h('div', { class: 'view-head' }, h('h1', { id: 'h-proj' }, 'Projects'), h('div', { class: 'grow' }), h('div', { class: 'fchips' }, chips)),
     h('p', { class: 'weekline' }, 'This week: ', h('b', null, String(t.merged)), ' merged · ', h('b', null, String(t.queue)), ' ready', t.plans ? [' · ', h('b', null, String(t.plans)), ' to plan'] : null, ' · ', h('b', null, String(t.working)), ' in progress · ', h('b', null, String(t.prs)), ' open PRs · ', h('b', null, String(t.blocked)), ' blocked'),
     h('div', { class: 'cards' }, cards),
     h('div', { class: 'toolbar' },

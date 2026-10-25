@@ -18,7 +18,6 @@ The page is built around one question — *what do I need to do?* — so it open
 | **Projects** | One card per repo: health, a one-line state, a bar of ready / working / open-PR / blocked work, the latest agent activity, **Details** (label counts, the next issue, every open PR with checks, Codex notes and a verdict, CI, last commit), **+ Task** and **Pause agents** (two taps). Automations get cards too. Below: **Outside the labels** (issues no agent will pick up, and this repo's own open pull requests) and the repos hidden by the `retired` label. |
 | **Agents** | One card per lane (the Fable administrator, the Claude agents, Codex, Antigravity), problems first: its state and the reason — working, idle with nothing to do, at its cap (and when a slot frees up), or *not starting* with the fix — plus tasks against the 5-hour and 7-day caps and per-account load. |
 | **System** | The dispatcher's real cadence (runs in 24 hours against the expected number, and the typical gap), Actions minutes with a month-end projection and the repos using the most, the API budget, and **Activity** (problems only by default, with All and per-repo filters). |
-| **Project form ↗** | Opens the project management form: a private claude.ai page with every project, including papers and folders that aren't GitHub repos. Only people the owner shares it with can open it; this repo holds just the link. |
 
 ## Deadlines for owner-only work
 
