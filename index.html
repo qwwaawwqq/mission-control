@@ -286,6 +286,11 @@ label.f > span, div.f > span { display: block; margin-bottom: 4px; }
 .tm-prev .meta { margin: 0; }
 .tm-ptitle { font-size: 14px; overflow-wrap: anywhere; }
 .tm-prev summary { margin-top: 4px; font-size: 13px; color: var(--accent-text); cursor: pointer; }
+.tm-checks { margin: 0 0 6px; overflow-wrap: anywhere; }
+.tm-checks code, .tm-steps code { padding: 1px 4px; border-radius: 4px; background: var(--bg); font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+.tm-prev .tm-steps-h { margin-top: 6px; }
+.tm-steps { margin: 2px 0 0; padding-left: 20px; font-size: 13px; color: var(--ink); }
+.tm-steps li { margin: 2px 0; overflow-wrap: anywhere; }
 .tm-body { max-height: 240px; margin: 6px 0 0; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink); }
 @media (max-width: 640px) { .tm-grid { grid-template-columns: 1fr 1fr; } }
 .setup ol { padding-left: 20px; margin: 8px 0; }
@@ -1652,61 +1657,77 @@ function renderPR(p) {
 /* ---------- new task: modules ---------- */
 /* A module turns two or three answers into a full spec (problem, acceptance criteria, files, out of scope,
    how to check), so every task reaches the agents in the same shape. The "Any project" modules live here;
-   a project's own modules come from .github/task-menu.json in its repo (schema: dispatch/TASK_MENU.md). */
+   a project's own modules come from .github/task-menu.json in its repo (schema: dispatch/TASK_MENU.md).
+   Every spec says how to check it: the steps name a command or a page and the result that counts as done.
+   The commands come from the menu's "checks" block ({TEST}, {PASS}, {OPEN}). */
 const MENU_PATH = '.github/task-menu.json';
 const SETUP_TITLE = 'Write this project\'s task menu for Mission Control';
+const CHECKS_TITLE = 'Add exact checks to this project\'s task menu';
 const SIZE_TEXT = { S: 'S · small', M: 'M · normal', L: 'L · hard' };
+const RESERVED = ['TEST', 'PASS', 'OPEN'];
+const CHECK_FALLBACK = { TEST: 'the full test command in AGENTS.md', PASS: 'exit code 0 and no failing tests', OPEN: 'start the app as the README says' };
+const VERIFY_LINE = 'Put each command and the last lines of its output in the PR under "Verification:".';
 const GENERIC_MODULES = [
   { id: 'bug', name: 'Fix a bug', hint: 'Something is broken', size: 'M',
-    fields: [{ id: 'what', label: 'What goes wrong', type: 'long', required: true }, { id: 'where', label: 'Where (page, screen or file)' }, { id: 'expected', label: 'What should happen instead' }],
+    fields: [{ id: 'what', label: 'What goes wrong', type: 'long', required: true }, { id: 'expected', label: 'What should happen instead', required: true }, { id: 'where', label: 'Where (page, screen or file)' }],
     title: 'Fix: {what}', problem: '{what}[[ (in {where})]]',
-    criteria: ['The problem no longer happens[[: {expected}]]', 'A test reproduces the bug and passes after the fix', 'Nothing else changes'],
-    check: 'Reproduce it[[ in {where}]] before and after the fix; run the tests', outOfScope: 'Refactors and other fixes' },
+    criteria: ['Afterwards: {expected}', 'A new test reproduces the bug: it fails on the default branch and passes with the fix', 'The full test suite passes ({TEST}): {PASS}', 'The diff changes only what the fix needs'],
+    check: ['Run the new test on the default branch: it fails', 'Run it on this branch: it passes', '[[{OPEN}, go to {where}: {expected}]]', 'Run {TEST}: {PASS}'],
+    outOfScope: 'Refactors and other fixes' },
   { id: 'change', name: 'Small change', hint: 'Wording, a setting, one screen', size: 'S',
     fields: [{ id: 'what', label: 'What to change', type: 'long', required: true }, { id: 'where', label: 'Where' }],
     title: '{what}', problem: 'Change requested: {what}[[ (in {where})]]',
-    criteria: ['{what}', 'Nothing else changes', 'The tests pass'],
-    check: 'Look at the changed place[[ ({where})]]; run the tests', outOfScope: 'Anything else' },
+    criteria: ['{what}', 'The diff touches only what this change needs', 'The full test suite passes ({TEST}): {PASS}'],
+    check: ['[[{OPEN}, go to {where}: the change is there and nothing else moved]]', 'Run {TEST}: {PASS}'],
+    outOfScope: 'Anything else' },
   { id: 'feature', name: 'New feature', hint: 'Something it can\'t do yet', size: 'M',
-    fields: [{ id: 'what', label: 'What it should do', type: 'long', required: true }, { id: 'who', label: 'Who uses it, and when' }, { id: 'done', label: 'Done when… (one per line)', type: 'long' }],
+    fields: [{ id: 'what', label: 'What it should do', type: 'long', required: true }, { id: 'done', label: 'Done when… (one checkable line each)', type: 'long', required: true, placeholder: 'e.g. the list can be sorted by date' }, { id: 'who', label: 'Who uses it, and when' }],
     title: 'Add: {what}', problem: 'It can\'t yet: {what}[[ (for {who})]]',
-    criteria: ['It does what the problem describes', '{done}', 'Tests cover the new behaviour'],
-    check: 'Use it as described; run the tests', outOfScope: 'Anything not described here (ask in a comment first)' },
+    criteria: ['{done}', 'New tests cover each line above and pass', 'The full test suite passes ({TEST}): {PASS}'],
+    check: ['Run the new tests: they pass', '{OPEN} and try each "done when" line: each one holds', 'Run {TEST}: {PASS}'],
+    outOfScope: 'Anything not described here (ask in a comment first)' },
   { id: 'speed', name: 'Make it faster', hint: 'A slow page, job or start-up', size: 'M',
-    fields: [{ id: 'what', label: 'What is slow', required: true }, { id: 'target', label: 'Target', placeholder: 'e.g. opens in under 2 s' }],
-    title: 'Faster: {what}', problem: '{what} is too slow.',
-    criteria: ['[[Meets the target: {target}]]', 'Measured before and after, with the numbers in the PR', 'Same results as before; the tests pass'],
-    check: 'Measure {what} before and after the change', outOfScope: 'New features and redesigns' },
+    fields: [{ id: 'what', label: 'What is slow', required: true }, { id: 'target', label: 'Target', required: true, placeholder: 'e.g. opens in under 2 s' }],
+    title: 'Faster: {what}', problem: '{what} is too slow; target: {target}.',
+    criteria: ['{what} meets the target: {target} (median of 3 runs)', 'Before and after timings in the PR, same machine and data', 'Same results as before; the full test suite passes ({TEST}): {PASS}'],
+    check: ['Time {what} 3 times on the default branch and 3 times on this branch: the median here meets {target}', 'Run {TEST}: {PASS}'],
+    outOfScope: 'New features and redesigns' },
   { id: 'tests', name: 'Add tests', hint: 'Cover something that has none', size: 'S',
     fields: [{ id: 'what', label: 'What to cover', required: true }],
     title: 'Tests: {what}', problem: '{what} has no tests, so a change could break it unnoticed.',
-    criteria: ['Tests cover {what}', 'They fail when that behaviour breaks', 'The whole suite passes'],
-    check: 'Run the tests; break the behaviour on purpose and see them fail', outOfScope: 'Changing the code under test (open an issue if it has a bug)' },
+    criteria: ['New tests cover {what}', 'Each new test fails when the behaviour it covers is broken', 'The full test suite passes ({TEST}): {PASS}'],
+    check: ['Run the new tests: they pass', 'Break {what} on purpose (one line) and run them: at least one fails; undo it', 'Run {TEST}: {PASS}'],
+    outOfScope: 'Changing the code under test (open an issue if it has a bug)' },
   { id: 'docs', name: 'Write docs', hint: 'Explain how something works', size: 'S',
     fields: [{ id: 'what', label: 'What to explain', required: true }, { id: 'who', label: 'For whom' }],
     title: 'Docs: {what}', problem: '{what} is not written down[[ for {who}]].',
-    criteria: ['A short section explains {what}[[ for {who}]]', 'Every command and step in it works as written'],
-    check: 'Follow the docs from a fresh checkout', outOfScope: 'Code changes' },
+    criteria: ['A section explains {what}[[ for {who}]]', 'Every command in it was run as written; the PR shows each with its output'],
+    check: ['From a fresh clone, follow the section step by step: every command works as written and its result matches the text'],
+    outOfScope: 'Code changes' },
   { id: 'review', name: 'Fix review findings', hint: 'Open comments on a pull request', size: 'M',
     fields: [{ id: 'pr', label: 'Pull request number', type: 'number', required: true }, { id: 'which', label: 'Which findings', placeholder: 'every open one' }],
     title: 'Fix the review findings on #{pr}', problem: 'Review comments on #{pr} found problems that are still open[[: {which}]].',
-    criteria: ['Each finding is fixed, or answered on #{pr} with the reason it stays', 'A test covers each fix', 'The tests pass'],
-    files: 'The files the findings point to', check: 'Re-read each finding on #{pr} against the change; run the tests', outOfScope: 'Anything the findings don\'t mention' },
+    criteria: ['Each finding is fixed, or answered on #{pr} with the reason it stays', 'Each fix has a test that fails on the default branch and passes with the fix', 'The full test suite passes ({TEST}): {PASS}'],
+    files: 'The files the findings point to',
+    check: ['For each finding, run its test on the default branch (it fails) and on this branch (it passes)', 'Run {TEST}: {PASS}', 'Every finding on #{pr} has a reply that links the fix or gives the reason'],
+    outOfScope: 'Anything the findings don\'t mention' },
   { id: 'polish', name: 'Visual polish', hint: 'Checked in a browser', size: 'M', route: 'ui',
     fields: [{ id: 'page', label: 'Which page or screen', required: true }, { id: 'what', label: 'What looks wrong, or what you want', type: 'long', required: true }],
     title: '{page}: {what}', problem: 'On {page}: {what}',
-    criteria: ['{page} looks as described', 'Works at phone width (390 px) and on a computer', 'Nothing else changes'],
-    check: 'Open {page} on a phone and on a computer; screenshots in the PR', outOfScope: 'Other pages' },
+    criteria: ['On {page}: {what}', 'Screenshots in the PR at 390 px and 1280 px wide, light and dark', 'No other page changes; the full test suite passes ({TEST}): {PASS}'],
+    check: ['{OPEN}, go to {page} at 390 px and at 1280 px wide: it matches the request and the screenshots', 'Run {TEST}: {PASS}'],
+    outOfScope: 'Other pages' },
   { id: 'goal', name: 'Big goal', hint: 'The administrator splits it into tasks', route: 'plan',
     fields: [{ id: 'goal', label: 'The goal', type: 'long', required: true }, { id: 'must', label: 'Must include (one per line)', type: 'long' }, { id: 'not', label: 'Not now' }],
     title: '{goal}', problem: 'Goal: {goal}',
-    criteria: ['{must}', 'Split into small ready issues, each with acceptance criteria and a way to check'],
-    check: 'The new issues together cover the goal', outOfScope: '[[{not}]]' },
+    criteria: ['{must}', 'Split into small ready issues; each one\'s "How to check" names a command or page and the result that counts as done'],
+    check: ['Every part of the goal is covered by at least one new issue', 'Each new issue\'s "How to check" names a command or page and the expected result'],
+    outOfScope: '[[{not}]]' },
 ];
 const FREE_MODULE = { id: 'free', name: 'Something else', hint: 'Write the task yourself', free: true };
-const menus = new Map();         /* repo name → { modules, missing, error, url, at } */
+const menus = new Map();         /* repo name → { modules, checks, missing, error, url, at } */
+const askedMenus = new Set();    /* repos asked for a menu (or its checks) in this page session */
 const setKids = (el, ...kids) => el.replaceChildren(...kids.flat(Infinity).filter(k => k != null && k !== false));
-const askedMenus = new Set();    /* repos asked for a menu in this page session */
 
 /* "{id}" becomes that field's answer; "[[ … ]]" is kept only when every field inside it was answered.
    With dropIfMissing, a template that still names an unanswered field becomes empty. */
@@ -1719,29 +1740,42 @@ function fillTpl(tpl, vals, dropIfMissing) {
   return s.replace(TPL_KEY, (m, k) => answered(k) ? String(vals[k]).trim() : '').replace(/[ \t]{2,}/g, ' ').trim();
 }
 const oneLine = (s) => String(s || '').replace(/\s*\n+\s*/g, '; ').trim();
-function buildSpec(r, m, vals, size) {
+/* The project's check commands as template values; the test command is shown as code. */
+function checkVals(checks) {
+  const c = checks || {};
+  const code = (s) => /`/.test(s) ? s : '`' + s + '`';
+  return { TEST: c.test ? code(c.test) : CHECK_FALLBACK.TEST, PASS: c.pass || CHECK_FALLBACK.PASS, OPEN: c.open || CHECK_FALLBACK.OPEN };
+}
+function fillLines(lines, vals) {
+  const out = [];
+  for (const line of lines || []) {
+    for (const c of fillTpl(line, vals, true).split('\n')) {
+      const t = c.replace(/^\s*(?:[-*•]|\d+[.)])\s+/, '').trim();
+      if (t) out.push(t);
+    }
+  }
+  return out;
+}
+function buildSpec(r, m, answers, size, checks) {
+  const vals = Object.assign({}, answers, checkVals(checks));
   const flat = {}; for (const k of Object.keys(vals)) flat[k] = oneLine(vals[k]);
   let title = fillTpl(m.title, flat);
   if (title.length > 90) title = title.slice(0, 89).trimEnd() + '…';
-  const crit = [];
-  for (const line of m.criteria || []) {
-    for (const c of fillTpl(line, vals, true).split('\n')) {
-      const t = c.replace(/^\s*(?:[-*•]|\d+[.)])\s+/, '').trim();
-      if (t) crit.push(t);
-    }
-  }
-  const details = (m.fields || []).filter(f => String(vals[f.id] || '').trim()).map(f => '- ' + f.label + ': ' + String(vals[f.id]).trim().replace(/\n/g, '\n  '));
+  const crit = fillLines(m.criteria, vals);
+  const steps = fillLines(Array.isArray(m.check) ? m.check : m.check ? [m.check] : [], flat);
+  if (!steps.length) steps.push('Run ' + vals.TEST + ': ' + vals.PASS);
+  const details = (m.fields || []).filter(f => String(answers[f.id] || '').trim()).map(f => '- ' + f.label + ': ' + String(answers[f.id]).trim().replace(/\n/g, '\n  '));
   const route = m.route || 'build';
   const lines = ['Problem: ' + (fillTpl(m.problem, flat) || title), ''];
   if (details.length) lines.push('Details from the owner:', ...details, '');
   lines.push('Acceptance criteria:', ...(crit.length ? crit : ['It does what the problem describes']).map(c => '- [ ] ' + c), '',
     'Files: ' + (fillTpl(m.files, flat) || 'find the right ones and list them in the PR'),
     'Out of scope: ' + (fillTpl(m.outOfScope, flat) || 'anything the criteria don\'t ask for'),
-    'How to check: ' + (fillTpl(m.check, flat) || 'run the tests and say what you checked'),
+    'How to check:', ...steps.map((s, k) => (k + 1) + '. ' + s), VERIFY_LINE,
     'Owner decisions needed: none', '',
     '_Created with the "' + m.name + '" task module in Mission Control._');
   const labels = route === 'plan' ? ['plan'] : route === 'codex' ? ['ready', 'to:codex'] : route === 'ui' ? ['ready', 'ui', 'size:' + size] : ['ready', 'size:' + size];
-  return { title, body: lines.join('\n'), labels };
+  return { title, body: lines.join('\n'), labels, steps };
 }
 function goesTo(r, route, size) {
   const home = r.home && r.home.length ? r.home.join(', ') : '';
@@ -1754,12 +1788,13 @@ function goesTo(r, route, size) {
 
 /* A project's own modules: .github/task-menu.json, checked so a bad file can't break the dialog. */
 const strOr = (v, max) => typeof v === 'string' ? v.trim().slice(0, max || 400) : '';
+const strList = (v, max, n) => (Array.isArray(v) ? v : typeof v === 'string' ? [v] : []).filter(c => typeof c === 'string' && c.trim()).map(c => c.trim().slice(0, max)).slice(0, n);
 function normModule(m, i) {
   if (!m || typeof m !== 'object') return null;
   const name = strOr(m.name, 48), title = strOr(m.title, 200);
   if (!name || !title) return null;
   const fields = (Array.isArray(m.fields) ? m.fields : [])
-    .filter(f => f && typeof f.id === 'string' && /^[a-z0-9_-]{1,30}$/i.test(f.id) && strOr(f.label))
+    .filter(f => f && typeof f.id === 'string' && /^[a-z0-9_-]{1,30}$/i.test(f.id) && !RESERVED.includes(f.id) && strOr(f.label))
     .slice(0, 6)
     .map(f => {
       const options = Array.isArray(f.options) ? f.options.filter(o => typeof o === 'string' && o.trim()).map(o => o.trim().slice(0, 80)).slice(0, 60) : [];
@@ -1771,9 +1806,14 @@ function normModule(m, i) {
     id: typeof m.id === 'string' && /^[a-z0-9-]{1,40}$/.test(m.id) ? m.id : 'm' + i, name, title, fields,
     hint: strOr(m.hint, 80), size: ['S', 'M', 'L'].includes(m.size) ? m.size : 'M',
     route: ['build', 'plan', 'ui', 'codex'].includes(m.route) ? m.route : 'build',
-    problem: strOr(m.problem), files: strOr(m.files), outOfScope: strOr(m.outOfScope), check: strOr(m.check),
-    criteria: (Array.isArray(m.criteria) ? m.criteria : []).filter(c => typeof c === 'string' && c.trim()).map(c => c.trim().slice(0, 300)).slice(0, 10),
+    problem: strOr(m.problem), files: strOr(m.files), outOfScope: strOr(m.outOfScope),
+    check: strList(m.check, 300, 8), criteria: strList(m.criteria, 300, 10),
   };
+}
+function normChecks(c) {
+  if (!c || typeof c !== 'object') return null;
+  const out = { test: strOr(c.test, 200), pass: strOr(c.pass, 200), open: strOr(c.open, 200) };
+  return out.test ? out : null;
 }
 async function loadMenu(r) {
   const hit = menus.get(r.name);
@@ -1784,54 +1824,88 @@ async function loadMenu(r) {
     const j = JSON.parse(b64ToText(f && f.content));
     const seen = new Set();
     const modules = (Array.isArray(j && j.modules) ? j.modules : []).map(normModule).filter(m => m && !seen.has(m.id) && seen.add(m.id)).slice(0, 12);
-    out = { modules, url: f && f.html_url, error: modules.length ? null : 'it lists no usable modules' };
+    out = { modules, checks: normChecks(j && j.checks), url: f && f.html_url, error: modules.length ? null : 'it lists no usable modules' };
   } catch (e) {
-    if (e instanceof ApiError && e.status === 404) out = { modules: [], missing: true };
-    else out = { modules: [], error: e instanceof SyntaxError ? 'it is not valid JSON' : e instanceof ApiError && e.status === 403 ? 'the token can\'t read files in this repo (needs Contents: Read)' : explain(e) };
+    if (e instanceof ApiError && e.status === 404) out = { modules: [], checks: null, missing: true };
+    else out = { modules: [], checks: null, error: e instanceof SyntaxError ? 'it is not valid JSON' : e instanceof ApiError && e.status === 403 ? 'the token can\'t read files in this repo (needs Contents: Read)' : explain(e) };
   }
   out.at = now();
   menus.set(r.name, out);
   return out;
 }
 
+/* What an agent is asked when a project has no menu, or a menu without its check commands. */
+const MENU_FORMAT = [
+  'The format in short (an example module; use this repo\'s paths and commands):',
+  '',
+  '```json',
+  '{ "version": 1,',
+  '  "checks": { "test": "<full test command>", "pass": "<what a passing run shows, e.g. last line \'0 failed\', exit code 0>", "open": "<how to open the app, e.g. npm run dev, then http://localhost:5173>" },',
+  '  "modules": [ {',
+  '    "id": "fix-content", "name": "Fix a content error", "hint": "A wrong answer or explanation", "size": "S", "route": "build",',
+  '    "fields": [ { "id": "where", "label": "Which item", "required": true },',
+  '                { "id": "right", "label": "What is right", "type": "long", "required": true } ],',
+  '    "title": "Content fix: {where}",',
+  '    "problem": "{where} is wrong.",',
+  '    "criteria": [ "{where} now says: {right}", "The source is cited", "{TEST} passes: {PASS}" ],',
+  '    "files": "<path>", "outOfScope": "Other items",',
+  '    "check": [ "{OPEN}, go to {where}: it says {right}", "Run {TEST}: {PASS}" ]',
+  '  } ] }',
+  '```',
+  '',
+  '- `size`: S, M or L (S and M go to Sonnet, L to Opus). `route`: build, plan (the administrator splits it), ui (checked in a browser) or codex.',
+  '- `fields`: at most 6; `type` is text (default), long, number or select (with `options`); `required`, `default` and `placeholder` are optional. No field may be called TEST, PASS or OPEN.',
+  '- Templates: `{id}` becomes that field\'s answer; `{TEST}`, `{PASS}` and `{OPEN}` become the `checks` values; `[[ … ]]` is kept only when every field inside it was answered; a criterion or check step that names an unanswered field is left out.',
+];
+const CHECKS_CRITERIA = [
+  '- [ ] A `checks` block with this repo\'s real commands: `test` (the full test command), `pass` (what a passing run prints or returns, e.g. its last line and exit code 0) and `open` (how to start or open the app to look at a page)',
+  '- [ ] Every module\'s `check` is a list of steps, and each step names a command or a page and the result that counts as done (never a bare "run the tests")',
+];
 function setupBody() {
   const schema = 'https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/TASK_MENU.md';
   return [
-    'Problem: Mission Control\'s New task dialog offers each project its own task modules, read from `' + MENU_PATH + '`, so the owner picks a task and answers two or three questions instead of writing a free-form request. This repository has no task menu yet.',
+    'Problem: Mission Control\'s New task dialog offers each project its own task modules, read from `' + MENU_PATH + '`, so the owner picks a task and answers two or three questions instead of writing a free-form request. Every task it writes must say exactly how to check it: which command to run and what result counts as done. This repository has no task menu yet.',
     '',
     'Acceptance criteria:',
-    '- [ ] `' + MENU_PATH + '` exists and follows the schema in ' + schema,
+    '- [ ] `' + MENU_PATH + '` exists and follows the format below (full description: ' + schema + ')',
+    ...CHECKS_CRITERIA,
     '- [ ] 4–8 modules for the tasks this repository gets most often; read AGENTS.md, the README, the plan documents and the last 30 closed issues and pull requests first',
-    '- [ ] Each module\'s criteria, files and "How to check" are specific to this repository (real paths, the real test command), and its fields ask only what the owner must decide',
+    '- [ ] Each module\'s criteria and files are specific to this repository (real paths), and its fields ask only what the owner must decide',
     '- [ ] Valid JSON: `python3 -m json.tool ' + MENU_PATH + '` succeeds',
     '',
-    'The format in short (an example module; replace the paths and the test command with this repo\'s):',
-    '',
-    '```json',
-    '{ "version": 1, "modules": [ {',
-    '  "id": "fix-content", "name": "Fix a content error", "hint": "A wrong answer or explanation", "size": "S", "route": "build",',
-    '  "fields": [ { "id": "where", "label": "Which item", "required": true },',
-    '              { "id": "right", "label": "What is right", "type": "long", "required": true } ],',
-    '  "title": "Content fix: {where}",',
-    '  "problem": "{where} is wrong.",',
-    '  "criteria": [ "{where} now says: {right}", "The source is cited", "The tests pass: <test command>" ],',
-    '  "files": "<path>", "outOfScope": "Other items", "check": "<test command>; open {where}"',
-    '} ] }',
-    '```',
-    '',
-    '- `size`: S, M or L (S and M go to Sonnet, L to Opus). `route`: build, plan (the administrator splits it), ui (checked in a browser) or codex.',
-    '- `fields`: at most 6; `type` is text (default), long, number or select (with `options`); `required`, `default` and `placeholder` are optional.',
-    '- Templates: `{id}` becomes that field\'s answer; `[[ … ]]` is kept only when every field inside it was answered; a criterion that names an unanswered field is left out.',
+    ...MENU_FORMAT,
     '',
     'Files: `' + MENU_PATH + '` (new; a data file, not a workflow)',
     'Out of scope: every other file',
-    'How to check: `python3 -m json.tool ' + MENU_PATH + '`; then Mission Control → New task → this project lists the modules',
+    'How to check:',
+    '1. `python3 -m json.tool ' + MENU_PATH + '` exits 0',
+    '2. Mission Control → New task → this project lists the modules, and each module\'s preview shows its check steps with the real commands',
     'Owner decisions needed: none',
   ].join('\n');
 }
-const menuAsked = (r) => askedMenus.has(r.name) || (r.issues || []).some(i => i.title === SETUP_TITLE);
-async function askForMenu(r) {
-  const i = await createIssue(r, SETUP_TITLE, setupBody(), ['ready', 'size:S']);
+function checksBody() {
+  return [
+    'Problem: Mission Control writes every task with a "How to check" list. It takes the commands from the `checks` block of `' + MENU_PATH + '`, which this repository\'s menu doesn\'t have, so tasks only say "the full test command from AGENTS.md".',
+    '',
+    'Acceptance criteria:',
+    ...CHECKS_CRITERIA,
+    '- [ ] Use `{TEST}`, `{PASS}` and `{OPEN}` in the modules\' criteria and check steps where they fit',
+    '- [ ] Nothing else in the menu changes; valid JSON: `python3 -m json.tool ' + MENU_PATH + '` succeeds',
+    '',
+    ...MENU_FORMAT,
+    '',
+    'Files: `' + MENU_PATH + '`',
+    'Out of scope: every other file',
+    'How to check:',
+    '1. `python3 -m json.tool ' + MENU_PATH + '` exits 0',
+    '2. Run the `test` command on the default branch: the output matches `pass`',
+    '3. Mission Control → New task → this project → any module: the preview\'s check steps name the real commands',
+    'Owner decisions needed: none',
+  ].join('\n');
+}
+const menuAsked = (r) => askedMenus.has(r.name) || (r.issues || []).some(i => i.title === SETUP_TITLE || i.title === CHECKS_TITLE);
+async function askForMenu(r, checksOnly) {
+  const i = await createIssue(r, checksOnly ? CHECKS_TITLE : SETUP_TITLE, checksOnly ? checksBody() : setupBody(), ['ready', 'size:S']);
   askedMenus.add(r.name); menus.delete(r.name);
   return i;
 }
@@ -1840,8 +1914,8 @@ async function askForAllMenus() {
   for (const r of (model ? model.repos.filter(x => !x.fatal && !x.paused) : [])) {
     if (menuAsked(r)) continue;
     const menu = await loadMenu(r);
-    if (!menu.missing) continue;
-    await askForMenu(r); n++;
+    if (menu.missing) { await askForMenu(r, false); n++; }
+    else if (menu.modules.length && !menu.checks) { await askForMenu(r, true); n++; }
   }
   return n;
 }
@@ -1854,16 +1928,20 @@ function modButton(r, m) {
   return h('button', { class: 'tmod', type: 'button', onclick: () => drawModule(r, m) },
     h('span', { class: 'tm-top' }, h('b', null, m.name), modTag(m)), m.hint ? h('span', { class: 'tm-hint' }, m.hint) : null);
 }
-function setupBox(r, redraw) {
-  if (menuAsked(r)) {
-    const open = (r.issues || []).find(i => i.title === SETUP_TITLE);
-    return h('p', { class: 'meta' }, 'An agent is writing this project\'s modules', open ? [' (', link(open.html_url, '#' + open.number), ')'] : '', '. Until you merge its pull request, use the modules below.');
-  }
+function askButtons(r, checksOnly, redraw) {
+  return h('div', { class: 'pc-act' },
+    h('button', { class: 'btn sm primary', type: 'button', onclick: (ev) => runAction(async () => { const i = await askForMenu(r, checksOnly); toast('Asked ' + r.nick + '\'s agent (#' + i.number + ')'); redraw(); }, ev.currentTarget) }, checksOnly ? 'Ask an agent to add them' : 'Ask an agent to write them'),
+    h('button', { class: 'btn sm', type: 'button', onclick: (ev) => runAction(async () => { const n = await askForAllMenus(); toast(n ? 'Asked in ' + plural(n, 'project') : 'Every project has modules and checks, or an agent is on it'); redraw(); }, ev.currentTarget) }, 'Ask for every project'));
+}
+function setupBox(r, menu, redraw) {
+  const open = (r.issues || []).find(i => i.title === SETUP_TITLE || i.title === CHECKS_TITLE);
+  if (menuAsked(r)) return h('p', { class: 'meta' }, 'An agent is writing this project\'s ' + (menu.missing ? 'modules' : 'check commands'), open ? [' (', link(open.html_url, '#' + open.number), ')'] : '', '. Until you merge its pull request, use the modules below.');
+  if (menu.missing) return h('div', { class: 'tm-setup' },
+    h('p', { class: 'meta' }, 'No modules of its own yet. An agent can write them, with this project\'s exact test commands, from its docs and past issues; you merge its pull request.'),
+    askButtons(r, false, redraw));
   return h('div', { class: 'tm-setup' },
-    h('p', { class: 'meta' }, 'No modules of its own yet. An agent can write them from this project\'s docs and past issues, and you merge its pull request.'),
-    h('div', { class: 'pc-act' },
-      h('button', { class: 'btn sm primary', type: 'button', onclick: (ev) => runAction(async () => { const i = await askForMenu(r); toast('Asked for ' + r.nick + '\'s modules (#' + i.number + ')'); redraw(); }, ev.currentTarget) }, 'Ask an agent to write them'),
-      h('button', { class: 'btn sm', type: 'button', onclick: (ev) => runAction(async () => { const n = await askForAllMenus(); toast(n ? 'Asked for modules in ' + plural(n, 'project') : 'Every project already has modules, or an agent is writing them'); redraw(); }, ev.currentTarget) }, 'Ask for every project')));
+    h('p', { class: 'meta' }, 'Its menu doesn\'t record the test command yet, so tasks point the agent to AGENTS.md instead of naming the exact check.'),
+    askButtons(r, true, redraw));
 }
 function drawPicker(r) {
   const host = $('#tHost');
@@ -1874,10 +1952,12 @@ function drawPicker(r) {
     h('div', { class: 'dlg-actions' }, h('button', { class: 'btn', type: 'button', onclick: () => $('#taskDlg').close() }, 'Cancel')));
   loadMenu(r).then(menu => {
     if (!own.isConnected) return;
+    const redraw = () => { if (own.isConnected) drawPicker(r); };
     setKids(own, h('h4', null, 'For ' + r.nick),
-      menu.modules.length ? h('div', { class: 'tm-grid' }, menu.modules.map(m => modButton(r, m)))
-        : menu.missing ? setupBox(r, () => { if (own.isConnected) drawPicker(r); })
-        : h('p', { class: 'err' }, 'This project\'s task menu can\'t be used: ' + menu.error + '. ', link(menu.url || (r.url + '/blob/' + (r.defaultBranch || 'main') + '/' + MENU_PATH), 'Open it')));
+      menu.checks ? h('p', { class: 'meta tm-checks' }, 'Checked with ', h('code', null, menu.checks.test), menu.checks.pass ? ' → ' + menu.checks.pass : '') : null,
+      menu.modules.length ? h('div', { class: 'tm-grid' }, menu.modules.map(m => modButton(r, m))) : null,
+      menu.missing || (menu.modules.length && !menu.checks) ? setupBox(r, menu, redraw) : null,
+      menu.error ? h('p', { class: 'err' }, 'This project\'s task menu can\'t be used: ' + menu.error + '. ', link(menu.url || (r.url + '/blob/' + (r.defaultBranch || 'main') + '/' + MENU_PATH), 'Open it')) : null);
   });
 }
 function drawModule(r, m) {
@@ -1886,6 +1966,7 @@ function drawModule(r, m) {
   if (m.free) { host.replaceChildren(); taskForm(r, host, () => $('#taskDlg').close(), back); return; }
   const route = m.route || 'build';
   let size = m.size || 'M';
+  const checks = () => (menus.get(r.name) || {}).checks || null;
   const ctrls = (m.fields || []).map(f => {
     let el;
     if (f.type === 'long') el = h('textarea', { rows: 3, placeholder: f.placeholder || null }, f.default || '');
@@ -1899,26 +1980,29 @@ function drawModule(r, m) {
   const sizeRow = route === 'plan' || route === 'codex' ? null : h('div', { class: 'f' }, h('span', null, 'Size'),
     h('div', { class: 'seg', role: 'group', 'aria-label': 'Size' }, ['S', 'M', 'L'].map(s => h('button', { class: 'segb', type: 'button', 'data-size': s, 'aria-pressed': String(s === size),
       onclick: (ev) => { size = s; for (const b of ev.currentTarget.parentNode.children) b.setAttribute('aria-pressed', String(b.dataset.size === s)); update(); } }, SIZE_TEXT[s]))));
-  const pvTitle = h('b', { class: 'tm-ptitle' }), pvMeta = h('p', { class: 'meta' }), pvBody = h('pre', { class: 'tm-body' });
+  const pvTitle = h('b', { class: 'tm-ptitle' }), pvMeta = h('p', { class: 'meta' }), pvSteps = h('ol', { class: 'tm-steps' }), pvBody = h('pre', { class: 'tm-body' });
   setKids(host,
     h('div', { class: 'tm-head' }, h('button', { class: 'btn sm', type: 'button', onclick: back }, '← Modules'), h('b', null, m.name), modTag(m)),
     m.hint ? h('p', { class: 'meta tm-sub' }, m.hint) : null,
     ctrls.map(c => h('label', { class: 'f' }, h('span', null, c.f.label + (c.f.required ? '' : ' (optional)')), c.el)),
     sizeRow,
-    h('div', { class: 'tm-prev' }, h('span', { class: 'meta' }, 'Will create'), pvTitle, pvMeta, h('details', null, h('summary', null, 'Full spec'), pvBody)),
+    h('div', { class: 'tm-prev' }, h('span', { class: 'meta' }, 'Will create'), pvTitle, pvMeta,
+      h('span', { class: 'meta tm-steps-h' }, 'Done when these checks pass'), pvSteps,
+      h('details', null, h('summary', null, 'Full spec'), pvBody)),
     h('div', { class: 'dlg-actions' }, h('button', { class: 'btn', type: 'button', onclick: () => $('#taskDlg').close() }, 'Cancel'),
       h('button', { class: 'btn primary', type: 'button', onclick: create }, 'Create task')));
   function values() { const v = {}; for (const c of ctrls) v[c.f.id] = c.el.value; return v; }
   function update() {
-    const spec = buildSpec(r, m, values(), size);
+    const spec = buildSpec(r, m, values(), size, checks());
     pvTitle.textContent = spec.title || '(answer the first question)';
     pvMeta.textContent = spec.labels.join(' · ') + ' → ' + goesTo(r, route, size);
+    pvSteps.replaceChildren(...spec.steps.map(s => h('li', null, String(s).split('`').map((part, k) => k % 2 ? h('code', null, part) : part))));
     pvBody.textContent = spec.body;
   }
   function create(ev) {
     const missing = ctrls.find(c => c.f.required && !String(c.el.value).trim());
     if (missing) { toast('Fill in: ' + missing.f.label, true); missing.el.focus(); return; }
-    const spec = buildSpec(r, m, values(), size);
+    const spec = buildSpec(r, m, values(), size, checks());
     if (!spec.title) { toast('The task needs a title: answer the first question', true); return; }
     runAction(async () => {
       const i = await createIssue(r, spec.title, spec.body, spec.labels);
@@ -1927,13 +2011,15 @@ function drawModule(r, m) {
     }, ev.currentTarget);
   }
   update();
+  if (!menus.has(r.name)) loadMenu(r).then(() => { if (pvTitle.isConnected) update(); });
   if (ctrls[0]) ctrls[0].el.focus();
 }
 
-/* "Something else": the free-form task, for anything no module fits. */
+/* "Something else": the free-form task, for anything no module fits. It still ends with check steps. */
 function taskForm(r, host, onDone, onBack) {
   const title = h('input', { type: 'text', placeholder: 'Task title (one sentence of what to build)', 'aria-label': 'Task title' });
   const body = h('textarea', { placeholder: 'Details / acceptance criteria (optional)', rows: 3, 'aria-label': 'Details' });
+  const check = h('textarea', { placeholder: 'How to check it: a command or page, and the result that counts as done (one step per line)', rows: 2, 'aria-label': 'How to check' });
   const sel = h('select', { 'aria-label': 'How to start' }, h('option', { value: 'ready' }, 'Build it: the dispatcher picks the agent'), h('option', { value: 'plan' }, 'Big goal: the administrator splits it into tasks'));
   const size = h('select', { 'aria-label': 'Size' },
     h('option', { value: '' }, 'Size: let the administrator decide'),
@@ -1946,14 +2032,22 @@ function taskForm(r, host, onDone, onBack) {
   const close = () => { if (onDone) onDone(); else form.remove(); };
   const form = h('div', { class: 'taskform' },
     onBack ? h('div', { class: 'tm-head' }, h('button', { class: 'btn sm', type: 'button', onclick: onBack }, '← Modules'), h('b', null, 'Something else')) : null,
-    title, body, sel, size,
+    title, body, check, sel, size,
     r.home && r.home.length ? h('div', { class: 'meta' }, 'Fenced repo: only ' + r.home.join(', ') + ' builds here.') : null,
     h('div', { style: 'display:flex;gap:8px;justify-content:flex-end' },
       h('button', { class: 'btn', type: 'button', onclick: close }, 'Cancel'),
       h('button', { class: 'btn primary', type: 'button', onclick: (ev) => {
         const t = title.value.trim(); if (!t) { toast('Give the task a title', true); return; }
         const labels = [sel.value]; if (sel.value === 'ready' && size.value) labels.push(size.value);
-        runAction(async () => { const i = await createIssue(r, t, body.value.trim(), labels); toast('Created #' + i.number + ' in ' + r.nick + ' (' + labels.join(', ') + ')'); if (onDone) onDone(); }, ev.currentTarget);
+        runAction(async () => {
+          const menu = await loadMenu(r).catch(() => null);
+          const cv = checkVals(menu && menu.checks);
+          const steps = check.value.split('\n').map(s => s.replace(/^\s*(?:[-*•]|\d+[.)])\s+/, '').trim()).filter(Boolean);
+          if (!steps.length) steps.push('Run ' + cv.TEST + ': ' + cv.PASS);
+          const text = [body.value.trim(), '', 'How to check:', ...steps.map((s, k) => (k + 1) + '. ' + s), VERIFY_LINE].join('\n').trim();
+          const i = await createIssue(r, t, text, labels);
+          toast('Created #' + i.number + ' in ' + r.nick + ' (' + labels.join(', ') + ')'); if (onDone) onDone();
+        }, ev.currentTarget);
       } }, 'Create issue')));
   host.append(form); title.focus();
 }

@@ -26,12 +26,14 @@ The page is built around one question — *what do I need to do?* — so it open
 its own modules first, then ones that fit any project (fix a bug, small change, new feature, make it faster,
 add tests, write docs, fix review findings, visual polish, big goal) and **Something else** for free text.
 Pick one, answer its two or three questions, choose S / M / L, and the preview shows the issue it will create:
-problem, acceptance criteria, files, out of scope and how to check, with `ready` and the size label set, so the
-dispatcher builds it on its next run without a sizing pass.
+problem, acceptance criteria, files, out of scope and **how to check**: numbered steps that each name a command or a
+page and the result that counts as done (the project's real test command, from its menu), with `ready` and the size
+label set, so the dispatcher builds it on its next run without a sizing pass.
 
 A project's own modules live in `.github/task-menu.json` in that repo (format: `dispatch/TASK_MENU.md`).
-For a project without one, **Ask an agent to write them** opens a `ready` task for it (or for every project at
-once); you merge the agent's pull request as usual.
+Its `checks` block records the project's test command, what a pass looks like and how to open the app. For a
+project without a menu, **Ask an agent to write them** opens a `ready` task for it (or for every project at once);
+for a menu without `checks`, **Ask an agent to add them**. You merge the agent's pull request as usual.
 
 ## Deadlines for owner-only work
 
