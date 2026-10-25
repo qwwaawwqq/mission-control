@@ -1,0 +1,33 @@
+# Optional. Copy this file to .github/workflows/wake-dispatcher.yml in an agent repo.
+# When you (or the administrator, which acts as you) label an issue `ready` or `plan`, it starts the
+# Mission Control dispatcher within seconds instead of waiting for GitHub's late schedule.
+#
+# Needs one secret in that repo: MC_WAKE_TOKEN, a fine-grained token with only the mission-control
+# repository selected and the single permission "Actions: Read and write". That token can start
+# workflows there and nothing else. It checks out no code and reads no issue text.
+# In a private repo GitHub bills each run as one Actions minute.
+name: wake-dispatcher
+
+on:
+  issues:
+    types: [labeled]
+
+permissions: {}
+
+jobs:
+  wake:
+    if: (github.event.label.name == 'ready' || github.event.label.name == 'plan') && github.event.sender.login == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Start the dispatcher
+        env:
+          TOKEN: ${{ secrets.MC_WAKE_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          curl -fsS -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/$OWNER/mission-control/actions/workflows/dispatch.yml/dispatches" \
+            -d '{"ref":"main"}'

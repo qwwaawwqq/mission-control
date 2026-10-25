@@ -280,6 +280,56 @@ dialog h3 { margin: 0 0 8px; font-size: 17px; }
 .toast-btn { min-height: 36px; padding: 0 12px; border: 0; border-radius: 8px; background: color-mix(in srgb, var(--bg) 20%, transparent); color: inherit; font-weight: 650; cursor: pointer; }
 footer { color: var(--ink-2); font-size: 13px; margin-top: 40px; display: flex; flex-direction: column; gap: 4px; }
 
+/* Portfolio: one row per project, papers to admin */
+.sw.needs-spec { background: color-mix(in srgb, var(--violet) 55%, transparent); } .sw.decision { background: var(--bad); }
+.pf-sum { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: 14px; color: var(--ink-2); }
+.pf-sum b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.wip { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent-text); font-weight: 650; }
+.wip b { color: inherit; }
+.wip.over { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad-text); }
+.pf-list { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.pf-row { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--line); scroll-margin-top: 80px; }
+.pf-row:first-child { border-top: 0; }
+.pf-row.editing { background: var(--chip); }
+.pf-head { display: flex; gap: 12px; align-items: flex-start; }
+.pf-st { flex: none; display: inline-flex; align-items: center; justify-content: center; min-width: 72px; height: 24px; padding: 0 8px; border-radius: 999px; background: var(--chip); color: var(--ink-2); font-size: 12px; font-weight: 650; }
+.pf-st.active { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent-text); }
+.pf-st.waiting { background: color-mix(in srgb, var(--warn) 24%, transparent); color: var(--warn-text); }
+.pf-st.done { background: color-mix(in srgb, var(--good) 14%, transparent); color: var(--good-text); }
+.pf-st.killed { text-decoration: line-through; }
+.pf-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 14px; overflow-wrap: anywhere; }
+.pf-title { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.pf-title b { font-size: 15px; font-weight: 650; }
+.pf-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.pf-act { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 84px; }
+.pill.duep { background: color-mix(in srgb, var(--warn) 30%, transparent); color: var(--warn-text); }
+.pill.soonp { background: var(--chip); color: var(--ink); }
+.pill.idlep { background: var(--chip); color: var(--ink-2); font-weight: 600; }
+.pill.warnp { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn-text); }
+.pf-edit { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0 14px; }
+.pf-edit .wide { grid-column: 1 / -1; }
+.pf-edit label.f { margin-top: 6px; }
+.pf-edit .dlg-actions { grid-column: 1 / -1; margin-top: 10px; }
+.seg { display: flex; flex-wrap: wrap; gap: 4px; }
+.segb { min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--ink); font-size: 13px; font-weight: 600; cursor: pointer; }
+.segb[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.quick { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); margin-top: 10px; }
+.check input { width: 18px; height: 18px; }
+.pf-bgroup { display: flex; flex-direction: column; gap: 6px; }
+.pf-board { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+.pf-col { flex: 0 0 230px; min-width: 0; display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 12px; background: var(--chip); }
+.pf-colh { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 13px; }
+.pf-mini { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font-size: 13px; text-align: left; cursor: pointer; }
+.pf-mini:hover { background: var(--hover); }
+.pf-mini .t { display: flex; align-items: center; gap: 6px; font-weight: 600; overflow-wrap: anywhere; }
+.pf-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.pf-dot.active { background: var(--accent); } .pf-dot.waiting { background: var(--warn); } .pf-dot.done { background: var(--good); }
+.pf-review { display: flex; flex-direction: column; gap: 10px; }
+.pf-review ol { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+.pf-review li b { font-weight: 650; }
+.pf-review .meta b { color: var(--ink); }
+
 @media (max-width: 640px) {
   .wrap { padding: 0 16px 112px; }
   header.top .bar { gap: 4px 8px; }
@@ -307,6 +357,11 @@ footer { color: var(--ink-2); font-size: 13px; margin-top: 40px; display: flex; 
   .view { padding-top: 20px; }
   .view-head h1 { font-size: 24px; }
   .toast { bottom: calc(80px + env(safe-area-inset-bottom)); }
+  .pf-head { flex-wrap: wrap; gap: 6px 10px; }
+  .pf-main { flex-basis: 100%; }
+  .pf-side { flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .pf-act { padding-left: 0; }
+  .pf-col { flex-basis: 76vw; }
 }
 </style>
 </head>
@@ -316,6 +371,7 @@ footer { color: var(--ink-2); font-size: 13px; margin-top: 40px; display: flex; 
     <div class="brand"><span class="dot" id="statusDot"></span><h1>Mission Control</h1></div>
     <nav class="views" aria-label="Views">
       <button type="button" data-view="today" id="nav-today" aria-pressed="true"><span class="vi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></span><span class="vl">Today</span><span class="badge hid"></span></button>
+      <button type="button" data-view="portfolio" id="nav-portfolio" aria-pressed="false"><span class="vi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg></span><span class="vl">Portfolio</span><span class="badge hid"></span></button>
       <button type="button" data-view="projects" id="nav-projects" aria-pressed="false"><span class="vi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg></span><span class="vl">Projects</span><span class="badge hid"></span></button>
       <button type="button" data-view="agents" id="nav-agents" aria-pressed="false"><span class="vi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></span><span class="vl">Agents</span><span class="badge hid"></span></button>
       <button type="button" data-view="system" id="nav-system" aria-pressed="false"><span class="vi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg></span><span class="vl">System</span><span class="badge hid"></span></button>
@@ -339,6 +395,10 @@ footer { color: var(--ink-2); font-size: 13px; margin-top: 40px; display: flex; 
     <label class="f"><span>Owner (GitHub user or org)</span><input type="text" id="fOwner"></label>
     <label class="f"><span>Repositories — one per line: <code>repo | short name | note</code></span><textarea id="fRepos" rows="6"></textarea></label>
     <div class="toolbar" style="margin:6px 0 0"><button class="btn sm" type="button" id="btnDiscover">Find my agent repos</button><span class="meta" id="discoverMsg"></span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 8px">
+      <label class="f"><span>Portfolio repo (private, holds portfolio.json)</span><input type="text" id="fPfRepo" placeholder="portfolio" autocomplete="off"></label>
+      <label class="f"><span>Portfolio token (optional: Contents read and write on that repo only)</span><input type="password" id="fPfToken" autocomplete="off" placeholder="leave empty to use the token above"></label>
+    </div>
     <label class="f"><span>Repos attached to each routine (optional, stays in this browser) — one per line: <code>claude-1: fenced-repo, other-fenced-repo</code>. With it, the page can tell a missing repo from "out of usage" when an agent doesn't start.</span><textarea id="fRoutineRepos" rows="3" placeholder="claude-1: repo-a, repo-b"></textarea></label>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px">
       <label class="f"><span>Auto-refresh (min)</span><input type="number" id="fRefresh" min="1" max="120"></label>
@@ -385,9 +445,10 @@ const DEFAULTS = {
   hidden: [],
   refreshMin: 5, staleHours: 2, claimHours: 3, failHours: 3, includedMinutes: 2000,
   routineRepos: {},
+  portfolioRepo: 'portfolio',
 };
-const LS = { token: 'mc.token', config: 'mc.config', snooze: 'mc.snooze', open: 'mc.open', view: 'mc.view' };
-const LABELS = ['plan', 'ready', 'claimed', 'in-review', 'blocked', 'pause'];
+const LS = { token: 'mc.token', pftoken: 'mc.pftoken', config: 'mc.config', snooze: 'mc.snooze', open: 'mc.open', view: 'mc.view' };
+const LABELS = ['plan', 'ready', 'claimed', 'in-review', 'blocked', 'needs-spec', 'decision', 'pause'];
 const DISPATCH_RE = /^Dispatch:\s*([\w.-]+)\s*·\s*([^·\n]*?)\s*·\s*([\w-]+)(?:\s*·\s*sha=([0-9a-f]{7,40}))?/m;
 const MIN = 6e4, HOUR = 36e5, DAY = 864e5;
 /* The team roster mirrors dispatch/config.json (fetched at start-up when served from GitHub Pages). */
@@ -409,7 +470,7 @@ let feedScope = 'exceptions';
 let discoveredThisLoad = false;
 let showAllInbox = false;
 let showSnoozed = false;
-let view = (() => { const v = (location.hash || '').slice(1); return ['today', 'projects', 'agents', 'system'].includes(v) ? v : loadJSON(LS.view, 'today'); })();
+let view = (() => { const v = (location.hash || '').slice(1); return ['today', 'portfolio', 'projects', 'agents', 'system'].includes(v) ? v : loadJSON(LS.view, 'today'); })();
 let inboxFilter = 'all';
 let projFilter = 'all';
 let showAllAutos = false;
@@ -428,14 +489,15 @@ function loadConfig() {
       const rr = {};
       if (c.routineRepos && typeof c.routineRepos === 'object') for (const [k, v] of Object.entries(c.routineRepos)) if (Array.isArray(v)) rr[k.toLowerCase()] = v.filter(x => typeof x === 'string' && /^[\w.-]+$/.test(x));
       c.routineRepos = rr;
+      if (typeof c.portfolioRepo !== 'string' || !/^[\w.-]+$/.test(c.portfolioRepo)) c.portfolioRepo = 'portfolio';
       return c;
     }
   } catch (e) { /* storage unavailable */ }
   return Object.assign({}, DEFAULTS, { repos: [], routineRepos: {} });
 }
 function saveConfig() { try { localStorage.setItem(LS.config, JSON.stringify(cfg)); } catch (e) { toast('Could not save settings in this browser', true); } }
-function loadToken() { try { return localStorage.getItem(LS.token) || ''; } catch (e) { return ''; } }
-function saveToken(t) { try { if (t) localStorage.setItem(LS.token, t); else localStorage.removeItem(LS.token); } catch (e) { toast('Could not store the token in this browser', true); } }
+function loadToken(key) { try { return localStorage.getItem(key || LS.token) || ''; } catch (e) { return ''; } }
+function saveToken(t, key) { try { if (t) localStorage.setItem(key || LS.token, t); else localStorage.removeItem(key || LS.token); } catch (e) { toast('Could not store the token in this browser', true); } }
 
 /* ---------- small helpers ---------- */
 const $ = (sel) => document.querySelector(sel);
@@ -541,16 +603,17 @@ function zonedToUtc(y, mo, d, hh, mi, tz) {
 function parseDeadlines(body) {
   const out = [];
   for (const raw of String(body || '').split('\n')) {
-    const m = /^\s*(?:[-*]\s+)?(?:⏰\s*)?(window|due)\s*:\s*(.+)$/i.exec(raw.replace(/[`*]/g, ' '));
+    const m = /^\s*(?:[-*]\s+)?(?:⏰\s*)?(window|due|decide\s+by)\s*:\s*(.+)$/i.exec(raw.replace(/[`*]/g, ' '));
     if (!m) continue;
     let rest = m[2], label = '', until = null;
     const bar = rest.indexOf('|'); if (bar >= 0) { label = rest.slice(bar + 1).trim(); rest = rest.slice(0, bar); }
     rest = rest.replace(/\buntil\s+(\d{4}-\d{2}-\d{2})\b/i, (_, d) => { until = d; return ' '; }).replace(/\bweekly\b/ig, ' ').trim();
-    if (/^due$/i.test(m[1])) {
+    const decide = /^decide/i.test(m[1]);
+    if (!/^window$/i.test(m[1])) {
       const d = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{1,2}):(\d{2}))?\s*(Z\b|[A-Za-z][\w\/+-]*)?/.exec(rest);
       if (!d) continue;
       const tz = zoneOf(d[6]);
-      out.push({ kind: 'due', at: zonedToUtc(+d[1], +d[2], +d[3], d[4] != null ? +d[4] : 23, d[5] != null ? +d[5] : 59, tz), tz, label });
+      out.push({ kind: 'due', at: zonedToUtc(+d[1], +d[2], +d[3], d[4] != null ? +d[4] : 23, d[5] != null ? +d[5] : 59, tz), tz, label, decide });
     } else {
       const w = /^(sun|mon|tue|wed|thu|fri|sat)[a-z]*\.?\s+(\d{1,2}):(\d{2})\s*(Z\b|[A-Za-z][\w\/+-]*)?\s*[-–—]\s*(?:(sun|mon|tue|wed|thu|fri|sat)[a-z]*\.?\s+)?(\d{1,2}):(\d{2})\s*(Z\b|[A-Za-z][\w\/+-]*)?/i.exec(rest);
       if (!w) continue;
@@ -605,7 +668,7 @@ function cdNode(d, big) {
 }
 function tickCountdowns() { const t = now(); document.querySelectorAll('[data-cd]').forEach(el => paintCd(el, t)); document.querySelectorAll('[data-nr]').forEach(el => paintNext(el, t)); document.querySelectorAll('[data-nrin]').forEach(el => paintNextIn(el, t)); }
 const dlWhen = (d) => d.kind === 'window' ? fmtRange(d.start, d.end) : fmtDay(d.at);
-const dlTitle = (d) => d.label || ('#' + d.spec.issue.number + ' ' + firstLine(d.spec.issue.title, 60));
+const dlTitle = (d) => d.label || (d.spec.pf ? firstLine(d.spec.issue.title, 60) : '#' + d.spec.issue.number + ' ' + firstLine(d.spec.issue.title, 60));
 function deadlineList(m, nowMs) {
   const out = [];
   for (const s of m.deadlines) { const d = deadlineNow(s, nowMs); if (d) out.push(d); }
@@ -647,7 +710,7 @@ class ApiError extends Error {
   constructor(status, path, data) { super((data && data.message) || ('HTTP ' + status)); this.status = status; this.path = path; this.data = data; }
 }
 async function gh(path, opts = {}) {
-  const headers = { 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'Authorization': 'Bearer ' + token };
+  const headers = { 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'Authorization': 'Bearer ' + (opts.token || token) };
   if (opts.body) headers['Content-Type'] = 'application/json';
   const res = await fetch(API + path, { method: opts.method || 'GET', headers, body: opts.body ? JSON.stringify(opts.body) : undefined, signal: opts.signal, cache: 'no-cache' });
   const rem = res.headers.get('x-ratelimit-remaining');
@@ -724,14 +787,16 @@ async function loadRepo(r, signal) {
   out.counts = {}; for (const L of LABELS) out.counts[L] = issues.filter(i => has(i, L)).length;
   out.pauseIssues = issues.filter(i => has(i, 'pause'));
   out.paused = out.pauseIssues.length > 0;
-  out.queue = issues.filter(i => has(i, 'ready') && !['claimed', 'blocked', 'in-review', 'jules', 'to:codex', 'to:antigravity'].some(l => has(i, l))).sort((a, b) => a.created_at.localeCompare(b.created_at));
-  out.blocked = issues.filter(i => has(i, 'blocked'));
+  out.queue = issues.filter(i => has(i, 'ready') && !['claimed', 'blocked', 'in-review', 'jules', 'to:codex', 'to:antigravity', 'needs-spec', 'decision'].some(l => has(i, l))).sort((a, b) => a.created_at.localeCompare(b.created_at));
+  out.blocked = issues.filter(i => has(i, 'blocked') && !has(i, 'decision'));
+  out.decisions = issues.filter(i => has(i, 'decision'));
+  out.needsSpec = issues.filter(i => has(i, 'needs-spec') && !has(i, 'decision'));
   out.claimed = issues.filter(i => has(i, 'claimed'));
   out.working = issues.filter(i => has(i, 'claimed') && !has(i, 'in-review'));
   out.plans = issues.filter(i => has(i, 'plan'));
   out.untracked = issues.filter(i => !LABELS.some(L => has(i, L)));
   out.deadlines = [];
-  for (const i of issues) for (const s of parseDeadlines(i.body)) out.deadlines.push(Object.assign({ repo: out, issue: i }, s));
+  for (const i of issues) for (const s of parseDeadlines(i.body)) out.deadlines.push(Object.assign({ repo: out, issue: i }, s, s.decide && !s.label ? { label: 'Decide: ' + firstLine(i.title, 60) } : null));
 
   const comments = got.comments || [];
   const reviewComments = got.reviewComments || [];
@@ -962,7 +1027,7 @@ async function refresh() {
       const found = await discoverRepos(ctrl.signal).catch(e => { if (e && e.name === 'AbortError') throw e; return null; });
       if (found) { const added = mergeRepos(found); if (added) toast('Added ' + added + ' new agent repo' + (added > 1 ? 's' : '')); }
     }
-    const [repos, billing, disp, sysPRs] = await Promise.all([
+    const [repos, billing, disp, sysPRs, port] = await Promise.all([
       Promise.all(cfg.repos.map(r => loadRepo(r, ctrl.signal).catch(e => {
         if (e && e.name === 'AbortError') throw e;
         return { cfg: r, name: r.name, nick: r.nick || r.name, note: r.note || '', url: 'https://github.com/' + cfg.owner + '/' + r.name, errors: [], fatal: e };
@@ -970,11 +1035,13 @@ async function refresh() {
       loadBilling(ctrl.signal),
       loadDispatcher(ctrl.signal),
       loadSystemPRs(ctrl.signal),
+      loadPortfolio(ctrl.signal),
     ]);
     if (ctrl.signal.aborted) return;
-    dispatcher = disp; systemPRs = sysPRs;
+    dispatcher = disp; systemPRs = sysPRs; pf = port;
     model = buildModel(repos.filter(r => !r.retired), withProjection(billing));
     model.retired = repos.filter(r => r.retired).map(r => r.nick);
+    applyPortfolio();
     tokenBad = repos.length > 0 && repos.every(r => r.fatal && r.fatal.status === 401);
     lastRefresh = now();
   } catch (e) {
@@ -1091,7 +1158,7 @@ function buildTeam(repos, beatAgents) {
   });
   const issuesAll = live.flatMap(r => r.paused ? [] : r.issues.map(i => ({ r, i })));
   const anyTo = (i) => labelsOf(i).some(l => l.startsWith('to:'));
-  const unassigned = issuesAll.filter(({ i }) => (has(i, 'ready') || has(i, 'plan')) && !['claimed', 'blocked', 'in-review', 'jules'].some(l => has(i, l)) && !anyTo(i)).length;
+  const unassigned = issuesAll.filter(({ i }) => (has(i, 'ready') || has(i, 'plan')) && !['claimed', 'blocked', 'in-review', 'jules', 'needs-spec', 'decision'].some(l => has(i, l)) && !anyTo(i)).length;
   const agQueue = issuesAll.filter(({ i }) => has(i, 'to:antigravity') && !has(i, 'claimed') && !has(i, 'in-review')).length;
   const agWorking = live.reduce((s, r) => s + r.working.filter(i => claimerOf(r, i.number) === 'antigravity').length, 0);
   const codexQueue = issuesAll.filter(({ i }) => has(i, 'to:codex') && !has(i, 'in-review')).length;
@@ -1110,7 +1177,7 @@ function buildInbox(m) {
   const dlByIssue = new Map();
   for (const s of m.deadlines) {
     const d = deadlineNow(s, nowMs); if (!d) continue;
-    const k = s.repo.name + '#' + s.issue.number, cur = dlByIssue.get(k);
+    const k = s.pf ? 'pf:' + s.pf : s.repo.name + '#' + s.issue.number, cur = dlByIssue.get(k);
     if (!cur || dlTime(d) < dlTime(cur)) dlByIssue.set(k, d);
   }
 
@@ -1124,12 +1191,42 @@ function buildInbox(m) {
       why: said ? 'Latest comment: ' + said : 'Labelled blocked: only you can move it.',
       next: d ? dlTitle(d) + ' · ' + dlWhen(d) : 'Decide, or answer what the agent asked, then remove the blocked label.', deadline: d, url: i.html_url });
   }
+  /* Decision briefs: an agent laid out the options; only you can choose. */
+  for (const r of live) for (const i of r.decisions) {
+    const d = dlByIssue.get(r.name + '#' + i.number), st = d ? cdState(d, nowMs) : null;
+    const rec = /^\s*(?:[-*]\s+)?recommendation\s*:\s*(.+)$/im.exec(String(i.body || '').replace(/[`*_]/g, ''));
+    const late = d && d.kind === 'due' && nowMs > d.at;
+    push({ key: 'decision:' + r.name + '#' + i.number, sev: st ? Math.min(2, st.sev) : 2, repo: r, title: '#' + i.number + ' ' + i.title,
+      why: rec ? 'Recommended: ' + firstLine(rec[1], 150) : 'A decision brief: the agent needs your call before it can go on.',
+      next: late ? 'Past its decide-by date: decide now, or the work it blocks slips.' : d ? 'Decide by ' + dlWhen(d) + '. Approve the recommendation, or comment the option you want.' : 'Approve the recommendation, or comment the option you want.',
+      deadline: d, url: i.html_url, actions: [armedButton('Approve recommendation', () => approveRecommendation(r, i))] });
+  }
+  /* Specs an agent could not build from: they never reach an agent until you fill the gap. */
+  for (const r of live) for (const i of r.needsSpec) {
+    const lc = r.lastCommentByIssue.get(i.number);
+    const said = lc ? firstLine(String(lc.body || '').replace(/^Dispatch:[^\n]*\n+/, ''), 150) : '';
+    push({ key: 'spec:' + r.name + '#' + i.number, sev: 3, repo: r, title: '#' + i.number + ' ' + i.title,
+      why: said || 'The spec is missing something an agent needs before it can build this.',
+      next: 'Add what is missing (acceptance criteria, files, how to check it), then tap Spec done.',
+      url: i.html_url, actions: [armedButton('Spec done', () => dropLabel(r, i.number, 'needs-spec'))] });
+  }
   for (const [k, d] of dlByIssue) {
-    const s = d.spec; if (has(s.issue, 'blocked')) continue;
+    const s = d.spec; if (has(s.issue, 'blocked') || has(s.issue, 'decision')) continue;
     const st = cdState(d, nowMs); if (st.sev > 2) continue;
+    if (s.pf) {
+      push({ key: 'deadline:' + k + ':' + dlTime(d), sev: st.sev, repo: PF_REPO, title: s.issue.title, why: d.label && d.label !== s.issue.title ? d.label : 'Deadline from your portfolio.', next: dlWhen(d), deadline: d, url: '#portfolio', linkText: 'Portfolio', actions: [pfDueDoneButton(s)] });
+      continue;
+    }
     push({ key: 'deadline:' + k, sev: st.sev, icon: '⏰', repo: s.repo, title: '#' + s.issue.number + ' ' + s.issue.title, why: d.label || 'Deadline from the issue description.', next: dlWhen(d), deadline: d, url: s.issue.html_url });
   }
   for (const r of live) for (const p of r.prs) if (p.level === 'you') push({ key: 'pr:' + r.name + '#' + p.number + ':' + p.verdict, sev: 2, icon: '⇄', repo: r, title: 'PR #' + p.number + ' · ' + p.verdict, why: p.title + ' — by ' + (p.agent || (p.pr.user && p.pr.user.login) || '?') + ', ' + ago(p.pr.created_at), next: p.next, url: p.pr.html_url });
+  /* Your review time sets the pace: the dispatcher starts no new build while this many agent PRs wait. */
+  const prCap = team.maxOpenAgentPRs || 3;
+  for (const r of live) {
+    const open = r.prs.filter(p => p.agent).length, n = open + r.working.length;
+    if (r.queue.length && n >= prCap) push({ key: 'prcap:' + r.name + ':' + n, sev: 2, repo: r, title: 'New builds wait for your review', why: plural(open, 'agent PR') + ' open and ' + r.working.length + ' being written (limit ' + prCap + '), so ' + plural(r.queue.length, 'ready task') + ' wait.', next: 'Merge or close an agent PR; the next dispatcher run starts the next task.', url: r.url + '/pulls', linkText: 'Pull requests' });
+  }
+  pfInbox(push, nowMs);
   for (const r of live) for (const i of r.stuck) push({ key: 'stuck:' + r.name + '#' + i.number, sev: 2, icon: '⏳', repo: r, title: '#' + i.number + ' claimed ' + Math.round(hoursSince(i.updated_at)) + 'h ago, no PR', why: i.title + ' — the agent run probably died.', next: 'Unclaim it so the next run can take it.', url: i.html_url, actions: [armedButton('Unclaim', () => unclaim(r, i.number))] });
 
   const covered = new Set();
@@ -1146,7 +1243,7 @@ function buildInbox(m) {
   if (d && !d.none && !d.error) {
     const age = nowMs - Date.parse(d.startedAt || d.at);
     if (age > Math.max(3 * HOUR, 8 * every)) push({ key: 'disp:stale', sev: 1, icon: '⏱', title: 'Dispatcher hasn\'t run for ' + dur(age), why: 'No agent is woken until it runs again.', next: 'Open Actions → dispatch, press Run workflow, and check the schedule is still enabled.', url: d.listUrl });
-    else if (d.median && d.median > 4 * every) push({ key: 'disp:slow', sev: 2, icon: '⏱', title: 'Dispatcher runs every ~' + dur(d.median) + ', not every ' + dur(every), why: 'GitHub delays or drops scheduled runs at busy times: ' + d.count24 + ' runs in the last 24 hours instead of ~' + Math.round(DAY / every) + ', so agents wake hours late.', next: 'Add the outside trigger from dispatch/SETUP.md (a free cron service, every 15 minutes).', url: 'https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/SETUP.md#optional-a-trigger-that-does-not-lag' });
+    else if (d.median && d.median > 4 * every) push({ key: 'disp:slow', sev: 2, icon: '⏱', title: 'Dispatcher runs every ~' + dur(d.median) + ', not every ' + dur(every), why: 'GitHub delays or drops scheduled runs at busy times: ' + d.count24 + ' runs in the last 24 hours instead of ~' + Math.round(DAY / every) + ', so agents wake hours late.', next: 'Add the outside trigger from dispatch/SETUP.md (a free cron service, every 15 minutes).', url: 'https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/SETUP.md#make-it-run-every-15-minutes-recommended' });
     if (d.status === 'completed' && d.conclusion && !['success', 'skipped', 'cancelled'].includes(d.conclusion)) push({ key: 'disp:fail:' + d.url, sev: 1, icon: '✗', title: 'Last dispatcher run: ' + d.conclusion, why: 'Agents are not being woken while it fails.', next: 'Open the run and read the error.', url: d.url });
   } else if (d && (d.none || d.error)) push({ key: 'disp:none', sev: 3, icon: '⏱', title: 'Dispatcher not running yet', why: 'Agents are only woken by the dispatcher.', next: 'Follow dispatch/SETUP.md.', url: 'https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/SETUP.md' });
 
@@ -1190,6 +1287,16 @@ async function resumeRepo(repo) {
 async function unclaim(repo, n) {
   await gh('/repos/' + cfg.owner + '/' + repo.name + '/issues/' + n + '/labels/claimed', { method: 'DELETE' });
   toast('#' + n + ' unclaimed');
+}
+async function dropLabel(repo, n, label) {
+  try { await gh('/repos/' + cfg.owner + '/' + repo.name + '/issues/' + n + '/labels/' + encodeURIComponent(label), { method: 'DELETE' }); }
+  catch (e) { if (!(e instanceof ApiError && e.status === 404)) throw e; }
+  toast('#' + n + ': ' + label + ' removed');
+}
+async function approveRecommendation(repo, i) {
+  await gh('/repos/' + cfg.owner + '/' + repo.name + '/issues/' + i.number + '/comments', { method: 'POST', body: { body: 'Decision (owner): go with the recommendation in the brief above.' } });
+  for (const l of ['decision', 'blocked']) if (has(i, l)) await dropLabel(repo, i.number, l);
+  toast('#' + i.number + ': recommendation approved');
 }
 async function runAction(fn, btn) {
   if (btn) btn.disabled = true;
@@ -1249,6 +1356,9 @@ const ICON_PATHS = {
   moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
   check: '<path d="M20 6 9 17l-5-5"/>',
   ext: '<path d="M7 17 17 7"/><path d="M7 7h10v10"/>',
+  decide: '<path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/>',
+  pencil: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/>',
+  layers: '<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
   dot: '<circle cx="12" cy="12" r="4"/>'
 };
 function icon(name, size) {
@@ -1260,12 +1370,12 @@ function iconFor(it) {
   const k = it.key.split(':')[0];
   if (k === 'noshow') return it.sev === 1 ? 'wrench' : 'hourglass';
   if (k === 'disp') return it.key.startsWith('disp:fail') ? 'fail' : 'pulse';
-  return ({ blocked: it.deadline ? 'clock' : 'stop', deadline: 'clock', pr: 'pr', stuck: 'hourglass', stalled: 'hourglass', paused: 'pause', ci: 'fail', idle: 'plus', untracked: 'tag', billing: 'gauge' })[k] || 'dot';
+  return ({ blocked: it.deadline ? 'clock' : 'stop', deadline: 'clock', pr: 'pr', prcap: 'pr', stuck: 'hourglass', stalled: 'hourglass', paused: 'pause', ci: 'fail', idle: 'plus', untracked: 'tag', billing: 'gauge', decision: 'decide', spec: 'pencil', pf: 'layers' })[k] || 'dot';
 }
 const extLink = (href, text, cls) => h('a', { class: cls || 'btn', href, target: '_blank', rel: 'noopener noreferrer' }, text, icon('ext', 13));
 
-/* The views: Today (what needs you), Projects, Agents, System. */
-const VIEWS = ['today', 'projects', 'agents', 'system'];
+/* The views: Today (what needs you), Portfolio (every project), Projects (code), Agents, System. */
+const VIEWS = ['today', 'portfolio', 'projects', 'agents', 'system'];
 function setView(v, anchor) {
   if (!VIEWS.includes(v)) v = 'today';
   view = v; saveJSON(LS.view, v);
@@ -1295,6 +1405,8 @@ function renderStatus(items) {
   setBadge('agents', stuck ? String(stuck) : '', 'you');
   setBadge('system', vis.some(i => /^(disp|billing):/.test(i.key) && i.sev <= 2) ? '!' : '', 'wait');
   setBadge('projects', '', '');
+  const pfDue = ok && pf && pf.status === 'ok' ? pf.data.items.filter(x => pfOpen(x) && isDate(x.check) && x.check <= todayStr()).length : 0;
+  setBadge('portfolio', pfDue ? String(pfDue) : '', 'wait');
   for (const b of document.querySelectorAll('.views button')) b.setAttribute('aria-pressed', String(b.dataset.view === view));
   document.title = (vis.length ? '(' + vis.length + ') ' : '') + 'Mission Control';
   setFavicon(!ok ? null : urgent ? 'bad' : vis.some(i => i.sev === 2) ? 'warn' : 'ok');
@@ -1310,7 +1422,8 @@ function tokenHelp() {
       h('li', null, 'Repository permissions: ', h('b', null, 'Issues: Read and write'), ' (Read-only also works, but then the Pause / Resume / New task buttons fail), ', h('b', null, 'Pull requests: Read'), ', ', h('b', null, 'Checks: Read'), ', ', h('b', null, 'Actions: Read'), ', ', h('b', null, 'Contents: Read'), '. Metadata is added automatically.'),
       h('li', null, 'Optional — Account permissions: ', h('b', null, 'Plan: Read'), ' shows your GitHub Actions minutes.'),
       h('li', null, 'Generate, copy the ', h('code', null, 'github_pat_…'), ' value and paste it here.')),
-    h('p', { class: 'kv' }, 'The token is kept only in this browser (localStorage) and is sent only to api.github.com. Use "Forget token" in Settings to remove it.'));
+    h('p', { class: 'kv' }, 'For the Portfolio view, make a second token the same way: repository access ', h('b', null, 'only your private ' + pfRepoName() + ' repo'), ', permission ', h('b', null, 'Contents: Read and write'), ', and paste it under Portfolio token in Settings. Keeping it separate means the main token never needs write access to code.'),
+    h('p', { class: 'kv' }, 'Tokens are kept only in this browser (localStorage) and are sent only to api.github.com. Use "Forget token" in Settings to remove them.'));
 }
 
 function renderSetup() {
@@ -1355,14 +1468,16 @@ function renderHero(m, items) {
       tile('Shipped', String(m.totals.merged), m.totals.merged ? 'ok' : '', 'pull requests merged in 7 days')));
 }
 
-const INBOX_FILTERS = [['all', 'All'], ['urgent', 'Urgent'], ['deadline', 'Deadlines'], ['pr', 'Pull requests'], ['blocked', 'Blocked'], ['system', 'Agents & system']];
+const INBOX_FILTERS = [['all', 'All'], ['urgent', 'Urgent'], ['deadline', 'Deadlines'], ['decide', 'Decisions & blocked'], ['pr', 'Pull requests'], ['portfolio', 'Portfolio'], ['system', 'Agents & system']];
+const isPfItem = (it) => it.key.startsWith('pf:') || !!(it.deadline && it.deadline.spec && it.deadline.spec.pf);
 function inFilter(it, f) {
   if (f === 'all') return true;
   if (f === 'urgent') return it.sev === 1;
   if (f === 'deadline') return !!it.deadline;
-  if (f === 'pr') return it.key.startsWith('pr:');
-  if (f === 'blocked') return it.key.startsWith('blocked:') && !it.deadline;
-  return !it.deadline && !/^(pr|blocked):/.test(it.key);
+  if (f === 'pr') return /^(pr|prcap):/.test(it.key);
+  if (f === 'decide') return /^(blocked|decision|spec):/.test(it.key);
+  if (f === 'portfolio') return isPfItem(it);
+  return !it.deadline && !isPfItem(it) && !/^(pr|prcap|blocked|decision|spec):/.test(it.key);
 }
 function snoozeWithUndo(it) {
   snooze(it.key, DAY);
@@ -1425,7 +1540,9 @@ function renderDeadlines(m) {
     const dt = new Date(dlTime(d));
     return h('div', { class: 'dl' },
       h('div', { class: 'dl-date' + (cdState(d, nowMs).sev <= 2 ? ' soon' : '') }, h('span', null, dt.toLocaleDateString([], { weekday: 'short' }).toUpperCase()), h('b', null, String(dt.getDate()))),
-      h('div', { class: 'dl-main' }, h('div', { class: 'dl-title' }, h('b', null, dlTitle(d)), cdNode(d)), h('span', { class: 'meta' }, d.spec.repo.nick + ' · ', link(d.spec.issue.html_url, '#' + d.spec.issue.number), ' · ' + dlWhen(d))));
+      h('div', { class: 'dl-main' }, h('div', { class: 'dl-title' }, h('b', null, dlTitle(d)), cdNode(d)), h('span', { class: 'meta' }, d.spec.repo.nick + ' · ',
+        d.spec.pf ? h('a', { href: '#portfolio', onclick: (ev) => { ev.preventDefault(); pfEditing = d.spec.pf; setView('portfolio', 'pf-' + d.spec.pf); } }, d.label && d.label !== d.spec.issue.title ? firstLine(d.spec.issue.title, 40) : 'open') : link(d.spec.issue.html_url, '#' + d.spec.issue.number),
+        ' · ' + dlWhen(d))));
   });
   return h('section', { class: 'card side', 'aria-labelledby': 'h-dl' },
     h('div', { class: 'sec-head' }, h('h2', { id: 'h-dl' }, 'Deadlines'), h('span', { class: 'count' }, String(list.length)), h('div', { class: 'grow' }), h('span', { class: 'meta' }, 'next 7 days')),
@@ -1527,7 +1644,9 @@ function repoHealth(r, noshowRepos) {
   if (r.fatal) return { level: 'bad', text: 'Cannot read: ' + explain(r.fatal) };
   if (r.paused) return { level: 'bad', text: 'Paused: every agent stays out' };
   if (noshowRepos.has(r.name)) return { level: 'bad', text: 'Its agent is not starting' };
+  if (r.decisions.length) return { level: 'bad', text: plural(r.decisions.length, 'decision') + ' waiting for you' };
   if (r.blocked.length) return { level: 'bad', text: plural(r.blocked.length, 'issue') + ' blocked on you' };
+  if (r.needsSpec.length) return { level: 'warn', text: plural(r.needsSpec.length, 'spec') + ' to finish before agents can build' };
   if (r.stalled) return { level: 'warn', text: 'Stalled: ready issues, no agent activity' };
   if (r.prs.some(p => p.level === 'you')) return { level: 'warn', text: 'A pull request waits for you' };
   if (r.mainFailing) return { level: 'warn', text: 'CI failing on ' + r.defaultBranch };
@@ -1656,6 +1775,440 @@ function renderProjects(m) {
     renderUntracked(m));
 }
 
+/* ---------- Portfolio: one private list of every project ---------- */
+/* portfolio.json lives in a private repo of yours (Settings → Portfolio repo, default "portfolio").
+   This page reads and edits it through the GitHub API with your token. Nothing about your projects
+   is stored in this public repo or served from GitHub Pages. Every save is a commit, so the file's
+   history is also the log of when each project changed stage. */
+const PF_FILE = 'portfolio.json';
+const PF_STATES = ['active', 'waiting', 'parked', 'done', 'killed'];
+const PF_STATE_LABEL = { active: 'Active', waiting: 'Waiting', parked: 'Parked', done: 'Done', killed: 'Killed' };
+const PF_TYPES = ['paper', 'app', 'course', 'quant', 'admin'];
+const PF_TYPE_LABEL = { paper: 'Papers', app: 'Apps', course: 'Course', quant: 'Quant research', admin: 'Admin' };
+const PF_STAGES = {
+  paper: ['idea', 'protocol', 'registered', 'search', 'screening', 'extraction', 'analysis', 'writing', 'co-author review', 'submitted', 'revision', 'accepted', 'proofs', 'published'],
+  app: ['idea', 'shaping', 'building', 'live', 'maintaining'],
+  course: ['in progress', 'finished'],
+  quant: ['research', 'paper trading', 'live'],
+  admin: ['preparing', 'submitted', 'waiting for result', 'ongoing', 'finished'],
+};
+const PF_AREA_TYPES = ['course', 'quant', 'admin'];
+const PF_REPO = { name: 'portfolio', nick: 'Portfolio' };
+const PF_FILTERS = [['today', 'Today'], ['active', 'Active'], ['waiting', 'Waiting'], ['parked', 'Parked'], ['board', 'Board'], ['all', 'All']];
+let pf = null;
+let pfToken = loadToken(LS.pftoken);
+let pfFilter = null;
+let pfEditing = null;
+let pfAdding = false;
+let pfShowReview = null;
+let pfImporting = false;
+
+const ymd = (ms) => { const d = new Date(ms); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const todayStr = () => ymd(now());
+const isDate = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+function addDays(s, n) { const p = String(s).split('-').map(Number); return ymd(new Date(p[0], p[1] - 1, p[2] + n).getTime()); }
+const dayNum = (s) => { const p = String(s).split('-').map(Number); return Math.round(Date.UTC(p[0], p[1] - 1, p[2]) / DAY); };
+const daysBetween = (a, b) => dayNum(b) - dayNum(a);
+const pfOpen = (x) => x.state === 'active' || x.state === 'waiting' || x.state === 'parked';
+const pfRepoName = () => String(cfg.portfolioRepo || 'portfolio').trim() || 'portfolio';
+const pfAuth = () => pfToken || token;
+const pfApi = () => '/repos/' + cfg.owner + '/' + pfRepoName() + '/contents/' + PF_FILE;
+const pfUrl = () => 'https://github.com/' + cfg.owner + '/' + pfRepoName();
+function pfStageIdx(x) { return (PF_STAGES[x.type] || []).indexOf(x.stage); }
+function b64ToText(b64) { const bin = atob(String(b64 || '').replace(/\s/g, '')); const bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i); return new TextDecoder().decode(bytes); }
+function textToB64(s) { const bytes = new TextEncoder().encode(s); let bin = ''; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(bin); }
+function pfSlug(title, seen) {
+  let base = '';
+  for (const w of String(title).toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) { if ((base + '-' + w).length > 33) break; base = base ? base + '-' + w : w; }
+  base = base || 'item';
+  let id = base, n = 2;
+  while (seen && seen.has(id)) id = base + '-' + n++;
+  return id;
+}
+function pfNormalize(j) {
+  const out = j && typeof j === 'object' && !Array.isArray(j) ? j : {};
+  out.version = out.version || 1;
+  out.wipLimit = Math.max(1, Math.min(9, Math.round(+out.wipLimit || 3)));
+  out.items = (Array.isArray(out.items) ? out.items : []).filter(x => x && typeof x === 'object' && typeof x.title === 'string' && x.title.trim());
+  const seen = new Set();
+  for (const x of out.items) {
+    if (typeof x.id !== 'string' || !x.id || seen.has(x.id)) x.id = pfSlug(x.title, seen);
+    seen.add(x.id);
+    if (!PF_TYPES.includes(x.type)) x.type = 'admin';
+    if (!PF_STATES.includes(x.state)) x.state = 'parked';
+    if (typeof x.area !== 'boolean') x.area = PF_AREA_TYPES.includes(x.type);
+    x.due = Array.isArray(x.due) ? x.due.filter(d => typeof d === 'string') : [];
+    x.log = Array.isArray(x.log) ? x.log.filter(e => e && isDate(e.date)) : [];
+    for (const k of ['stage', 'next', 'waitingOn', 'note', 'journal', 'backup', 'where', 'link']) if (x[k] != null && typeof x[k] !== 'string') x[k] = String(x[k]);
+    for (const k of ['check', 'since', 'lastSearch', 'touched']) if (x[k] != null && !isDate(x[k])) delete x[k];
+    if (x.link && !/^https:\/\//.test(x.link)) delete x.link;
+  }
+  out.reviews = Array.isArray(out.reviews) ? out.reviews.filter(isDate).slice(-80) : [];
+  out.late = Array.isArray(out.late) ? out.late.filter(e => e && isDate(e.date)).slice(-200) : [];
+  if (!isDate(out.trialStart)) delete out.trialStart;
+  return out;
+}
+
+async function pfFetch(signal) {
+  const f = await gh(pfApi(), { signal, token: pfAuth() });
+  if (!f || typeof f.content !== 'string') throw new Error(PF_FILE + ' could not be read');
+  return { data: pfNormalize(JSON.parse(b64ToText(f.content))), sha: f.sha };
+}
+async function loadPortfolio(signal) {
+  if (!cfg.owner) return null;
+  try {
+    const r = await pfFetch(signal);
+    return { status: 'ok', data: r.data, sha: r.sha };
+  } catch (e) {
+    if (e && e.name === 'AbortError') throw e;
+    if (e instanceof ApiError && e.status === 404) {
+      try { await gh('/repos/' + cfg.owner + '/' + pfRepoName(), { signal, token: pfAuth() }); return { status: 'nofile' }; }
+      catch (e2) { if (e2 && e2.name === 'AbortError') throw e2; return { status: 'norepo' }; }
+    }
+    if (e instanceof ApiError && (e.status === 401 || e.status === 403)) return { status: 'noaccess', why: explain(e) };
+    return { status: 'error', why: e instanceof SyntaxError ? PF_FILE + ' is not valid JSON (' + e.message + ')' : explain(e) };
+  }
+}
+/* Read the latest copy, change it, write it back; one retry when someone saved in between. */
+async function pfWrite(mutate, message) {
+  for (let attempt = 0; ; attempt++) {
+    const cur = await pfFetch();
+    const next = pfNormalize(JSON.parse(JSON.stringify(cur.data)));
+    mutate(next);
+    next.updated = todayStr();
+    try {
+      const res = await gh(pfApi(), { method: 'PUT', token: pfAuth(), body: { message, content: textToB64(JSON.stringify(next, null, 2) + '\n'), sha: cur.sha } });
+      pf = { status: 'ok', data: next, sha: res && res.content ? res.content.sha : cur.sha };
+      return next;
+    } catch (e) {
+      if (attempt === 0 && e instanceof ApiError && (e.status === 409 || e.status === 422)) continue;
+      throw e;
+    }
+  }
+}
+async function pfCreate(data) {
+  const next = pfNormalize(data);
+  next.updated = todayStr();
+  if (!next.trialStart) next.trialStart = todayStr();
+  const res = await gh(pfApi(), { method: 'PUT', token: pfAuth(), body: { message: 'Portfolio: start the list', content: textToB64(JSON.stringify(next, null, 2) + '\n') } });
+  pf = { status: 'ok', data: next, sha: res && res.content ? res.content.sha : null };
+}
+function pfTouch(it, before) {
+  const today = todayStr();
+  it.touched = today;
+  if (!before || before.state !== it.state || (before.stage || '') !== (it.stage || '')) it.log.push({ date: today, state: it.state, stage: it.stage || '' });
+}
+function pfUpdate(id, change, message) {
+  return pfWrite(data => {
+    const it = data.items.find(x => x.id === id);
+    if (!it) throw new Error('that row is gone (removed elsewhere?); refresh');
+    const before = { state: it.state, stage: it.stage };
+    change(it, data);
+    pfTouch(it, before);
+  }, message);
+}
+async function pfRun(fn, btn, okMsg, after) {
+  if (btn) btn.disabled = true;
+  try {
+    await fn();
+    if (after) after();
+    applyPortfolio(); render();
+    if (okMsg) toast(okMsg);
+    return true;
+  } catch (e) {
+    toast((e instanceof ApiError && [401, 403, 404].includes(e.status)) ? 'Not saved: the portfolio token needs Contents: Read and write on ' + pfRepoName() : 'Not saved: ' + explain(e), true);
+    if (btn) btn.disabled = false;
+    return false;
+  }
+}
+const pfBtn = (label, fn, cls, okMsg, after) => h('button', { class: 'btn sm ' + (cls || ''), type: 'button', onclick: (ev) => pfRun(fn, ev.currentTarget, okMsg, after) }, label);
+function pfArmed(label, fn, cls, okMsg, after) {
+  let timer = 0;
+  const b = h('button', { class: 'btn sm ' + (cls || ''), type: 'button' }, label);
+  b.addEventListener('click', () => {
+    if (b.classList.contains('armed')) { clearTimeout(timer); b.classList.remove('armed'); b.textContent = label; pfRun(fn, b, okMsg, after); return; }
+    b.classList.add('armed'); b.textContent = 'Tap again to ' + label.toLowerCase();
+    timer = setTimeout(() => { b.classList.remove('armed'); b.textContent = label; }, 6000);
+  });
+  return b;
+}
+
+/* Deadlines in a row ("2026-11-06 18:00 Asia/Taipei | label", "x " in front once done) join the
+   page's Deadlines and the Today inbox, next to the ones from issues. */
+function pfDueSpecs(x) {
+  const out = [];
+  x.due.forEach((line, idx) => {
+    if (/^\s*x\s/i.test(line)) return;
+    const src = /^\s*(window|due)\s*:/i.test(line) ? line : 'Due: ' + line;
+    for (const s of parseDeadlines(src)) out.push(Object.assign({ repo: PF_REPO, issue: { number: 0, title: x.title, html_url: '#portfolio', labels: [] }, pf: x.id, pfDue: idx }, s));
+  });
+  return out;
+}
+const pfDeadlineSpecs = () => pf && pf.status === 'ok' ? pf.data.items.filter(pfOpen).flatMap(pfDueSpecs) : [];
+function applyPortfolio() { if (model) model.deadlines = (model.deadlines || []).filter(s => !s.pf).concat(pfDeadlineSpecs()); }
+function pfNextDue(x, nowMs) {
+  let best = null;
+  for (const s of pfDueSpecs(x)) { const d = deadlineNow(s, nowMs); if (d && (!best || dlTime(d) < dlTime(best))) best = d; }
+  return best;
+}
+function pfDueDoneButton(s) {
+  return pfBtn('Done', () => pfUpdate(s.pf, it => { const l = it.due[s.pfDue]; if (typeof l === 'string' && !/^\s*x\s/i.test(l)) it.due[s.pfDue] = 'x ' + l; }, 'Portfolio: ' + s.issue.title + ' · deadline done'), '', 'Deadline marked done');
+}
+function pfCheckedButton(x) {
+  const days = x.state === 'waiting' ? 5 : 7;
+  return pfBtn('Checked · next in ' + (days === 7 ? '1 week' : days + ' days'), () => pfUpdate(x.id, it => { it.check = addDays(todayStr(), days); }, 'Portfolio: checked ' + x.title), '', 'Next check ' + addDays(todayStr(), days));
+}
+const pfReviewButton = (label) => h('button', { class: 'btn sm primary', type: 'button', onclick: () => { pfShowReview = true; setView('portfolio'); } }, label || 'Start review');
+
+/* What the portfolio adds to Today. */
+function pfInbox(push, nowMs) {
+  if (!pf) return;
+  if (pf.status === 'norepo' || pf.status === 'nofile') {
+    push({ key: 'pf:setup', sev: 3, title: 'Start your portfolio', why: 'One private list of every paper, app, course and admin duty, so research waits and deadlines show up here too.', next: pf.status === 'norepo' ? 'Create the private repo ' + pfRepoName() + ' and give this page a token for it.' : 'The repo is there: add the list.', url: '#portfolio', linkText: 'Set up' });
+    return;
+  }
+  if (pf.status !== 'ok') return;
+  const data = pf.data, items = data.items, today = todayStr();
+  const due = items.filter(x => pfOpen(x) && isDate(x.check) && x.check <= today).sort((a, b) => a.check.localeCompare(b.check));
+  if (due.length > 4) push({ key: 'pf:checks:' + today + ':' + due.length, sev: 2, title: plural(due.length, 'portfolio row') + ' to check', why: due.slice(0, 3).map(x => x.title).join(' · ') + ' …', next: 'Open Portfolio → Today and set each row\'s next check as you go.', url: '#portfolio', linkText: 'Open' });
+  else for (const x of due) push({ key: 'pf:check:' + x.id + ':' + x.check, sev: 2, title: x.title,
+    why: x.state === 'waiting' ? 'Waiting on ' + (x.waitingOn || 'nobody named') + (isDate(x.since) ? ' for ' + plural(daysBetween(x.since, today), 'day') : '') + ': follow up now.' : 'Check date ' + (x.check === today ? 'today' : x.check) + '.',
+    next: x.next || 'Decide the next action.', url: '#portfolio', linkText: 'Open', actions: [pfCheckedButton(x)] });
+  const act = items.filter(x => x.state === 'active' && !x.area);
+  if (act.length > data.wipLimit) push({ key: 'pf:wip:' + act.length + ':' + data.wipLimit, sev: 2, title: act.length + ' active projects, limit ' + data.wipLimit, why: 'Juggling slows every one of them: ' + act.map(x => x.title).join(' · ') + '.', next: 'Park one (with a resume note) or finish one.', url: '#portfolio', linkText: 'Open' });
+  const vague = items.filter(x => x.state === 'waiting' && (!x.waitingOn || !isDate(x.check)));
+  if (vague.length) push({ key: 'pf:vague:' + vague.map(x => x.id).join(','), sev: 3, title: plural(vague.length, 'wait') + ' without who or a check date', why: vague.map(x => x.title).join(' · '), next: 'Add who has it, since when, and the day you will check.', url: '#portfolio', linkText: 'Open' });
+  const waits = items.filter(x => x.state === 'waiting').length;
+  if (waits > 10) push({ key: 'pf:waits:' + waits, sev: 3, title: waits + ' rows waiting on others', why: 'More than 8 to 10 waits usually means too much started, not too little chasing.', next: 'Park or kill the least valuable ones.', url: '#portfolio', linkText: 'Open' });
+  const accepted = PF_STAGES.paper.indexOf('accepted');
+  for (const x of items) {
+    if (x.type !== 'paper' || !pfOpen(x) || !isDate(x.lastSearch) || pfStageIdx(x) >= accepted) continue;
+    const age = daysBetween(x.lastSearch, today);
+    if (age >= 270) push({ key: 'pf:search:' + x.id + ':' + x.lastSearch, sev: 3, title: x.title + ': search is ' + Math.floor(age / 30.4) + ' months old', why: 'Cochrane wants searches run within 12 months of publication, and reviewers ask.', next: 'Plan the update search before you submit.', url: '#portfolio', linkText: 'Open' });
+  }
+  for (const x of act) if (isDate(x.touched) && daysBetween(x.touched, today) >= 28) push({ key: 'pf:stale:' + x.id + ':' + x.touched, sev: 3, title: x.title + ': untouched for ' + Math.floor(daysBetween(x.touched, today) / 7) + ' weeks', why: 'Would you start this today?', next: 'Keep it (set the next action), park it with a resume note, or kill it.', url: '#portfolio', linkText: 'Open' });
+  const day = new Date(nowMs), last = data.reviews[data.reviews.length - 1];
+  if (day.getDay() === 0 && last !== today) push({ key: 'pf:review:' + today, sev: day.getHours() >= 19 ? 2 : 3, title: 'Sunday review · 25 minutes', why: 'Record progress, chase the waits, keep active projects within ' + data.wipLimit + '.', next: 'Open the checklist and work down it.', actions: [pfReviewButton()] });
+  else if (day.getDay() !== 0 && (!last || daysBetween(last, today) > 8)) push({ key: 'pf:review-late:' + (last || 'never'), sev: 3, title: last ? 'Weekly review last done ' + plural(daysBetween(last, today), 'day') + ' ago' : 'No weekly review yet', why: 'The 25-minute review is what keeps this list true.', next: 'Do it now, or this Sunday evening.', actions: [pfReviewButton('Checklist')] });
+}
+
+function pfCheckChip(x) {
+  if (!pfOpen(x)) return null;
+  if (!isDate(x.check)) return x.state === 'waiting' ? h('span', { class: 'pill warnp' }, 'no check date') : null;
+  const d = daysBetween(todayStr(), x.check);
+  const text = d < 0 ? 'check · ' + (-d) + 'd late' : d === 0 ? 'check today' : d === 1 ? 'check tomorrow' : 'check in ' + (d < 14 ? d + 'd' : Math.round(d / 7) + 'w');
+  return h('span', { class: 'pill ' + (d <= 0 ? 'duep' : d <= 2 ? 'soonp' : 'idlep'), title: 'Next check ' + x.check }, text);
+}
+function pfRow(x) {
+  const today = todayStr(), due = pfNextDue(x, now()), editing = pfEditing === x.id;
+  const wait = x.state === 'waiting' ? h('div', { class: 'meta' }, 'Waiting on ', h('b', null, x.waitingOn || 'nobody named'), isDate(x.since) ? ' · asked ' + plural(daysBetween(x.since, today), 'day') + ' ago' : '') : null;
+  const facts = [x.journal ? 'Journal: ' + x.journal : null, x.lastSearch ? 'last search ' + x.lastSearch : null, x.where || null].filter(Boolean);
+  const head = h('div', { class: 'pf-head' },
+    h('span', { class: 'pf-st ' + x.state }, PF_STATE_LABEL[x.state]),
+    h('div', { class: 'pf-main' },
+      h('div', { class: 'pf-title' }, h('b', null, x.title), x.stage ? h('span', { class: 'tag' }, x.stage) : null, x.area ? h('span', { class: 'tag auto' }, 'area') : null),
+      x.next ? h('div', null, h('span', { class: 'meta' }, 'Next: '), x.next) : null,
+      wait,
+      x.note ? h('div', { class: 'meta' }, 'Resume: ' + x.note) : null,
+      facts.length || x.link ? h('div', { class: 'meta' }, facts.join(' · '), x.link ? [facts.length ? ' · ' : '', link(x.link, 'open')] : null) : null),
+    h('div', { class: 'pf-side' }, pfCheckChip(x), due ? cdNode(due) : null));
+  const acts = editing ? null : h('div', { class: 'pf-act' },
+    pfOpen(x) ? pfCheckedButton(x) : null,
+    h('button', { class: 'btn sm', type: 'button', onclick: () => { pfEditing = x.id; pfAdding = false; render(); } }, icon('pencil', 14), 'Edit'));
+  return h('div', { class: 'pf-row' + (editing ? ' editing' : ''), id: 'pf-' + x.id }, head, acts, editing ? pfEditor(x, false) : null);
+}
+function pfEditor(x, isNew) {
+  const cur = JSON.parse(JSON.stringify(x));
+  const inp = (id, value, attrs) => h('input', Object.assign({ type: 'text', id, value: value || '' }, attrs || {}));
+  const fld = (label, el, wide) => h('label', { class: 'f' + (wide ? ' wide' : '') }, h('span', null, label), el);
+  const title = inp('pfe-title', cur.title, { placeholder: 'Short name you will recognise' });
+  const type = h('select', { id: 'pfe-type' }, PF_TYPES.map(t => h('option', { value: t, selected: t === cur.type ? true : null }, PF_TYPE_LABEL[t])));
+  const stage = h('select', { id: 'pfe-stage' });
+  const fillStages = () => {
+    const list = (PF_STAGES[type.value] || []).slice();
+    if (cur.stage && !list.includes(cur.stage)) list.unshift(cur.stage);
+    stage.replaceChildren(h('option', { value: '' }, '—'), ...list.map(s => h('option', { value: s, selected: s === cur.stage ? true : null }, s)));
+  };
+  fillStages();
+  const who = inp('pfe-who', cur.waitingOn, { placeholder: 'Journal, co-author, PI…' });
+  const since = h('input', { type: 'date', id: 'pfe-since', value: cur.since || '' });
+  const waitBox = h('div', { class: 'wide pf-edit' + (cur.state === 'waiting' ? '' : ' hid') }, fld('Waiting on', who), fld('Asked on', since));
+  const seg = h('div', { class: 'seg', role: 'group', 'aria-label': 'State' });
+  const setState = (s) => { cur.state = s; for (const b of seg.children) b.setAttribute('aria-pressed', String(b.dataset.s === s)); waitBox.classList.toggle('hid', s !== 'waiting'); };
+  for (const s of PF_STATES) seg.append(h('button', { type: 'button', class: 'segb', 'data-s': s, 'aria-pressed': String(cur.state === s), onclick: () => setState(s) }, PF_STATE_LABEL[s]));
+  const next = inp('pfe-next', cur.next, { placeholder: 'The very next physical action' });
+  const check = h('input', { type: 'date', id: 'pfe-check', value: cur.check || '' });
+  const quick = h('div', { class: 'quick' }, [['+3 days', 3], ['+1 week', 7], ['+2 weeks', 14], ['+1 month', 30]].map(([l, n]) => h('button', { type: 'button', class: 'btn sm ghost', onclick: (ev) => { ev.preventDefault(); check.value = addDays(todayStr(), n); } }, l)),
+    h('button', { type: 'button', class: 'btn sm ghost', onclick: (ev) => { ev.preventDefault(); check.value = ''; } }, 'None'));
+  const journal = inp('pfe-journal', cur.journal, { placeholder: 'Where it goes first' });
+  const backup = inp('pfe-backup', cur.backup, { placeholder: 'Two backups, before you submit' });
+  const lastSearch = h('input', { type: 'date', id: 'pfe-search', value: cur.lastSearch || '' });
+  const paperBox = h('div', { class: 'wide pf-edit' + (cur.type === 'paper' ? '' : ' hid') }, fld('Target journal', journal), fld('Backup journals', backup), fld('Last search date', lastSearch));
+  type.addEventListener('change', () => { cur.stage = ''; fillStages(); paperBox.classList.toggle('hid', type.value !== 'paper'); });
+  const due = h('textarea', { id: 'pfe-due', rows: 3, placeholder: '2026-11-06 18:00 Asia/Taipei | what is due\nPut "x " in front once it is done' }, (cur.due || []).join('\n'));
+  const note = h('textarea', { id: 'pfe-note', rows: 2, placeholder: 'Where to restart, what is left, what you postponed' }, cur.note || '');
+  const where = inp('pfe-where', cur.where, { placeholder: 'Folder, Drive path or Claude project' });
+  const linkIn = inp('pfe-link', cur.link, { placeholder: 'https://… (optional)' });
+  const area = h('input', { type: 'checkbox', id: 'pfe-area', checked: cur.area ? true : null });
+  let areaTouched = false;
+  area.addEventListener('change', () => { areaTouched = true; });
+  type.addEventListener('change', () => { if (!areaTouched) area.checked = PF_AREA_TYPES.includes(type.value); });
+  const done = () => { pfEditing = null; pfAdding = false; };
+  const save = h('button', { class: 'btn primary', type: 'button', onclick: (ev) => {
+    const t = title.value.trim();
+    if (!t) { toast('Give it a title', true); return; }
+    const dueLines = due.value.split('\n').map(s => s.trim()).filter(Boolean);
+    const bad = dueLines.find(l => !/^\s*x\s/i.test(l) && !parseDeadlines(/^\s*(window|due)\s*:/i.test(l) ? l : 'Due: ' + l).length);
+    if (bad) { toast('Not a date line: ' + bad, true); return; }
+    const lv = linkIn.value.trim();
+    if (lv && !/^https:\/\//.test(lv)) { toast('The link must start with https://', true); return; }
+    const vals = { title: t, type: type.value, state: cur.state, stage: stage.value, next: next.value.trim(), waitingOn: who.value.trim(), since: since.value || (cur.state === 'waiting' ? todayStr() : ''), check: check.value, journal: journal.value.trim(), backup: backup.value.trim(), lastSearch: lastSearch.value, note: note.value.trim(), where: where.value.trim(), link: lv };
+    const apply = (it) => { for (const [k, v] of Object.entries(vals)) { if (v === '') delete it[k]; else it[k] = v; } it.due = dueLines; it.area = area.checked; };
+    if (isNew) pfRun(() => pfWrite(data => { const it = { id: pfSlug(t, new Set(data.items.map(i => i.id))), log: [] }; apply(it); pfTouch(it, null); data.items.push(it); }, 'Portfolio: add ' + t), ev.currentTarget, 'Added', done);
+    else pfRun(() => pfUpdate(x.id, apply, 'Portfolio: ' + t + ' · ' + vals.state + (vals.stage ? ', ' + vals.stage : '')), ev.currentTarget, 'Saved', done);
+  } }, isNew ? 'Add' : 'Save');
+  return h('div', { class: 'pf-edit' },
+    fld('Title', title, true),
+    h('div', { class: 'f wide', style: 'margin-top:6px' }, h('span', { class: 'meta', style: 'display:block;margin-bottom:4px' }, 'State'), seg),
+    fld('Type', type), fld('Stage', stage),
+    fld('Next action', next, true),
+    waitBox,
+    h('label', { class: 'f' }, h('span', null, 'Next check'), check, quick),
+    paperBox,
+    fld('Deadlines only you can meet (one per line)', due, true),
+    fld('Resume note', note, true),
+    fld('Where the material lives', where), fld('Link', linkIn),
+    h('label', { class: 'check wide' }, area, 'Ongoing area (course, admin, quant): does not count toward the active limit'),
+    h('div', { class: 'dlg-actions' },
+      isNew ? null : pfArmed('Delete', () => pfWrite(data => { data.items = data.items.filter(i => i.id !== x.id); }, 'Portfolio: remove ' + x.title), 'danger', 'Removed: Killed keeps the history next time', done),
+      h('div', { class: 'grow' }),
+      h('button', { class: 'btn', type: 'button', onclick: () => { done(); render(); } }, 'Cancel'),
+      save));
+}
+function pfBoard(items) {
+  if (!items.length) return h('div', { class: 'empty' }, 'Nothing open.');
+  return PF_TYPES.filter(t => items.some(x => x.type === t)).map(t => {
+    const its = items.filter(x => x.type === t);
+    const stages = (PF_STAGES[t] || []).slice();
+    for (const x of its) if (x.stage && !stages.includes(x.stage)) stages.push(x.stage);
+    const cols = stages.map(sg => ({ sg, list: its.filter(x => x.stage === sg) })).filter(c => c.list.length);
+    const none = its.filter(x => !x.stage);
+    if (none.length) cols.push({ sg: 'no stage', list: none });
+    const open = (x) => { pfEditing = x.id; pfAdding = false; pfFilter = 'all'; setView('portfolio', 'pf-' + x.id); };
+    return h('div', { class: 'pf-bgroup' }, h('p', { class: 'grp-label' }, PF_TYPE_LABEL[t] + ' · ' + its.length),
+      h('div', { class: 'pf-board' }, cols.map(c => h('div', { class: 'pf-col' },
+        h('div', { class: 'pf-colh' }, h('b', null, c.sg), h('span', { class: 'count' }, String(c.list.length))),
+        c.list.map(x => h('button', { class: 'pf-mini', type: 'button', onclick: () => open(x) }, h('span', { class: 't' }, h('span', { class: 'pf-dot ' + x.state, title: PF_STATE_LABEL[x.state] }), x.title), pfCheckChip(x)))))));
+  });
+}
+function pfInView(x, f, today, nowMs) {
+  if (f === 'all') return true;
+  if (f === 'board') return pfOpen(x);
+  if (f === 'today') {
+    if (!pfOpen(x)) return false;
+    if (isDate(x.check) && x.check <= today) return true;
+    const d = pfNextDue(x, nowMs);
+    return !!d && dlTime(d) - nowMs < 7 * DAY;
+  }
+  return x.state === f;
+}
+function pfReviewCard(data) {
+  const items = data.items, today = todayStr();
+  const act = items.filter(x => x.state === 'active');
+  const actCount = act.filter(x => !x.area).length;
+  const chase = items.filter(x => x.state === 'waiting' && isDate(x.check) && x.check <= today);
+  const stale = act.filter(x => !x.area && isDate(x.touched) && daysBetween(x.touched, today) >= 28);
+  const grave = items.filter(x => x.state === 'parked').filter(x => { const first = x.log.filter(e => e.stage === (x.stage || '')).map(e => e.date).sort()[0] || x.touched; return isDate(first) && daysBetween(first, today) >= 365; });
+  const moves = items.reduce((s, x) => s + x.log.filter(e => daysBetween(e.date, today) <= 7).length, 0);
+  const last = data.reviews[data.reviews.length - 1];
+  const list = (xs) => xs.map(x => x.title).join(' · ');
+  return h('section', { class: 'card pf-review', 'aria-labelledby': 'h-review' },
+    h('div', { class: 'sec-head' }, h('h2', { id: 'h-review' }, 'Weekly review · 25 min'), h('div', { class: 'grow' }), h('span', { class: 'meta' }, last ? 'last done ' + last : 'your first one')),
+    h('ol', null,
+      h('li', null, h('b', null, 'Skim, 6 min. '), 'Saturday\'s review-invitation digest, Sunday\'s literature and week-ahead digests, Today on this page, flagged mail. Only add or update rows.'),
+      h('li', null, h('b', null, 'Rows, 10 min. '), plural(act.length, 'active row') + ': update the stage, next action and resume note. ', chase.length ? ['Chase now: ', h('b', null, list(chase)), '. '] : 'No waits to chase. ', 'Calendar: one week back, four ahead; add any new deadline only you can meet.'),
+      h('li', null, h('b', null, 'Limit and prune, 8 min. '), 'Active ' + actCount + ' of ' + data.wipLimit + (actCount < data.wipLimit ? ': a slot is free, so pull in a parked project. ' : actCount > data.wipLimit ? ': over the limit, so park one. ' : '. '),
+        stale.length ? ['Untouched 4+ weeks, would you start it today? ', h('b', null, list(stale)), '. '] : null,
+        grave.length ? ['Same stage for a year: ', h('b', null, list(grave)), '. Kill it or revive it. '] : null,
+        'Pick each day\'s main project and book writing slots as if-then plans ("Tuesday 06:00: open the draft at its resume note").'),
+      h('li', null, h('b', null, 'Tell someone, 4 min. '), 'A three-line status update to a mentor or co-author.')),
+    h('p', { class: 'meta' }, 'Last 7 days: ', h('b', null, String(moves)), ' stage or state changes. Deadlines found too late since ' + (data.trialStart || 'the start') + ': ', h('b', null, String(data.late.length)), ' (aim for zero).'),
+    h('div', { class: 'pc-act' },
+      pfBtn('Review done', () => pfWrite(d => { if (d.reviews[d.reviews.length - 1] !== today) d.reviews.push(today); }, 'Portfolio: weekly review ' + today), 'primary', 'Review logged', () => { pfShowReview = null; }),
+      pfBtn('Found a deadline too late', () => pfWrite(d => { d.late.push({ date: today }); }, 'Portfolio: a deadline found too late'), '', 'Logged. Add it to its row now.'),
+      h('button', { class: 'btn sm ghost', type: 'button', onclick: () => { pfShowReview = false; render(); } }, 'Hide')));
+}
+function pfSetupCard() {
+  const repo = pfRepoName(), owner = cfg.owner || 'you';
+  if (pf.status === 'nofile') {
+    const ta = h('textarea', { id: 'pf-import', rows: 6, placeholder: '{ "version": 1, "items": [ … ] }' });
+    return h('div', { class: 'card setup' }, h('h2', null, 'Start the list'),
+      h('p', { style: 'margin:8px 0' }, 'The private repo ', h('code', null, owner + '/' + repo), ' is there but has no ', h('code', null, PF_FILE), ' yet. Start empty, or paste a list you already have.'),
+      h('div', { class: 'toolbar' },
+        pfBtn('Create an empty list', () => pfCreate({ version: 1, wipLimit: 3, items: [] }), 'primary', 'Portfolio created'),
+        h('button', { class: 'btn sm', type: 'button', 'aria-expanded': String(pfImporting), onclick: () => { pfImporting = !pfImporting; render(); } }, 'Paste a list')),
+      pfImporting ? h('div', { class: 'taskform', style: 'margin-top:10px' }, ta, h('div', { style: 'display:flex;gap:8px;justify-content:flex-end' },
+        pfBtn('Import', () => { let j; try { j = JSON.parse(ta.value); } catch (e) { throw new Error('that is not valid JSON (' + e.message + ')'); } return pfCreate(j); }, 'primary', 'Imported', () => { pfImporting = false; }))) : null);
+  }
+  return h('div', { class: 'card setup' }, h('h2', null, 'Set up your portfolio'),
+    h('p', { style: 'margin:8px 0' }, 'One private list of every paper, app, course and admin duty: its state, the next action, who you are waiting on and when to check. Research waits and deadlines then show up in Today, next to the agents\' work.'),
+    h('ol', null,
+      h('li', null, 'Create a ', h('b', null, 'private'), ' repo named ', h('code', null, repo), ': ', link('https://github.com/new?name=' + encodeURIComponent(repo) + '&visibility=private', 'github.com/new'), '.'),
+      h('li', null, 'Make a token for it: ', link('https://github.com/settings/personal-access-tokens/new', 'new fine-grained token'), ', repository access ', h('b', null, 'only ' + repo), ', permission ', h('b', null, 'Contents: Read and write'), '. Paste it in Settings → Portfolio token.'),
+      h('li', null, 'Press Refresh.')),
+    pf.status === 'noaccess' ? h('p', { class: 'err' }, 'GitHub said: ' + (pf.why || 'no access') + '.') : null);
+}
+function renderPortfolio() {
+  const head = (extra) => h('div', { class: 'view-head' }, h('h1', { id: 'h-pf' }, 'Portfolio'), h('div', { class: 'grow' }), extra);
+  const wrap = (...kids) => h('section', { class: 'view', 'aria-labelledby': 'h-pf' }, ...kids);
+  if (!pf) return wrap(head(null), h('div', { class: 'empty' }, busy ? 'Loading…' : 'Press Refresh to load.'));
+  if (pf.status === 'error') return wrap(head(null), h('div', { class: 'card err' }, 'Could not read ' + PF_FILE + ': ' + pf.why + '. ', link(pfUrl() + '/blob/main/' + PF_FILE, 'Open it on GitHub')));
+  if (pf.status !== 'ok') return wrap(head(null), pfSetupCard());
+  const data = pf.data, items = data.items, today = todayStr(), nowMs = now();
+  const counts = {};
+  for (const [k] of PF_FILTERS) counts[k] = items.filter(x => pfInView(x, k, today, nowMs)).length;
+  if (!pfFilter) pfFilter = counts.today ? 'today' : 'active';
+  const chips = PF_FILTERS.map(([k, label]) => h('button', { class: 'fchip', type: 'button', 'aria-pressed': String(pfFilter === k), onclick: () => { pfFilter = k; pfEditing = null; render(); } }, label + (k === 'board' ? '' : ' ' + counts[k])));
+  const act = items.filter(x => x.state === 'active' && !x.area).length;
+  const chk = items.filter(x => pfOpen(x) && isDate(x.check) && x.check <= today).length;
+  const sum = h('p', { class: 'pf-sum' },
+    h('span', { class: 'wip' + (act > data.wipLimit ? ' over' : ''), title: 'Projects that need your own effort; ongoing areas do not count' }, 'Active ', h('b', null, act + ' of ' + data.wipLimit)),
+    h('span', null, h('b', null, String(chk)), ' to check'),
+    h('span', null, h('b', null, String(items.filter(x => x.state === 'waiting').length)), ' waiting on others'),
+    h('span', null, h('b', null, String(items.filter(x => x.state === 'parked').length)), ' parked'));
+  const sortCheck = (a, b) => (a.check || '9999').localeCompare(b.check || '9999') || a.title.localeCompare(b.title);
+  const nextUp = items.filter(x => pfOpen(x) && isDate(x.check) && x.check > today).sort(sortCheck)[0];
+  const empty = (text) => h('div', { class: 'card empty-ok' }, h('span', { class: 'it-ic t-ok' }, icon('check', 18)),
+    h('div', null, h('b', null, text), nextUp ? h('div', { class: 'it-why' }, 'Next check: ' + nextUp.title + ' on ' + nextUp.check + '.') : null));
+  let body;
+  if (pfFilter === 'board') body = pfBoard(items.filter(pfOpen));
+  else if (pfFilter === 'waiting') {
+    const groups = new Map();
+    for (const x of items.filter(y => y.state === 'waiting')) { const k = x.waitingOn || 'nobody named'; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(x); }
+    body = groups.size ? [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([who, xs]) => h('div', { class: 'grp' }, h('p', { class: 'grp-label' }, who + ' · ' + xs.length), h('div', { class: 'pf-list' }, xs.sort(sortCheck).map(pfRow)))) : empty('Not waiting on anyone.');
+  } else {
+    const list = items.filter(x => pfInView(x, pfFilter, today, nowMs));
+    const soon = (x) => { const d = pfNextDue(x, nowMs); return d && dlTime(d) - nowMs < 7 * DAY ? dlTime(d) : Infinity; };
+    if (pfFilter === 'today') list.sort((a, b) => soon(a) - soon(b) || (a.check || '9999').localeCompare(b.check || '9999') || PF_STATES.indexOf(a.state) - PF_STATES.indexOf(b.state) || a.title.localeCompare(b.title));
+    else if (pfFilter === 'parked') list.sort((a, b) => (a.touched || '').localeCompare(b.touched || ''));
+    else if (pfFilter === 'all') list.sort((a, b) => PF_STATES.indexOf(a.state) - PF_STATES.indexOf(b.state) || PF_TYPES.indexOf(a.type) - PF_TYPES.indexOf(b.type) || a.title.localeCompare(b.title));
+    else list.sort(sortCheck);
+    const msg = { today: 'Nothing to check today.', active: 'No active projects.', parked: 'Nothing parked.', all: 'No rows yet: add your first project.' }[pfFilter] || 'Nothing here.';
+    body = list.length ? h('div', { class: 'pf-list' }, list.map(pfRow)) : empty(msg);
+  }
+  const showReview = pfShowReview != null ? pfShowReview : (new Date(nowMs).getDay() === 0 && data.reviews[data.reviews.length - 1] !== today);
+  return wrap(
+    head(h('div', { class: 'toolbar' },
+      h('button', { class: 'btn', type: 'button', 'aria-expanded': String(showReview), onclick: () => { pfShowReview = !showReview; render(); } }, 'Weekly review'),
+      h('button', { class: 'btn primary', type: 'button', onclick: () => { pfAdding = true; pfEditing = null; render(); } }, icon('plus', 16), 'Add'))),
+    sum,
+    showReview ? pfReviewCard(data) : null,
+    pfAdding ? h('div', { class: 'pf-list' }, h('div', { class: 'pf-row editing' }, h('b', null, 'New row'), pfEditor({ id: '', title: '', type: 'paper', state: 'parked', stage: '', due: [], log: [], area: false }, true))) : null,
+    h('div', { class: 'fchips' }, chips),
+    body,
+    h('p', { class: 'meta', style: 'margin:0' }, 'Saved in ', link(pfUrl() + '/blob/main/' + PF_FILE, cfg.owner + '/' + pfRepoName()), ' (private). Every save is a commit, so its history is your stage log.'));
+}
+
 /* ---------- Agents ---------- */
 function meter(n, cap) {
   const f = cap ? Math.min(1, n / cap) : 0;
@@ -1744,7 +2297,7 @@ function renderSystem(m) {
       h('p', { class: 'bigval ' + tone }, failed ? 'Last run ' + d.conclusion : d.status !== 'completed' ? 'Running' : String(d.count24), failed || d.status !== 'completed' ? null : h('small', null, ' runs in 24 h')),
       h('div', { class: 'bars' }, barRow('Expected', 1, 'color-mix(in srgb, var(--ink) 22%, transparent)', String(expected)), barRow('Actual', expected ? d.count24 / expected : 0, slow ? 'var(--warn)' : 'var(--good)', String(d.count24))),
       h('p', { class: 'meta' }, d.median ? 'Typical gap ' + dur(d.median) + (slow ? '. GitHub runs scheduled workflows late; a backup trigger from outside keeps the ' + dur(every) + ' rhythm.' : '.') : '', d.failed24 ? [' ', h('span', { class: 'bad' }, d.failed24 + ' failed in 24 h.')] : null),
-      h('div', { class: 'pc-act' }, extLink(d.listUrl, 'Runs'), slow ? extLink(setup + '#optional-a-trigger-that-does-not-lag', 'Backup trigger') : extLink(setup, 'Setup')));
+      h('div', { class: 'pc-act' }, extLink(d.listUrl, 'Runs'), slow ? extLink(setup + '#make-it-run-every-15-minutes-recommended', 'Backup trigger') : extLink(setup, 'Setup')));
   }
   let bTile;
   if (b && b.included) {
@@ -1786,12 +2339,13 @@ function render() {
   items = buildInbox(model);
   renderStatus(items);
   if (view === 'projects') app.append(renderProjects(model));
+  else if (view === 'portfolio') app.append(renderPortfolio());
   else if (view === 'agents') app.append(renderAgents(model));
   else if (view === 'system') app.append(renderSystem(model));
   else app.append(renderHero(model, items), h('div', { class: 'today' }, renderInbox(model, items), h('aside', { class: 'side-col', 'aria-label': 'Deadlines and automations' }, renderDeadlines(model), renderAutomations())));
   app.append(h('footer', null,
     h('span', null, 'Labels: plan → the administrator splits it · ready → the dispatcher assigns it · size:S/M → Sonnet · size:L → Opus · ui → Antigravity · to:codex → Codex · claimed → agent on it · in-review → PR open · blocked → needs you · pause → everything stops · retired (on a repo) → hidden here'),
-    h('span', null, 'Deadlines: add a "Window:" or "Due:" line to an issue (see Settings).'),
+    h('span', null, 'Deadlines: add a "Window:", "Due:" or "Decide by:" line to an issue (see Settings), or a deadline to a portfolio row. Labels needs-spec and decision hold an issue for you: the dispatcher never gives those to an agent.'),
     h('span', null, 'Install: Share → Add to Home Screen (phone) or the install icon in the address bar.')));
 }
 
@@ -1805,6 +2359,7 @@ function openSettings() {
     return parts.join(' | ');
   }).join('\n');
   $('#fRoutineRepos').value = Object.entries(cfg.routineRepos || {}).map(([a, list]) => a + ': ' + list.join(', ')).join('\n');
+  $('#fPfRepo').value = pfRepoName(); $('#fPfToken').value = pfToken;
   $('#fRefresh').value = cfg.refreshMin; $('#fStale').value = cfg.staleHours; $('#fClaim').value = cfg.claimHours; $('#fFail').value = cfg.failHours; $('#fMinutes').value = cfg.includedMinutes;
   $('#tokenHelp2').replaceChildren(tokenHelp());
   $('#settings').showModal();
@@ -1829,9 +2384,13 @@ function applySettings() {
   cfg.claimHours = Math.max(0.5, +$('#fClaim').value || DEFAULTS.claimHours);
   cfg.failHours = Math.max(0.5, +$('#fFail').value || DEFAULTS.failHours);
   cfg.includedMinutes = Math.max(0, +$('#fMinutes').value || 0);
+  const pr = $('#fPfRepo').value.trim();
+  cfg.portfolioRepo = /^[\w.-]+$/.test(pr) ? pr : 'portfolio';
   saveConfig();
   const t = $('#fToken').value.trim();
   if (t !== token) { token = t; saveToken(t); tokenBad = false; }
+  const pt = $('#fPfToken').value.trim();
+  if (pt !== pfToken) { pfToken = pt; saveToken(pt, LS.pftoken); }
   return true;
 }
 
@@ -1842,7 +2401,7 @@ window.addEventListener('hashchange', () => { const v = location.hash.slice(1); 
 $('#btnTask').addEventListener('click', () => openTaskDialog());
 $('#btnSettings').addEventListener('click', openSettings);
 $('#btnCancel').addEventListener('click', () => $('#settings').close());
-$('#btnForget').addEventListener('click', () => { token = ''; saveToken(''); model = null; tokenBad = false; $('#settings').close(); render(); toast('Token removed from this browser'); });
+$('#btnForget').addEventListener('click', () => { token = ''; saveToken(''); pfToken = ''; saveToken('', LS.pftoken); model = null; pf = null; tokenBad = false; $('#settings').close(); render(); toast('Tokens removed from this browser'); });
 $('#settingsForm').addEventListener('submit', (ev) => { ev.preventDefault(); if (applySettings()) { $('#settings').close(); model = null; refresh(); } });
 $('#btnDiscover').addEventListener('click', async (ev) => {
   if (!token) { toast('Connect a token first', true); return; }
@@ -1861,7 +2420,7 @@ $('#btnDiscover').addEventListener('click', async (ev) => {
 });
 $('#taskDlg').addEventListener('click', (ev) => { if (ev.target === $('#taskDlg')) $('#taskDlg').close(); });
 /* Never refresh under someone typing: a refresh redraws the page and would drop an open task form. */
-const editing = () => !!document.querySelector('.taskform') || $('#settings').open || $('#taskDlg').open;
+const editing = () => !!document.querySelector('.taskform, .pf-edit') || $('#settings').open || $('#taskDlg').open;
 setInterval(() => { if (token && document.visibilityState === 'visible' && now() - lastRefresh > cfg.refreshMin * 60e3 && !busy && !editing()) refresh(); }, 20e3);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && token && now() - lastRefresh > 60e3 && !busy && !editing()) refresh(); });
 setInterval(() => { if (model && !busy) { renderHeader(); tickCountdowns(); } }, 30e3);
