@@ -996,7 +996,13 @@ async function loadDispatcher(signal) {
     const times = runs.map(x => Date.parse(x.run_started_at || x.created_at)).filter(t => t >= since).sort((a, b) => a - b);
     const gaps = []; for (let i = 1; i < times.length; i++) gaps.push(times[i] - times[i - 1]);
     gaps.sort((a, b) => a - b);
+    /* The current rhythm comes from the newest runs, so a fixed trigger shows within the hour instead of after a day. */
+    const newest = runs.map(x => Date.parse(x.run_started_at || x.created_at)).sort((a, b) => b - a).slice(0, 9);
+    const rgaps = []; for (let i = 1; i < newest.length; i++) rgaps.push(newest[i - 1] - newest[i]);
+    rgaps.sort((a, b) => a - b);
     return {
+      recent: rgaps.length ? rgaps[Math.floor(rgaps.length / 2)] : null,
+      outside: runs.filter(x => x.event === 'workflow_dispatch').length >= 3,
       at: run.updated_at, startedAt: run.run_started_at || run.created_at, status: run.status, conclusion: run.conclusion, url: run.html_url,
       count24: times.length, median: gaps.length ? gaps[Math.floor(gaps.length / 2)] : null, max: gaps.length ? gaps[gaps.length - 1] : null,
       failed24: runs.filter(x => Date.parse(x.created_at) >= since && x.status === 'completed' && !['success', 'skipped', 'cancelled'].includes(x.conclusion)).length,
@@ -1257,7 +1263,7 @@ function buildInbox(m) {
   if (d && !d.none && !d.error) {
     const age = nowMs - Date.parse(d.startedAt || d.at);
     if (age > Math.max(3 * HOUR, 8 * every)) push({ key: 'disp:stale', sev: 1, icon: '⏱', title: 'Dispatcher hasn\'t run for ' + dur(age), why: 'No agent is woken until it runs again.', next: 'Open Actions → dispatch, press Run workflow, and check the schedule is still enabled.', url: d.listUrl });
-    else if (d.median && d.median > 4 * every) push({ key: 'disp:slow', sev: 2, icon: '⏱', title: 'Dispatcher runs every ~' + dur(d.median) + ', not every ' + dur(every), why: 'GitHub delays or drops scheduled runs at busy times: ' + d.count24 + ' runs in the last 24 hours instead of ~' + Math.round(DAY / every) + ', so agents wake hours late.', next: 'Add the outside trigger from dispatch/SETUP.md (a free cron service, every 15 minutes).', url: 'https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/SETUP.md#make-it-run-every-15-minutes-recommended' });
+    else if (d.recent && d.recent > 4 * every) push({ key: 'disp:slow', sev: 2, icon: '⏱', title: 'Dispatcher runs every ~' + dur(d.recent) + ', not every ' + dur(every), why: (d.outside ? 'The outside trigger has stopped starting it, and GitHub runs the schedule late: ' : 'GitHub delays or drops scheduled runs at busy times: ') + d.count24 + ' runs in the last 24 hours instead of ~' + Math.round(DAY / every) + ', so agents wake hours late.', next: d.outside ? 'Open the cron job\'s history (cron-job.org): a 401 means its token expired, so make a new dispatch-trigger token and paste it after "Bearer ".' : 'Add the outside trigger from dispatch/SETUP.md (a free cron service, every 15 minutes).', url: d.outside ? 'https://console.cron-job.org/jobs' : 'https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/SETUP.md#make-it-run-every-15-minutes-recommended', linkText: d.outside ? 'Cron jobs ↗' : null });
     if (d.status === 'completed' && d.conclusion && !['success', 'skipped', 'cancelled'].includes(d.conclusion)) push({ key: 'disp:fail:' + d.url, sev: 1, icon: '✗', title: 'Last dispatcher run: ' + d.conclusion, why: 'Agents are not being woken while it fails.', next: 'Open the run and read the error.', url: d.url });
   } else if (d && (d.none || d.error)) push({ key: 'disp:none', sev: 3, icon: '⏱', title: 'Dispatcher not running yet', why: 'Agents are only woken by the dispatcher.', next: 'Follow dispatch/SETUP.md.', url: 'https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/SETUP.md' });
 
@@ -2310,7 +2316,7 @@ function renderSystem(m) {
   if (!d) dTile = h('article', { class: 'stile' }, h('h2', null, 'Dispatcher'), h('p', { class: 'bigval' }, '…'));
   else if (d.none || d.error) dTile = h('article', { class: 'stile' }, h('div', { class: 'ac-head' }, h('span', { class: 'hdot warn' }), h('h2', null, 'Dispatcher')), h('p', { class: 'bigval warn' }, 'Not running yet'), h('div', { class: 'pc-act' }, extLink(setup, 'Set it up')));
   else {
-    const slow = d.median && d.median > 4 * every;
+    const slow = d.recent && d.recent > 4 * every;
     const failed = d.status === 'completed' && d.conclusion && !['success', 'skipped', 'cancelled'].includes(d.conclusion);
     const expected = Math.round(DAY / every);
     const tone = failed ? 'bad' : slow ? 'warn' : 'ok';
@@ -2318,7 +2324,7 @@ function renderSystem(m) {
       h('div', { class: 'ac-head' }, h('span', { class: 'hdot ' + (tone === 'ok' ? 'good' : tone) }), h('h2', null, 'Dispatcher'), h('div', { class: 'grow' }), h('span', { class: 'meta' }, 'last run ' + ago(d.at))),
       h('p', { class: 'bigval ' + tone }, failed ? 'Last run ' + d.conclusion : d.status !== 'completed' ? 'Running' : String(d.count24), failed || d.status !== 'completed' ? null : h('small', null, ' runs in 24 h')),
       h('div', { class: 'bars' }, barRow('Expected', 1, 'color-mix(in srgb, var(--ink) 22%, transparent)', String(expected)), barRow('Actual', expected ? d.count24 / expected : 0, slow ? 'var(--warn)' : 'var(--good)', String(d.count24))),
-      h('p', { class: 'meta' }, d.median ? 'Typical gap ' + dur(d.median) + (slow ? '. GitHub runs scheduled workflows late; a backup trigger from outside keeps the ' + dur(every) + ' rhythm.' : '.') : '', d.failed24 ? [' ', h('span', { class: 'bad' }, d.failed24 + ' failed in 24 h.')] : null),
+      h('p', { class: 'meta' }, d.recent ? 'Lately every ~' + dur(d.recent) + (slow ? (d.outside ? '. The outside trigger has stopped; check the cron job.' : '. GitHub runs scheduled workflows late; a backup trigger from outside keeps the ' + dur(every) + ' rhythm.') : d.outside ? ', with the outside trigger' + (d.count24 < DAY / every * 0.8 ? '; the 24-hour count catches up within a day.' : '.') : '.') : '', d.failed24 ? [' ', h('span', { class: 'bad' }, d.failed24 + ' failed in 24 h.')] : null),
       h('div', { class: 'pc-act' }, extLink(d.listUrl, 'Runs'), slow ? extLink(setup + '#make-it-run-every-15-minutes-recommended', 'Backup trigger') : extLink(setup, 'Setup')));
   }
   let bTile;
