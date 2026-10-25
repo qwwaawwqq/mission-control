@@ -1842,6 +1842,8 @@ function pfNormalize(j) {
     for (const k of ['stage', 'next', 'waitingOn', 'note', 'journal', 'backup', 'where', 'link']) if (x[k] != null && typeof x[k] !== 'string') x[k] = String(x[k]);
     for (const k of ['check', 'since', 'lastSearch', 'touched']) if (x[k] != null && !isDate(x[k])) delete x[k];
     if (x.link && !/^https:\/\//.test(x.link)) delete x.link;
+    /* mail the triage task matched to this row: [{ date, from, subject, label }] */
+    x.inbox = Array.isArray(x.inbox) ? x.inbox.filter(e => e && isDate(e.date) && typeof e.subject === 'string').slice(-20) : [];
   }
   out.reviews = Array.isArray(out.reviews) ? out.reviews.filter(isDate).slice(-80) : [];
   out.late = Array.isArray(out.late) ? out.late.filter(e => e && isDate(e.date)).slice(-200) : [];
@@ -2010,6 +2012,7 @@ function pfRow(x) {
       x.next ? h('div', null, h('span', { class: 'meta' }, 'Next: '), x.next) : null,
       wait,
       x.note ? h('div', { class: 'meta' }, 'Resume: ' + x.note) : null,
+      x.inbox.filter(e => !x.touched || e.date >= x.touched).slice(-2).map(e => h('div', { class: 'meta' }, h('b', null, 'Mail ' + e.date.slice(5)), ' · ' + [e.label, e.from, firstLine(e.subject, 90)].filter(Boolean).join(' · '))),
       facts.length || x.link ? h('div', { class: 'meta' }, facts.join(' · '), x.link ? [facts.length ? ' · ' : '', link(x.link, 'open')] : null) : null),
     h('div', { class: 'pf-side' }, pfCheckChip(x), due ? cdNode(due) : null));
   const acts = editing ? null : h('div', { class: 'pf-act' },
