@@ -808,7 +808,9 @@ async function loadRepo(r, signal) {
   const claudeBeats = beats.filter(b => /^claude/.test(b.agent));
   out.lastClaudeAt = claudeBeats.length ? claudeBeats.map(b => b.at).sort().pop() : null;
   out.lastBeat = beats.length ? beats.slice().sort((a, b) => b.at.localeCompare(a.at))[0] : null;
-  out.stalled = out.queue.length > 0 && !out.paused && hoursSince(out.lastClaudeAt) > cfg.staleHours;
+  /* Stalled only when a ready issue has itself waited past the threshold: a task created a minute ago
+     is just waiting for the next dispatcher run. */
+  out.stalled = out.queue.length > 0 && !out.paused && hoursSince(out.lastClaudeAt) > cfg.staleHours && out.queue.some(i => hoursSince(i.updated_at) > cfg.staleHours);
 
   /* CI on the default branch */
   const runs = (got.runs && got.runs.workflow_runs) || [];
@@ -1530,7 +1532,7 @@ function repoHealth(r, noshowRepos) {
   if (r.prs.some(p => p.level === 'you')) return { level: 'warn', text: 'A pull request waits for you' };
   if (r.mainFailing) return { level: 'warn', text: 'CI failing on ' + r.defaultBranch };
   if (r.working.length) return { level: 'good', text: 'Agents working on ' + r.working.map(i => '#' + i.number).join(', ') };
-  if (r.queue.length) return { level: 'good', text: plural(r.queue.length, 'task') + ' queued' };
+  if (r.queue.length) return { level: 'good', text: plural(r.queue.length, 'task') + ' queued for the next dispatcher run' };
   const unl = r.untracked.length ? ' · ' + plural(r.untracked.length, 'issue') + ' outside the labels' : '';
   if (r.merged7d.length) return { level: 'idle', text: 'Queue empty · shipped ' + r.merged7d.length + ' this week' + unl };
   return { level: 'idle', text: 'Queue empty' + unl };
