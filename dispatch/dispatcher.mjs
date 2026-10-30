@@ -483,7 +483,10 @@ export async function run({ config, env = {}, now = Date.now(), fetchImpl = fetc
   }
 
   const loads = agents.map((a) => `${a.name} ${a.model} ${a.target ? 'on' : 'off'} ${a.load5h}/${a.cap5h} (5h) ${a.load7d}/${a.cap7d} (7d)${a.cooling ? ' cooling' : ''}`);
-  return { stats, loads, detail, dry: DRY };
+  /* The same facts as data, for the run's "agents" annotation: Mission Control reads it to show which
+     routines are connected, since it can't see the secrets. Never the token or the routine URL. */
+  const agentState = Object.fromEntries(agents.map((a) => [a.name, { on: !!a.target, load5h: a.load5h, cap5h: a.cap5h, load7d: a.load7d, cap7d: a.cap7d, cooling: !!a.cooling }]));
+  return { stats, loads, agentState, detail, dry: DRY };
 }
 
 /* ---------- CLI ---------- */
@@ -493,6 +496,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     .then((r) => {
       console.log(JSON.stringify({ dry: r.dry, ...r.stats }));
       for (const l of r.loads || []) console.log(l);
+      /* One notice annotation per run (workflow-command escaping: % \r \n). */
+      if (process.env.GITHUB_ACTIONS === 'true' && r.agentState) {
+        console.log(`::notice title=agents::${JSON.stringify(r.agentState).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A')}`);
+      }
       if (r.note) console.log(r.note);
       for (const l of r.detail || []) console.log(l);
     })

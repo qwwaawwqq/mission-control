@@ -343,6 +343,23 @@ footer { color: var(--ink-2); font-size: 13px; margin-top: 40px; display: flex; 
 .pf-edit { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0 14px; }
 .pf-edit .wide { grid-column: 1 / -1; }
 .pf-edit label.f { margin-top: 6px; }
+
+/* Goals: each agent repo's goal (its open `goal` issue) and how far along it is */
+.gcard { flex: 1 1 360px; }
+.g-goal { margin: 0; font-size: 16px; font-weight: 650; line-height: 1.35; color: var(--ink); overflow-wrap: anywhere; }
+.g-goal.none { font-weight: 550; color: var(--ink-2); }
+.g-prog { display: flex; align-items: center; gap: 10px; }
+.g-bar { flex: 1 1 auto; height: 8px; border-radius: 999px; background: var(--chip); overflow: hidden; }
+.g-bar > span { display: block; height: 100%; border-radius: 999px; background: var(--good); }
+.g-pct { flex: none; font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.g-pct b { color: var(--ink); }
+.g-ms { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; font-size: 13.5px; }
+.g-ms li { display: flex; gap: 8px; align-items: flex-start; color: var(--ink-2); overflow-wrap: anywhere; }
+.g-ms li::before { content: ''; flex: none; display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; margin-top: 2px; border-radius: 4px; border: 1.5px solid var(--muted); box-sizing: border-box; font-size: 10px; font-weight: 800; line-height: 1; color: #fff; }
+.g-ms li.done::before { content: '✓'; background: var(--good); border-color: var(--good); }
+.g-ms li.next { color: var(--ink); font-weight: 600; }
+.g-ms li.next::before { border-color: var(--accent); }
+.g-now b { color: var(--ink); font-weight: 650; }
 .pf-edit .dlg-actions { grid-column: 1 / -1; margin-top: 10px; }
 .seg { display: flex; flex-wrap: wrap; gap: 4px; }
 .segb { min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--ink); font-size: 13px; font-weight: 600; cursor: pointer; }
@@ -405,6 +422,7 @@ footer { color: var(--ink-2); font-size: 13px; margin-top: 40px; display: flex; 
     <div class="brand"><span class="dot" id="statusDot"></span><h1>Mission Control</h1></div>
     <nav class="views" aria-label="Views">
       <button type="button" data-view="today" id="nav-today" aria-pressed="true"><span class="vi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></span><span class="vl">Today</span><span class="badge hid"></span></button>
+      <button type="button" data-view="goals" id="nav-goals" aria-pressed="false"><span class="vi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span><span class="vl">Goals</span><span class="badge hid"></span></button>
       <button type="button" data-view="portfolio" id="nav-portfolio" aria-pressed="false"><span class="vi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg></span><span class="vl">Portfolio</span><span class="badge hid"></span></button>
       <button type="button" data-view="projects" id="nav-projects" aria-pressed="false"><span class="vi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg></span><span class="vl">Projects</span><span class="badge hid"></span></button>
       <button type="button" data-view="agents" id="nav-agents" aria-pressed="false"><span class="vi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></span><span class="vl">Agents</span><span class="badge hid"></span></button>
@@ -511,7 +529,7 @@ let feedScope = 'exceptions';
 let discoveredThisLoad = false;
 let showAllInbox = false;
 let showSnoozed = false;
-let view = (() => { const v = (location.hash || '').slice(1); return ['today', 'portfolio', 'projects', 'agents', 'system'].includes(v) ? v : loadJSON(LS.view, 'today'); })();
+let view = (() => { const v = (location.hash || '').slice(1); return ['today', 'goals', 'portfolio', 'projects', 'agents', 'system'].includes(v) ? v : loadJSON(LS.view, 'today'); })();
 let inboxFilter = 'all';
 let projFilter = 'all';
 let showAllAutos = false;
@@ -796,6 +814,23 @@ function mergeRepos(found) {
   return added;
 }
 
+/* ---------- goals: one open issue labelled `goal` per repo ---------- */
+/* Its title is the goal ("Goal: …") and its task list ("- [x] …") the milestones, so the goal is private
+   to the repo, editable on GitHub, and ticking a milestone there moves the bar here. No workflow label,
+   so the dispatcher never hands it to an agent. A "Due:" line in it shows up as a deadline. */
+const GOAL_LABEL = 'goal';
+function goalOf(issues) {
+  const i = issues.filter(x => has(x, GOAL_LABEL)).sort((a, b) => a.number - b.number)[0];
+  if (!i) return null;
+  const milestones = [];
+  for (const line of String(i.body || '').split(/\r?\n/)) {
+    const mm = /^\s*[-*]\s+\[( |x|X)\]\s+(.+?)\s*$/.exec(line);
+    if (mm) milestones.push({ done: mm[1] !== ' ', text: mm[2] });
+  }
+  const done = milestones.filter(x => x.done).length;
+  return { issue: i, text: String(i.title).replace(/^\s*goal\s*[:：-]\s*/i, '').trim() || String(i.title), milestones, done, total: milestones.length };
+}
+
 /* ---------- loading one repo ---------- */
 async function loadRepo(r, signal) {
   const base = '/repos/' + cfg.owner + '/' + r.name;
@@ -835,7 +870,8 @@ async function loadRepo(r, signal) {
   out.claimed = issues.filter(i => has(i, 'claimed'));
   out.working = issues.filter(i => has(i, 'claimed') && !has(i, 'in-review'));
   out.plans = issues.filter(i => has(i, 'plan'));
-  out.untracked = issues.filter(i => !LABELS.some(L => has(i, L)));
+  out.goal = goalOf(issues);
+  out.untracked = issues.filter(i => !has(i, GOAL_LABEL) && !LABELS.some(L => has(i, L)));
   out.deadlines = [];
   for (const i of issues) for (const s of parseDeadlines(i.body)) out.deadlines.push(Object.assign({ repo: out, issue: i }, s, s.decide && !s.label ? { label: 'Decide: ' + firstLine(i.title, 60) } : null));
 
@@ -1041,7 +1077,24 @@ async function loadDispatcher(signal) {
     const newest = runs.map(x => Date.parse(x.run_started_at || x.created_at)).sort((a, b) => b - a).slice(0, 9);
     const rgaps = []; for (let i = 1; i < newest.length; i++) rgaps.push(newest[i - 1] - newest[i]);
     rgaps.sort((a, b) => a - b);
+    /* Which routines the dispatcher can wake (their secret is set) and their loads: every run
+       publishes them as one "agents" annotation, since secrets can't be read from here. */
+    let agents = null, agentsAt = null;
+    const okRun = runs.find(x => x.status === 'completed' && x.conclusion === 'success');
+    if (okRun) {
+      try {
+        const jobs = await gh('/repos/' + cfg.owner + '/mission-control/actions/runs/' + okRun.id + '/jobs?per_page=5', { signal });
+        const cr = ((jobs && jobs.jobs) || []).map(j => String(j.check_run_url || '').split('/').pop()).find(x => /^\d+$/.test(x));
+        if (cr) {
+          const anns = await gh('/repos/' + cfg.owner + '/mission-control/check-runs/' + cr + '/annotations?per_page=50', { signal });
+          const a = (anns || []).find(x => x && x.title === 'agents');
+          const j = a ? JSON.parse(a.message) : null;
+          if (j && typeof j === 'object' && !Array.isArray(j)) { agents = j; agentsAt = okRun.updated_at; }
+        }
+      } catch (e) { if (e && e.name === 'AbortError') throw e; /* runs from before the annotation: status stays unknown */ }
+    }
     return {
+      agents, agentsAt,
       recent: rgaps.length ? rgaps[Math.floor(rgaps.length / 2)] : null,
       outside: runs.filter(x => x.event === 'workflow_dispatch').length >= 3,
       at: run.updated_at, startedAt: run.run_started_at || run.created_at, status: run.status, conclusion: run.conclusion, url: run.html_url,
@@ -1440,8 +1493,8 @@ function iconFor(it) {
 }
 const extLink = (href, text, cls) => h('a', { class: cls || 'btn', href, target: '_blank', rel: 'noopener noreferrer' }, text, icon('ext', 13));
 
-/* The views: Today (what needs you), Portfolio (every project), Projects (code), Agents, System. */
-const VIEWS = ['today', 'portfolio', 'projects', 'agents', 'system'];
+/* The views: Today (what needs you), Goals (each project's goal), Portfolio (every project), Projects (code), Agents, System. */
+const VIEWS = ['today', 'goals', 'portfolio', 'projects', 'agents', 'system'];
 function setView(v, anchor) {
   if (!VIEWS.includes(v)) v = 'today';
   view = v; saveJSON(LS.view, v);
@@ -2650,17 +2703,102 @@ function renderPortfolio() {
     h('p', { class: 'meta', style: 'margin:0' }, 'Saved in ', link(pfUrl() + '/blob/main/' + PF_FILE, cfg.owner + '/' + pfRepoName()), ' (private). Every save is a commit, so its history is your stage log.'));
 }
 
+/* ---------- Goals ---------- */
+let goalFormFor = null;
+const mdPlain = (s) => String(s || '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/(\*\*|__)(.+?)\1/g, '$2').replace(/`([^`]+)`/g, '$1').trim();
+function renderGoals(m) {
+  const noshowRepos = new Set(m.team.rows.filter(a => a.noshow).map(a => a.noshow.repo.name));
+  const nowMs = now(), dueOf = new Map();
+  for (const d of deadlineList(m, nowMs)) {
+    const g = d.spec.repo && d.spec.repo.goal;
+    if (g && d.spec.issue && d.spec.issue.number === g.issue.number && !dueOf.has(d.spec.repo.name)) dueOf.set(d.spec.repo.name, d);
+  }
+  const withGoal = m.repos.filter(r => !r.fatal && r.goal);
+  const done = withGoal.reduce((s, r) => s + r.goal.done, 0), total = withGoal.reduce((s, r) => s + r.goal.total, 0);
+  return h('section', { class: 'view', 'aria-labelledby': 'h-goals' },
+    h('div', { class: 'view-head' }, h('h1', { id: 'h-goals' }, 'Goals'),
+      h('span', { class: 'meta' }, plural(m.repos.length, 'project') + ' · ' + withGoal.length + ' with a goal' + (total ? ' · ' + done + ' of ' + total + ' milestones done' : ''))),
+    h('div', { class: 'cards' }, m.repos.map(r => renderGoalCard(r, noshowRepos, dueOf.get(r.name)))),
+    h('p', { class: 'meta', style: 'margin:0' }, 'Each goal is an open issue labelled ', h('code', null, GOAL_LABEL), ' in its repo: change the wording and tick milestones there (Edit goal). No agent ever picks it up. A "Due: YYYY-MM-DD" line in it adds a countdown.'));
+}
+function renderGoalCard(r, noshowRepos, dl) {
+  const hl = repoHealth(r, noshowRepos), g = r.goal;
+  const head = h('div', { class: 'pc-head' }, h('span', { class: 'hdot ' + hl.level, title: hl.text }), h('h2', null, r.nick), h('div', { class: 'grow' }), dl ? cdNode(dl) : null);
+  if (r.fatal) return h('article', { class: 'pcard gcard' }, head, h('p', { class: 'err' }, hl.text));
+  const body = [];
+  if (g) {
+    body.push(h('p', { class: 'g-goal' }, mdPlain(g.text)));
+    if (g.total) {
+      const pct = Math.round(100 * g.done / g.total), next = g.milestones.findIndex(x => !x.done);
+      body.push(h('div', { class: 'g-prog' },
+        h('div', { class: 'g-bar', role: 'img', 'aria-label': g.done + ' of ' + g.total + ' milestones done' }, h('span', { style: 'width:' + pct + '%' })),
+        h('span', { class: 'g-pct' }, h('b', null, pct + '%'), ' · ' + g.done + ' of ' + g.total + ' milestones')));
+      body.push(h('ol', { class: 'g-ms' }, g.milestones.map((x, k) => h('li', { class: x.done ? 'done' : k === next ? 'next' : null }, mdPlain(x.text)))));
+    } else body.push(h('p', { class: 'meta' }, 'No milestones yet: add a checklist ("- [ ] …") to the goal issue.'));
+  } else body.push(h('p', { class: 'g-goal none' }, 'No goal yet'));
+  body.push(h('p', { class: 'meta g-now' }, h('b', null, 'Now: '), hl.text));
+  const lastAt = r.lastCommit && r.lastCommit.commit && r.lastCommit.commit.committer ? r.lastCommit.commit.committer.date : r.pushedAt;
+  body.push(h('p', { class: 'meta' }, [r.merged7d.length + ' merged this week', r.queue.length + ' ready', r.working.length + ' in progress', plural(r.prs.length, 'open PR'), lastAt ? 'last commit ' + ago(lastAt) : null].filter(Boolean).join(' · ')));
+  const formOpen = !g && goalFormFor === r.name;
+  body.push(h('div', { class: 'pc-act' },
+    g ? extLink(g.issue.html_url, 'Edit goal', 'btn sm') : formOpen ? null : h('button', { class: 'btn sm primary', type: 'button', onclick: () => { goalFormFor = r.name; render(); } }, 'Set goal'),
+    h('button', { class: 'btn sm', type: 'button', onclick: () => setView('projects') }, 'Project details')));
+  if (formOpen) body.push(goalForm(r));
+  return h('article', { class: 'pcard gcard' }, head, body);
+}
+/* Writes the goal issue with the page's token (Issues: Read and write, like New task). */
+function goalForm(r) {
+  const fGoal = h('input', { type: 'text', maxlength: '120', placeholder: 'What this project is for, in one line' });
+  const fMs = h('textarea', { rows: '5', placeholder: 'One milestone per line, in order.\nStart a line with "x " if it is already done.' });
+  const fDue = h('input', { type: 'text', maxlength: '10', inputmode: 'numeric', placeholder: 'YYYY-MM-DD (optional)' });
+  const save = h('button', { class: 'btn sm primary', type: 'button' }, 'Save goal');
+  save.addEventListener('click', () => {
+    const goal = fGoal.value.trim(), due = fDue.value.trim();
+    if (!goal) { toast('Write the goal first', true); fGoal.focus(); return; }
+    if (due && !isDate(due)) { toast('Write the date as YYYY-MM-DD', true); fDue.focus(); return; }
+    const ms = fMs.value.split(/\r?\n/).map(s => s.trim()).filter(Boolean)
+      .map(s => '- [' + (/^(x|\[x\])\s+/i.test(s) ? 'x' : ' ') + '] ' + s.replace(/^(?:x|\[x\]|\[ \]|[-*])\s+/i, ''));
+    const body = ['What this project is for. Mission Control\'s Goals tab shows this issue: edit the title to change the goal and tick a milestone when it is done.', '',
+      '## Milestones', ms.length ? ms.join('\n') : '- [ ] (add the first milestone)']
+      .concat(due ? ['', 'Due: ' + due] : [], ['', '_Not a task: no agent picks up an issue labelled `' + GOAL_LABEL + '`._']).join('\n');
+    runAction(async () => {
+      const base = '/repos/' + cfg.owner + '/' + r.name;
+      await gh(base + '/labels', { method: 'POST', body: { name: GOAL_LABEL, color: '0e8a16', description: 'The project\'s goal and milestones, shown in Mission Control. Not a task.' } })
+        .catch(e => { if (!(e instanceof ApiError && e.status === 422)) throw e; /* 422: the label exists */ });
+      await gh(base + '/issues', { method: 'POST', body: { title: 'Goal: ' + goal, body, labels: [GOAL_LABEL] } });
+      goalFormFor = null;
+      toast('Goal saved in ' + r.nick);
+    }, save);
+  });
+  return h('div', { class: 'taskform' },
+    h('label', { class: 'f' }, h('span', null, 'Goal'), fGoal),
+    h('label', { class: 'f' }, h('span', null, 'Milestones'), fMs),
+    h('label', { class: 'f' }, h('span', null, 'Due (optional)'), fDue),
+    h('div', { class: 'pc-act', style: 'justify-content:flex-end' }, h('button', { class: 'btn sm', type: 'button', onclick: () => { goalFormFor = null; render(); } }, 'Cancel'), save));
+}
+
 /* ---------- Agents ---------- */
 function meter(n, cap) {
   const f = cap ? Math.min(1, n / cap) : 0;
   const cls = f >= 1 ? 'full' : f >= 0.7 ? 'high' : '';
   return h('span', { class: 'meter ' + cls, title: n + ' of ' + cap }, h('span', { class: 'fill', style: 'width:' + Math.round(f * 100) + '%' }), h('span', { class: 'num' }, n + '/' + cap));
 }
-const STATE_LABEL = { working: 'Working', starting: 'Starting', sizing: 'Sizing issues', misconfigured: 'Not starting', noshow: 'Skipped, out of usage?', capped: 'At its cap', idle: 'Idle' };
-const toneOf = (s) => ['working', 'starting', 'sizing'].includes(s) ? 'good' : s === 'misconfigured' ? 'bad' : ['noshow', 'capped'].includes(s) ? 'warn' : 'idle';
+/* The same bar, labelled with what is left: "29 left" of a 30-task cap. */
+function quota(n, cap) {
+  const f = cap ? Math.min(1, n / cap) : 0;
+  const cls = f >= 1 ? 'full' : f >= 0.7 ? 'high' : '';
+  return h('span', { class: 'meter ' + cls, title: n + ' of ' + cap + ' used, ' + Math.max(0, cap - n) + ' left' }, h('span', { class: 'fill', style: 'width:' + Math.round(f * 100) + '%' }), h('span', { class: 'num' }, Math.max(0, cap - n) + ' left'));
+}
+const STATE_LABEL = { working: 'Working', starting: 'Starting', sizing: 'Sizing issues', misconfigured: 'Not starting', noshow: 'Skipped, out of usage?', capped: 'At its cap', off: 'Not connected', idle: 'Idle' };
+const toneOf = (s) => ['working', 'starting', 'sizing'].includes(s) ? 'good' : s === 'misconfigured' ? 'bad' : ['noshow', 'capped', 'off'].includes(s) ? 'warn' : 'idle';
+/* true / false from the dispatcher's latest "agents" annotation; null before the first such run. */
+function agentOn(name) { const s = dispatcher && dispatcher.agents; return s && s[name] && typeof s[name] === 'object' ? !!s[name].on : null; }
 function renderAgents(m) {
   const t = m.team, rank = { bad: 0, warn: 1, good: 2, idle: 3 };
-  const rows = t.rows.slice().sort((a, b) => rank[toneOf(a.status)] - rank[toneOf(b.status)]);
+  const secretOf = (name) => ((team.agents || []).find(a => a.name === name) || {}).secret || ('ROUTINE_' + name.toUpperCase().replace(/-/g, '_'));
+  const all = t.rows.map(r => agentOn(r.name) === false && r.status !== 'working'
+    ? Object.assign({}, r, { status: 'off', why: 'The dispatcher has no token for its routine, so it never wakes it.', offSecret: secretOf(r.name) }) : r);
+  const rows = all.slice().sort((a, b) => rank[toneOf(a.status)] - rank[toneOf(b.status)]);
   const cards = rows.map(r => {
     const tn = toneOf(r.status);
     return h('article', { class: 'acard' + (tn === 'bad' || tn === 'warn' ? ' t-' + tn : '') },
@@ -2668,9 +2806,11 @@ function renderAgents(m) {
       h('p', { class: 'ac-state t-' + tn }, STATE_LABEL[r.status] || r.status, r.doing ? [' · ', link(r.doing.url || r.doing.r.url, r.doing.r.nick + ' #' + r.doing.n)] : null),
       r.why ? h('p', { class: 'meta' }, r.why) : null,
       r.noshow && r.status !== 'working' ? h('p', { class: 'ac-fix' }, h('b', null, 'Fix: '), r.noshow.fix) : null,
-      h('div', { class: 'ac-meters' }, h('span', { class: 'mpair' }, h('span', { class: 'meta' }, '5 h'), meter(r.load5h, r.cap5h)), h('span', { class: 'mpair' }, h('span', { class: 'meta' }, '7 days'), meter(r.load7d, r.cap7d))),
+      r.offSecret ? h('p', { class: 'ac-fix' }, h('b', null, 'Connect it: '), 'in mission-control → Settings → Secrets and variables → Actions, add the routine\'s token as the secret ', h('code', null, r.offSecret), ' and its URL as the variable ', h('code', null, r.offSecret + '_URL'), '.') : null,
+      h('div', { class: 'ac-meters' }, h('span', { class: 'mpair' }, h('span', { class: 'meta' }, '5 h'), quota(r.load5h, r.cap5h)), h('span', { class: 'mpair' }, h('span', { class: 'meta' }, '7 days'), quota(r.load7d, r.cap7d))),
       h('p', { class: 'meta' }, (r.role || r.serves) + ' · ' + (r.last ? 'last task ' + ago(r.last.at) : 'no tasks yet')),
-      r.status === 'misconfigured' ? h('div', { class: 'pc-act' }, extLink('https://claude.ai/code/routines', 'Open routines', 'btn primary')) : null);
+      r.status === 'misconfigured' ? h('div', { class: 'pc-act' }, extLink('https://claude.ai/code/routines', 'Open routines', 'btn primary')) : null,
+      r.offSecret ? h('div', { class: 'pc-act' }, extLink('https://github.com/' + cfg.owner + '/mission-control/settings/secrets/actions', 'Open secrets', 'btn sm')) : null);
   });
   cards.push(h('article', { class: 'acard' },
     h('div', { class: 'ac-head' }, h('span', { class: 'hdot ' + (t.codexQueue ? 'good' : 'idle') }), h('h2', null, 'codex'), h('span', { class: 'model m-gpt' }, (team.codex && team.codex.model) || 'GPT'), h('div', { class: 'grow' }), h('span', { class: 'meta' }, 'ChatGPT')),
@@ -2682,17 +2822,21 @@ function renderAgents(m) {
     h('p', { class: 'ac-state' + (t.agWorking ? ' t-good' : '') }, t.agWorking ? 'Working on ' + t.agWorking : t.agQueue ? t.agQueue + ' waiting' : 'Idle'),
     h('p', { class: 'meta' }, t.agQueue ? 'Runs only while Antigravity is open on the Mac.' : 'ui tasks in non-fenced repos. Nothing queued for it.'),
     h('p', { class: 'meta' }, t.agLast ? 'Last seen ' + ago(t.agLast.at) : 'Not seen yet')));
-  const stuck = t.rows.filter(r => r.noshow && r.status !== 'working').length;
-  const working = t.rows.filter(r => toneOf(r.status) === 'good').length;
-  const idle = t.rows.filter(r => r.status === 'idle').length;
-  const accounts = Object.keys(team.accounts || {}).map(k => h('span', { class: 'chip' }, 'account ' + k + ' ', meter(t.acct[k] || 0, (team.accounts[k] || {}).cap5h || 0)));
+  const stuck = all.filter(r => r.noshow && r.status !== 'working').length;
+  const working = all.filter(r => toneOf(r.status) === 'good').length;
+  const idle = all.filter(r => r.status === 'idle').length;
+  const known = all.some(r => agentOn(r.name) !== null);
+  const connected = all.filter(r => agentOn(r.name) === true).length;
+  const accounts = Object.keys(team.accounts || {}).map(k => h('span', { class: 'chip' }, 'account ' + k + ' ', quota(t.acct[k] || 0, (team.accounts[k] || {}).cap5h || 0)));
   const others = t.others.map(o => [h('b', null, o.agent === 'claude' ? 'claude (your own sessions)' : o.agent), ' ' + o.last.what + ' in ' + o.last.repo.nick + ' ', link(o.last.url, ago(o.last.at))]);
   return h('section', { class: 'view', 'aria-labelledby': 'h-agents' },
-    h('div', { class: 'view-head' }, h('h1', { id: 'h-agents' }, 'Agents'), h('span', { class: 'meta' }, [stuck ? stuck + ' not starting' : null, working + ' working', idle + ' idle'].filter(Boolean).join(' · '))),
+    h('div', { class: 'view-head' }, h('h1', { id: 'h-agents' }, 'Agents'), h('span', { class: 'meta' }, [known ? connected + ' of ' + all.length + ' Claude routines connected' : null, stuck ? stuck + ' not starting' : null, working + ' working', idle + ' idle'].filter(Boolean).join(' · '))),
     h('div', { class: 'cards' }, cards),
     h('div', { class: 'chips' },
-      accounts.length ? h('span', { class: 'meta', style: 'align-self:center' }, 'Tasks per account, last 5 h:') : null, accounts,
+      accounts.length ? h('span', { class: 'meta', style: 'align-self:center' }, 'Left per account, last 5 h:') : null, accounts,
       h('span', { class: 'chip' + (t.unassigned ? '' : ' zero') }, 'Waiting for dispatch ', h('b', null, String(t.unassigned)))),
+    h('p', { class: 'meta', style: 'margin:0' }, '"Left" counts the tasks the dispatcher may still start under its own caps, which are set high on purpose. The real limit is each Claude plan\'s usage, which GitHub can\'t see: an agent that runs out shows "Skipped, out of usage?".',
+      known ? '' : ' Which routines are connected shows after the next dispatcher run.'),
     others.length ? h('p', { class: 'meta', style: 'margin:0' }, 'Also seen: ', others.map((o, i) => [i ? ' · ' : '', o])) : null,
     h('p', { class: 'meta', style: 'margin:0' }, 'The dispatcher wakes a routine only when it has a task for it: ', link('https://claude.ai/code/routines', 'routines'), ' · ', link('https://chatgpt.com/codex', 'Codex tasks')));
 }
@@ -2780,6 +2924,7 @@ function render() {
   items = buildInbox(model);
   renderStatus(items);
   if (view === 'projects') app.append(renderProjects(model));
+  else if (view === 'goals') app.append(renderGoals(model));
   else if (view === 'portfolio') app.append(renderPortfolio());
   else if (view === 'agents') app.append(renderAgents(model));
   else if (view === 'system') app.append(renderSystem(model));
