@@ -2796,8 +2796,18 @@ function agentOn(name) { const s = dispatcher && dispatcher.agents; return s && 
 function renderAgents(m) {
   const t = m.team, rank = { bad: 0, warn: 1, good: 2, idle: 3 };
   const secretOf = (name) => ((team.agents || []).find(a => a.name === name) || {}).secret || ('ROUTINE_' + name.toUpperCase().replace(/-/g, '_'));
-  const all = t.rows.map(r => agentOn(r.name) === false && r.status !== 'working'
-    ? Object.assign({}, r, { status: 'off', why: 'The dispatcher has no token for its routine, so it never wakes it.', offSecret: secretOf(r.name) }) : r);
+  /* The dispatcher's own counts are the ones its caps use, so they win over the page's estimate. */
+  const sw = (dispatcher && dispatcher.agents) || {};
+  const num = (v) => Number.isFinite(v) && v >= 0 ? v : null;
+  const all = t.rows.map(r => {
+    const s = sw[r.name] || {};
+    const x = num(s.load5h) != null && num(s.load7d) != null
+      ? Object.assign({}, r, { load5h: s.load5h, load7d: s.load7d, cap5h: num(s.cap5h) || r.cap5h, cap7d: num(s.cap7d) || r.cap7d }) : r;
+    return agentOn(r.name) === false && r.status !== 'working'
+      ? Object.assign({}, x, { status: 'off', why: 'The dispatcher has no token for its routine, so it never wakes it.', offSecret: secretOf(r.name) }) : x;
+  });
+  const acctUsed = Object.assign({}, t.acct);
+  if (all.every(r => num((sw[r.name] || {}).load5h) != null)) { for (const k of Object.keys(acctUsed)) acctUsed[k] = 0; for (const r of all) acctUsed[r.account] = (acctUsed[r.account] || 0) + r.load5h; }
   const rows = all.slice().sort((a, b) => rank[toneOf(a.status)] - rank[toneOf(b.status)]);
   const cards = rows.map(r => {
     const tn = toneOf(r.status);
@@ -2827,7 +2837,7 @@ function renderAgents(m) {
   const idle = all.filter(r => r.status === 'idle').length;
   const known = all.some(r => agentOn(r.name) !== null);
   const connected = all.filter(r => agentOn(r.name) === true).length;
-  const accounts = Object.keys(team.accounts || {}).map(k => h('span', { class: 'chip' }, 'account ' + k + ' ', quota(t.acct[k] || 0, (team.accounts[k] || {}).cap5h || 0)));
+  const accounts = Object.keys(team.accounts || {}).map(k => h('span', { class: 'chip' }, 'account ' + k + ' ', quota(acctUsed[k] || 0, (team.accounts[k] || {}).cap5h || 0)));
   const others = t.others.map(o => [h('b', null, o.agent === 'claude' ? 'claude (your own sessions)' : o.agent), ' ' + o.last.what + ' in ' + o.last.repo.nick + ' ', link(o.last.url, ago(o.last.at))]);
   return h('section', { class: 'view', 'aria-labelledby': 'h-agents' },
     h('div', { class: 'view-head' }, h('h1', { id: 'h-agents' }, 'Agents'), h('span', { class: 'meta' }, [known ? connected + ' of ' + all.length + ' Claude routines connected' : null, stuck ? stuck + ' not starting' : null, working + ' working', idle + ' idle'].filter(Boolean).join(' · '))),
