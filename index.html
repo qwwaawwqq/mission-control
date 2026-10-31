@@ -76,14 +76,6 @@ header.top .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 
 .badge.you { background: #c62f2f; }
 .badge.wait { background: var(--warn); color: #111; }
 .actions { display: flex; align-items: center; gap: 8px; }
-.dash-menu { position: relative; }
-.dash-menu > summary { list-style: none; }
-.dash-menu > summary::-webkit-details-marker { display: none; }
-.dash-menu[open] > summary { background: var(--hover); color: var(--ink); }
-.dash-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 60; width: 300px; max-width: calc(100vw - 24px); display: flex; flex-direction: column; gap: 2px; padding: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 28px rgba(0,0,0,.16); }
-.dash-pop a { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border-radius: 8px; color: var(--ink); text-decoration: none; font-size: 14px; font-weight: 600; white-space: normal; }
-.dash-pop a:hover { background: var(--hover); text-decoration: none; }
-.dash-pop a span { font-size: 13px; font-weight: 400; color: var(--ink-2); }
 
 /* buttons */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); color: var(--ink); cursor: pointer; font-size: 14px; font-weight: 550; line-height: 1.2; text-decoration: none; white-space: nowrap; }
@@ -438,12 +430,6 @@ footer { color: var(--ink-2); font-size: 13px; margin-top: 40px; display: flex; 
       <span class="meta" id="lastRefresh"></span>
       <button class="btn icon" id="btnRefresh" type="button" aria-label="Refresh" title="Refresh"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></button>
       <button class="btn primary" id="btnTask" type="button" aria-label="New task" title="New task for the agents"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg><span class="lnk-wide">New task</span></button>
-      <details class="dash-menu" id="dashMenu">
-        <summary class="btn icon ghost" aria-label="Dashboards" title="Dashboards"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></summary>
-        <div class="dash-pop">
-          <a href="https://claude.ai/artifact/NJSrnZV93jwqVnCFLjrpdu" target="_blank" rel="noopener">Meta-control ↗<span>Dispatcher, agents, goals, projects, every scheduled task, mail and alerts</span></a>
-        </div>
-      </details>
       <button class="btn icon ghost" id="btnSettings" type="button" aria-label="Settings" title="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg></button>
     </div>
   </div>
@@ -3052,11 +3038,6 @@ setInterval(() => { if (token && document.visibilityState === 'visible' && now()
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && token && now() - lastRefresh > 60e3 && !busy && !editing()) refresh(); });
 setInterval(() => { if (model && !busy) { renderHeader(); tickCountdowns(); } }, 30e3);
 
-/* Dashboards menu: closes when a click lands elsewhere, on Escape, or after a link is opened. */
-const dashMenu = $('#dashMenu');
-document.addEventListener('click', (ev) => { if (dashMenu.open && !dashMenu.contains(ev.target)) dashMenu.open = false; });
-document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && dashMenu.open) { dashMenu.open = false; dashMenu.querySelector('summary').focus(); } });
-for (const a of dashMenu.querySelectorAll('a')) a.addEventListener('click', () => { dashMenu.open = false; });
 
 render();
 loadTeam().then(() => { if (model) { model.team = buildTeam(model.repos, model.agents); render(); } });
