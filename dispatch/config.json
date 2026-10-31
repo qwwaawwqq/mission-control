@@ -35,7 +35,7 @@
     { "name": "Dashboard refresh",
       "what": "Refreshes the Meta-control dashboard from GitHub and your scheduled-task list.",
       "times": ["06:42", "11:42", "16:42", "20:42"], "tz": "Asia/Taipei",
-      "links": [{ "text": "Meta-control", "url": "https://claude.ai/artifact/NJSrnZV93jwqVnCFLjrpdu" }, { "text": "scheduled tasks", "url": "https://claude.ai/code/routines" }] },
+      "links": [{ "text": "scheduled tasks", "url": "https://claude.ai/code/routines" }] },
     { "name": "Taiwan market open brief",
       "what": "Pre-open brief for the TWSE open, saved as a Gmail draft.",
       "times": ["07:00"], "tz": "Asia/Taipei",
