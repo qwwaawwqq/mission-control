@@ -68,6 +68,10 @@ header.top .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 
 .views button:hover { color: var(--ink); background: var(--hover); }
 .views button[aria-pressed="true"] { color: var(--ink); font-weight: 650; box-shadow: inset 0 -2px 0 var(--accent); }
 .views .vi { display: none; }
+.meta-view { display: flex; flex-direction: column; gap: 16px; }
+.meta-row .auto-main { gap: 2px; }
+.meta-what { font-size: 13px; color: var(--ink-2); }
+.meta-links { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; }
 .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: #52514e; color: #fff; font-size: 11px; font-weight: 700; line-height: 1; }
 .badge.you { background: #c62f2f; }
 .badge.wait { background: var(--warn); color: #111; }
@@ -427,6 +431,7 @@ footer { color: var(--ink-2); font-size: 13px; margin-top: 40px; display: flex; 
       <button type="button" data-view="projects" id="nav-projects" aria-pressed="false"><span class="vi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg></span><span class="vl">Projects</span><span class="badge hid"></span></button>
       <button type="button" data-view="agents" id="nav-agents" aria-pressed="false"><span class="vi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></span><span class="vl">Agents</span><span class="badge hid"></span></button>
       <button type="button" data-view="system" id="nav-system" aria-pressed="false"><span class="vi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg></span><span class="vl">System</span><span class="badge hid"></span></button>
+      <button type="button" data-view="meta" id="nav-meta" aria-pressed="false"><span class="vi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg></span><span class="vl">Meta-control</span><span class="badge hid"></span></button>
     </nav>
     <div class="grow"></div>
     <div class="actions">
@@ -436,8 +441,7 @@ footer { color: var(--ink-2); font-size: 13px; margin-top: 40px; display: flex; 
       <details class="dash-menu" id="dashMenu">
         <summary class="btn icon ghost" aria-label="Dashboards" title="Dashboards"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></summary>
         <div class="dash-pop">
-          <a href="https://claude.ai/artifact/NJSrnZV93jwqVnCFLjrpdu" target="_blank" rel="noopener">Meta-control ↗<span>How the automation runs: dispatcher, agents, scheduled tasks, alerts</span></a>
-          <a href="https://claude.ai/artifact/H5c8v6fsTXgpaP7PreFy7e" target="_blank" rel="noopener">Project progress and goals ↗<span>Every project's goal, stage, next step and deadline</span></a>
+          <a href="https://claude.ai/artifact/NJSrnZV93jwqVnCFLjrpdu" target="_blank" rel="noopener">Meta-control ↗<span>Dispatcher, agents, goals, projects, every scheduled task, mail and alerts</span></a>
         </div>
       </details>
       <button class="btn icon ghost" id="btnSettings" type="button" aria-label="Settings" title="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg></button>
@@ -1494,7 +1498,7 @@ function iconFor(it) {
 const extLink = (href, text, cls) => h('a', { class: cls || 'btn', href, target: '_blank', rel: 'noopener noreferrer' }, text, icon('ext', 13));
 
 /* The views: Today (what needs you), Goals (each project's goal), Portfolio (every project), Projects (code), Agents, System. */
-const VIEWS = ['today', 'goals', 'portfolio', 'projects', 'agents', 'system'];
+const VIEWS = ['today', 'goals', 'portfolio', 'projects', 'agents', 'system', 'meta'];
 function setView(v, anchor) {
   if (!VIEWS.includes(v)) v = 'today';
   view = v; saveJSON(LS.view, v);
@@ -1696,6 +1700,32 @@ function renderAutomations() {
     h('div', { class: 'side-foot' },
       tasks.length > 5 ? h('button', { class: 'btn', type: 'button', 'aria-expanded': String(showAllAutos), onclick: () => { showAllAutos = !showAllAutos; render(); } }, showAllAutos ? 'Show fewer' : 'Show all ' + tasks.length) : null,
       h('span', { class: 'meta' }, 'Each reports by push notification. ', link('https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/config.json', 'Edit the list'))));
+}
+
+/* ---------- Meta-control: every scheduled task, and the way to the full dashboard ---------- */
+const META_URL = 'https://claude.ai/artifact/NJSrnZV93jwqVnCFLjrpdu';
+function renderMeta() {
+  const tasks = scheduledTasks(), nowMs = now();
+  const sorted = tasks.map((t, k) => ({ t, k, at: nextRuns(t, nowMs, 1)[0] || Infinity })).sort((a, b) => a.at - b.at);
+  const rows = sorted.map(({ t, k, at }) => {
+    const inEl = h('span', { class: 'meta', 'data-nrin': String(k) }); paintNextIn(inEl, nowMs);
+    const links = (Array.isArray(t.links) ? t.links : []).filter(l => l && l.url && /^https:\/\//.test(l.url));
+    return h('div', { class: 'auto meta-row' }, h('span', { class: 'hdot sched' }),
+      h('div', { class: 'auto-main' }, h('b', null, t.alias ? t.alias + ' · ' + t.name : t.name), h('span', { class: 'meta' }, schedText(t)),
+        t.what ? h('span', { class: 'meta-what' }, t.what) : null,
+        links.length ? h('span', { class: 'meta-links' }, links.map(l => link(l.url, l.text + ' ↗'))) : null),
+      h('div', { class: 'auto-next' }, h('b', null, at < Infinity ? (at - nowMs < 20 * HOUR ? fmtClock(at) : fmtDay(at)) : '—'), inEl));
+  });
+  const jump = (v, label) => h('button', { class: 'btn', type: 'button', onclick: () => setView(v) }, label);
+  return h('section', { class: 'view meta-view' },
+    h('div', { class: 'card' },
+      h('div', { class: 'sec-head' }, h('h2', null, 'Meta-control'), h('div', { class: 'grow' }), extLink(META_URL, 'Open the full dashboard')),
+      h('p', { class: 'kv' }, 'How the automation runs. The full Meta-control dashboard on claude.ai adds what this page can\'t read from a browser: mail triage, alert emails, your calendar and each task\'s last result. It refreshes at 06:42, 11:42, 16:42 and 20:42 Taipei.'),
+      h('div', { class: 'toolbar' }, jump('agents', 'Agents and usage left'), jump('system', 'Dispatcher and Actions'), jump('goals', 'Goals'))),
+    h('div', { class: 'card' },
+      h('div', { class: 'sec-head' }, h('h2', { id: 'h-meta-auto' }, 'Scheduled tasks'), h('span', { class: 'count' }, String(tasks.length)), h('div', { class: 'grow' }), h('span', { class: 'meta' }, 'by next run')),
+      tasks.length ? h('div', { class: 'autos' }, rows) : h('p', { class: 'meta' }, 'No scheduled tasks listed yet.'),
+      h('div', { class: 'side-foot' }, h('span', { class: 'meta' }, 'One-off checks and the agents\' own routines are left out: the agents show under Agents. ', link('https://github.com/' + cfg.owner + '/mission-control/blob/main/dispatch/config.json', 'Edit the list')))));
 }
 
 /* ---------- Projects ---------- */
@@ -2938,6 +2968,7 @@ function render() {
   else if (view === 'portfolio') app.append(renderPortfolio());
   else if (view === 'agents') app.append(renderAgents(model));
   else if (view === 'system') app.append(renderSystem(model));
+  else if (view === 'meta') app.append(renderMeta());
   else app.append(renderHero(model, items), h('div', { class: 'today' }, renderInbox(model, items), h('aside', { class: 'side-col', 'aria-label': 'Deadlines and automations' }, renderDeadlines(model), renderAutomations())));
   app.append(h('footer', null,
     h('span', null, 'Labels: plan → the administrator splits it · ready → the dispatcher assigns it · size:S/M → Sonnet · size:L → Opus · ui → Antigravity · to:codex → Codex · claimed → agent on it · in-review → PR open · blocked → needs you · pause → everything stops · retired (on a repo) → hidden here'),
